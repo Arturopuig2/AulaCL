@@ -9,6 +9,9 @@ Aula CL es una aplicación web educativa diseñada para mejorar la comprensión 
 -   **Cuestionarios Interactivos**: Tests de comprensión con feedback inmediato.
 -   **Gamificación**: Sistema de puntuación y seguimiento de progreso ("Completado").
 -   **Predicción de Rendimiento**: Modelo de ML simple que predice futuras puntuaciones basadas en el historial.
+-   **Panel de Administración**: Gestión completa de textos (subida de archivos, asignación de cursos/idiomas).
+-   **Filtros Avanzados**: Búsqueda por Curso (Primaria/ESO/Bachillerato) e Idioma.
+-   **Gestión de Usuarios**: Registro, Login y Recuperación de Contraseña seguro.
 -   **Interfaz Moderna**: Diseño limpio y amigable (Glassmorphism) adaptado a estudiantes.
 
 ## 🛠 Tecnologías Utilizadas
