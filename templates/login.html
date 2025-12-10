@@ -11,17 +11,31 @@
             </div>
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" required>
+                <div style="position: relative;">
+                    <input type="password" id="password" required style="width: 100%; padding-right: 2.5rem;">
+                    <span id="toggle-password"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem;">🙈</span>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
         </form>
         <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
             ¿No tienes cuenta? <a href="/register" style="color: var(--primary-color);">Regístrate</a>
+            <br>
+            <a href="/forgot-password" style="font-size: 0.8rem; color: var(--text-secondary);">¿Olvidaste tu
+                contraseña?</a>
         </p>
     </div>
 </div>
 
 <script>
+    document.getElementById('toggle-password').addEventListener('click', function () {
+        const passwordInput = document.getElementById('password');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.textContent = type === 'password' ? '🙈' : '🐵';
+    });
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
@@ -36,7 +50,11 @@
             const response = await axios.post('/auth/token', formData);
             localStorage.setItem('token', response.data.access_token);
             localStorage.setItem('username', username);
-            window.location.href = '/dashboard';
+            if (username === 'admin') {
+                window.location.href = '/admin';
+            } else {
+                window.location.href = '/dashboard';
+            }
         } catch (error) {
             alert('Error de login: ' + (error.response?.data?.detail || error.message));
         }

@@ -4,9 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const navLinks = document.getElementById('nav-links');
 
-    if (token) {
-        // User is logged in
+    if (token && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        const username = localStorage.getItem('username');
+        let adminLink = '';
+        if (username === 'admin') {
+            adminLink = `<a href="/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-right: 0.5rem;">Admin</a>`;
+        }
+
         navLinks.innerHTML = `
+            ${adminLink}
             <button id="logout-btn" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Cerrar Sesión</button>
         `;
 

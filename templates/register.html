@@ -12,15 +12,34 @@
             <div class="form-group">
                 <label for="course">Curso</label>
                 <select id="course" required>
-                    <option value="1ESO">1º ESO</option>
-                    <option value="2ESO">2º ESO</option>
-                    <option value="3ESO">3º ESO</option>
-                    <option value="4ESO">4º ESO</option>
+                    <option value="" disabled selected>Selecciona tu curso</option>
+                    <optgroup label="Primaria">
+                        <option value="1P">1º Primaria</option>
+                        <option value="2P">2º Primaria</option>
+                        <option value="3P">3º Primaria</option>
+                        <option value="4P">4º Primaria</option>
+                        <option value="5P">5º Primaria</option>
+                        <option value="6P">6º Primaria</option>
+                    </optgroup>
+                    <optgroup label="ESO">
+                        <option value="1ESO">1º ESO</option>
+                        <option value="2ESO">2º ESO</option>
+                        <option value="3ESO">3º ESO</option>
+                        <option value="4ESO">4º ESO</option>
+                    </optgroup>
+                    <optgroup label="Bachillerato">
+                        <option value="1BAT">1º Bachillerato</option>
+                        <option value="2BAT">2º Bachillerato</option>
+                    </optgroup>
                 </select>
             </div>
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" required>
+                <div style="position: relative;">
+                    <input type="password" id="password" required style="width: 100%; padding-right: 2.5rem;">
+                    <span id="toggle-password"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem;">🙈</span>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%;">Registrarse</button>
         </form>
@@ -31,6 +50,13 @@
 </div>
 
 <script>
+    document.getElementById('toggle-password').addEventListener('click', function () {
+        const passwordInput = document.getElementById('password');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.textContent = type === 'password' ? '🙈' : '🐵';
+    });
+
     document.getElementById('register-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;

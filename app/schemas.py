@@ -4,6 +4,7 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     username: str
+    email: Optional[str] = None
     course_level: str
 
 class UserCreate(UserBase):
@@ -49,6 +50,10 @@ class TextResponse(TextBase):
     class Config:
         from_attributes = True
 
+class TextUpdate(BaseModel):
+    course_level: Optional[str] = None
+    language: Optional[str] = None
+
 class AttemptCreate(BaseModel):
     text_id: int
     time_spent_seconds: float
@@ -64,3 +69,10 @@ class AttemptResponse(AttemptCreate):
 class PredictionResponse(BaseModel):
     predicted_score: float
     message: Optional[str] = None
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str

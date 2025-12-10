@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from .. import database, models, schemas, auth
 
 router = APIRouter(
@@ -10,7 +10,8 @@ router = APIRouter(
 
 @router.get("/texts", response_model=List[schemas.TextResponse])
 def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    texts = db.query(models.Text).filter(models.Text.course_level == current_user.course_level).all()
+    # Return all texts so frontend can filter by course
+    texts = db.query(models.Text).all()
     
     user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
     # Map text_id to latest score (assuming ID order is chronological)
@@ -82,3 +83,90 @@ def get_prediction(current_user: schemas.User = Depends(auth.get_current_user), 
     else:
         # It's a string message
         return {"predicted_score": 0.0, "message": str(predicted_score)}
+
+@router.get("/admin/texts", response_model=List[schemas.TextResponse])
+def get_all_texts_admin(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return db.query(models.Text).all()
+
+@router.put("/admin/texts/{text_id}", response_model=schemas.TextResponse)
+def update_text(text_id: int, text_update: schemas.TextUpdate, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
+    if text_update.course_level is not None:
+        text.course_level = text_update.course_level
+    if text_update.language is not None:
+        text.language = text_update.language
+        
+    db.commit()
+    db.refresh(text)
+    db.commit()
+    db.refresh(text)
+    return text
+
+@router.post("/admin/upload", response_model=schemas.TextResponse)
+def upload_text(
+    title: str = Form(...),
+    course_level: str = Form("ALL"),
+    language: str = Form("es"),
+    text_file: UploadFile = File(...),
+    audio_file: Optional[UploadFile] = File(None),
+    current_user: schemas.User = Depends(auth.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    import shutil
+    import os
+    
+    # 1. Save Text File
+    # Ensure directory exists
+    save_dir = f"data/texts/{course_level}"
+    os.makedirs(save_dir, exist_ok=True)
+    
+    filename = text_file.filename
+    content_path = f"{save_dir}/{filename}"
+    
+    with open(content_path, "wb") as buffer:
+        shutil.copyfileobj(text_file.file, buffer)
+        
+    # 2. Save Audio File (if present)
+    audio_path = None
+    if audio_file:
+        audio_filename = audio_file.filename
+        audio_save_dir = "static/audio"
+        os.makedirs(audio_save_dir, exist_ok=True)
+        audio_path_full = f"{audio_save_dir}/{audio_filename}"
+        
+        with open(audio_path_full, "wb") as buffer:
+            shutil.copyfileobj(audio_file.file, buffer)
+        
+        # Store relative path for DB
+        audio_path = f"audio/{audio_filename}"
+
+    # 3. Create DB Entry
+    new_text = models.Text(
+        title=title,
+        filename=filename,
+        course_level=course_level,
+        language=language,
+        content_path=content_path,
+        audio_path=audio_path
+    )
+    
+    try:
+        db.add(new_text)
+        db.commit()
+        db.refresh(new_text)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error saving to DB (Title/Filename might be duplicate): {str(e)}")
+        
+    return new_text

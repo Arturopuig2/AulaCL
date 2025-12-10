@@ -9,6 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    email = Column(String, unique=True, index=True, nullable=True) # Nullable for migration
     course_level = Column(String)  # e.g., "1ESO", "2ESO"
     
     attempts = relationship("ReadingAttempt", back_populates="user")
