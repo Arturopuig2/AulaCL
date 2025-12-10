@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+
+{% block navbar_actions %}
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Home</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="glass-panel" style="padding: 2rem;">
+    <h1>Quiz: <span id="text-title"></span></h1>
+
+    <div id="quiz-container">
+        <!-- Questions loaded here -->
+    </div>
+
+    <div id="result-panel"
+        style="display: none; margin-top: 2rem; padding: 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.9); text-align: center;">
+        <h2>Resultado: <span id="score-display"></span></h2>
+        <a href="/dashboard" class="btn btn-primary" style="margin-top: 1rem;">Volver al Dashboard</a>
+    </div>
+
+    <button id="submit-quiz" class="btn btn-primary" style="margin-top: 2rem;">Enviar Respuestas</button>
+</div>
+
+<script>
+    const textId = parseInt("{{ text_id }}");
+    let questionsData = [];
+
+    async function loadQuiz() {
+        const token = localStorage.getItem('token');
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+
+        try {
+            // Get text title
+            const textRes = await axios.get(`/reading/texts/${textId}`);
+            document.getElementById('text-title').innerText = textRes.data.title;
+
+            // Get questions
+            const qRes = await axios.get(`/reading/texts/${textId}/questions`);
+            questionsData = qRes.data;
+
+            const container = document.getElementById('quiz-container');
+
+            questionsData.forEach((q, index) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'card';
+                qDiv.id = `q-card-${q.id}`;
+                qDiv.style.marginBottom = '1rem';
+
+                let optionsHtml = '';
+                q.options.forEach((opt, optedIndex) => {
+                    optionsHtml += `
+                        <div id="opt-div-${q.id}-${optedIndex}" style="margin: 0.5rem 0; display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem;">
+                            <input type="radio" name="q_${q.id}" value="${optedIndex}" id="q_${q.id}_${optedIndex}" style="width: auto; margin-right: 0.5rem;">
+                            <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer;">${opt}</label>
+                        </div>
+                    `;
+                });
+
+                qDiv.innerHTML = `
+                    <h3>${index + 1}. ${q.question_content}</h3>
+                    ${optionsHtml}
+                `;
+                container.appendChild(qDiv);
+            });
+
+        } catch (error) {
+            console.error(error);
+            alert("Error cargando preguntas");
+        }
+    }
+
+    document.getElementById('submit-quiz').addEventListener('click', async () => {
+        // Disable button to prevent double submit
+        const submitBtn = document.getElementById('submit-quiz');
+        if (submitBtn.innerText === "Volver al Dashboard") {
+            window.location.href = '/dashboard';
+            return;
+        }
+
+        let score = 0;
+
+        questionsData.forEach(q => {
+            const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+            const correctIndex = q.correct_answer;
+
+            // Highlight Correct Answer (Green)
+            const correctDiv = document.getElementById(`opt-div-${q.id}-${correctIndex}`);
+            if (correctDiv) {
+                correctDiv.style.backgroundColor = '#dcfce7'; // green-100
+                correctDiv.style.border = '1px solid #22c55e';
+                correctDiv.style.color = '#15803d';
+            }
+
+            if (selected) {
+                const selectedVal = parseInt(selected.value);
+                if (selectedVal === correctIndex) {
+                    score++;
+                } else {
+                    // Highlight Incorrect Selection (Red)
+                    const wrongDiv = document.getElementById(`opt-div-${q.id}-${selectedVal}`);
+                    if (wrongDiv) {
+                        wrongDiv.style.backgroundColor = '#fee2e2'; // red-100
+                        wrongDiv.style.border = '1px solid #ef4444';
+                        wrongDiv.style.color = '#b91c1c';
+                    }
+                }
+            } else {
+                // Not answered
+                // Optional: Mark question title as unanswered?
+            }
+
+            // Disable inputs
+            const inputs = document.getElementsByName(`q_${q.id}`);
+            inputs.forEach(input => input.disabled = true);
+        });
+
+        const finalScore = (score / questionsData.length) * 100;
+        const timeSpent = parseFloat(localStorage.getItem(`time_spent_${textId}`)) || 0;
+
+        // Display Result
+        document.getElementById('submit-quiz').style.display = 'none';
+        const resultPanel = document.getElementById('result-panel');
+        resultPanel.style.display = 'block';
+        document.getElementById('score-display').innerText = `${score} / ${questionsData.length}`;
+
+        // Scroll to bottom
+        resultPanel.scrollIntoView({ behavior: 'smooth' });
+
+        try {
+            await axios.post('/reading/attempt', {
+                text_id: textId,
+                time_spent_seconds: timeSpent,
+                score: finalScore
+            });
+        } catch (e) {
+            console.error('Error enviando resultados', e);
+        }
+    });
+
+    loadQuiz();
+</script>
+{% endblock %}

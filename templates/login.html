@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto; padding-top: 4rem;">
+    <div class="glass-panel" style="padding: 2rem;">
+        <h2 style="text-align: center;">Iniciar Sesión</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+        </form>
+        <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+            ¿No tienes cuenta? <a href="/register" style="color: var(--primary-color);">Regístrate</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        // Form data for OAuth2
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+
+        try {
+            const response = await axios.post('/auth/token', formData);
+            localStorage.setItem('token', response.data.access_token);
+            localStorage.setItem('username', username);
+            window.location.href = '/dashboard';
+        } catch (error) {
+            alert('Error de login: ' + (error.response?.data?.detail || error.message));
+        }
+    });
+</script>
+{% endblock %}

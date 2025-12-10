@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto; padding-top: 4rem;">
+    <div class="glass-panel" style="padding: 2rem;">
+        <h2 style="text-align: center;">Registro</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="course">Curso</label>
+                <select id="course" required>
+                    <option value="1ESO">1º ESO</option>
+                    <option value="2ESO">2º ESO</option>
+                    <option value="3ESO">3º ESO</option>
+                    <option value="4ESO">4º ESO</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Registrarse</button>
+        </form>
+        <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+            ¿Ya tienes cuenta? <a href="/login" style="color: var(--primary-color);">Inicia Sesión</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const course = document.getElementById('course').value;
+
+        try {
+            await axios.post('/auth/register', {
+                username: username,
+                password: password,
+                course_level: course
+            });
+            alert('Registro exitoso. Por favor inicia sesión.');
+            window.location.href = '/login';
+        } catch (error) {
+            alert('Error de registro: ' + (error.response?.data?.detail || error.message));
+        }
+    });
+</script>
+{% endblock %}

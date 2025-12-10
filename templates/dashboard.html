@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    <h1>Mi Panel - <span id="user-display"></span></h1>
+    <p class="lead">Selecciona una lectura para comenzar.</p>
+
+    <div id="prediction-card" class="card"
+        style="background: #eff6ff; border-left: 4px solid var(--primary-color); margin-bottom: 1rem; display: none;">
+        <h3>🔮 Predicción de Futuro</h3>
+        <p id="prediction-text"></p>
+    </div>
+</div>
+
+<div id="language-filters" style="margin-bottom: 2rem;">
+    <label for="lang-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
+        idioma:</label>
+    <select id="lang-select" onchange="filterTexts(this.value)"
+        style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%; max-width: 300px;">
+        <option value="all">Todos</option>
+        <option value="es">Español</option>
+        <option value="val">Valencià</option>
+        <option value="cat">Català</option>
+        <option value="gal">Gallego</option>
+        <option value="eus">Euskera</option>
+        <option value="en">Inglés</option>
+        <option value="fr">Francés</option>
+    </select>
+</div>
+
+<div id="texts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+    <!-- Texts will be loaded here -->
+</div>
+</div>
+
+<script>
+    let allTexts = [];
+
+    async function loadDashboard() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        document.getElementById('user-display').innerText = localStorage.getItem('username');
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+
+        try {
+            const response = await axios.get('/reading/texts');
+            allTexts = response.data;
+            renderTexts(allTexts);
+
+            // Load Prediction (existing code)
+            const predResponse = await axios.get('/reading/prediction');
+            const pred = predResponse.data;
+            if (pred.message && pred.message !== "Not enough data for prediction") {
+                document.getElementById('prediction-card').style.display = 'block';
+                const scoreOver10 = Math.round(pred.predicted_score / 10);
+                document.getElementById('prediction-text').innerHTML = `
+                    Basado en tus lecturas anteriores, predecimos que tu próxima puntuación será de: 
+                    <strong>${scoreOver10} / 10</strong>. 
+                `;
+            } else if (pred.predicted_score > 0) {
+                document.getElementById('prediction-card').style.display = 'block';
+                const scoreOver10 = Math.round(pred.predicted_score / 10);
+                document.getElementById('prediction-text').innerHTML = `
+                     Predicción de rendimiento futuro: <strong>${scoreOver10} / 10</strong>
+                  `;
+            }
+
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                window.location.href = '/login';
+            }
+            console.error(error);
+        }
+    }
+
+    function renderTexts(texts) {
+        const grid = document.getElementById('texts-grid');
+        grid.innerHTML = '';
+        texts.forEach(text => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <h3>${text.title}</h3>
+                    ${text.is_completed ? `<div style="display: flex; align-items: center;"><span style="font-size: 0.85rem; color: var(--text-secondary); margin-right: 0.5rem; font-weight: 500;">${Math.round(text.score / 10)}/10</span><div style="width: 12px; height: 12px; background-color: #22c55e; border-radius: 50%;" title="Completado"></div></div>` : ''}
+                </div>
+                <p style="color: var(--text-secondary);">Curso: ${text.course_level} <span style="margin-left: 0.5rem; background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem;">${getLangLabel(text.language)}</span></p>
+                <a href="/reading-room/${text.id}" class="btn btn-primary" style="margin-top: 1rem; width: 100%; text-decoration: none; text-align: center;">Leer y Escuchar</a>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function filterTexts(lang) {
+        if (lang === 'all') {
+            renderTexts(allTexts);
+        } else {
+            const filtered = allTexts.filter(t => t.language === lang);
+            renderTexts(filtered);
+        }
+    }
+
+    function getLangLabel(code) {
+        const map = { 'es': 'Español', 'en': 'Inglés', 'val': 'Valencià', 'cat': 'Català', 'fr': 'Francés', 'gal': 'Gallego', 'eus': 'Euskera' };
+        return map[code] || code || 'Español';
+    }
+
+    loadDashboard();
+</script>
+{% endblock %}
