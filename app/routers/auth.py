@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import List
 from .. import database, models, schemas, auth
 
 router = APIRouter(
@@ -21,16 +22,37 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
          if db_email:
              raise HTTPException(status_code=400, detail="Email already registered")
 
+    # VALIDATE ACCESS CODE against DB - REMOVED for Freemium
+    # if not user.access_code:
+    #     raise HTTPException(status_code=400, detail="Código de acceso requerido")
+        
+    # invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == user.access_code).first()
+    
+    # if not invitation:
+    #     raise HTTPException(status_code=403, detail="Código de acceso inválido")
+    
+    # if invitation.is_used:
+    #     raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
+
     hashed_password = auth.get_password_hash(user.password)
+    
+    # Freemium: No expiration by default (or expired in past), until code is used.
+    # We can set it to None, which means "Free Tier".
+    expires_at = None
+    
     db_user = models.User(
         username=user.username, 
         hashed_password=hashed_password, 
         course_level=user.course_level,
-        email=user.email
+        email=user.email,
+        access_expires_at=expires_at
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
+    # Mark Invitation as Used - REMOVED here, moved to /unlock
+    
     return db_user
 
 @router.post("/token", response_model=schemas.Token)
@@ -98,3 +120,61 @@ def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(
         
     except JWTError:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+@router.post("/unlock")
+def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    # Validate Code (Force Uppercase)
+    code_input = request.access_code.upper().strip()
+    invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
+    
+    if not invitation:
+        raise HTTPException(status_code=403, detail="Código de acceso inválido")
+    
+    if invitation.is_used:
+        raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
+
+    # Grant 1 Year Access
+    current_user.access_expires_at = datetime.utcnow() + timedelta(days=365)
+    
+    # Mark code as used
+    invitation.is_used = True
+    invitation.used_at = datetime.utcnow()
+    invitation.used_by_user_id = current_user.id
+    
+    db.commit()
+    
+    return {"message": "¡Contenido desbloqueado!", "expires_at": current_user.access_expires_at}
+
+# --- ADMIN: CODE GENERATION ---
+@router.post("/admin/codes", response_model=List[str])
+def generate_codes(count: int = 1, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    import secrets
+    import string
+    
+    new_codes = []
+    for _ in range(count):
+        # Generate random 8-char code (Uppercase + Digits)
+        code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+        
+        # Check uniqueness (simplified, unlikely collision with 8 chars but safer to check)
+        while db.query(models.InvitationCode).filter(models.InvitationCode.code == code).first():
+             code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+             
+        db_code = models.InvitationCode(code=code)
+        db.add(db_code)
+        new_codes.append(code)
+    
+    db.commit()
+    return new_codes
+
+@router.get("/admin/codes")
+def get_codes(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    codes = db.query(models.InvitationCode).all()
+    # Simple serialization
+    return [{"code": c.code, "is_used": c.is_used, "used_at": c.used_at, "created_at": c.created_at} for c in codes]

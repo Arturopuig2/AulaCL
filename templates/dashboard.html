@@ -2,8 +2,35 @@
 
 {% block content %}
 <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
-    <h1>Mi Panel - <span id="user-display"></span></h1>
-    <p class="lead">Selecciona una lectura para comenzar.</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1>Mi Panel - <span id="user-display"></span></h1>
+            <p class="lead">Selecciona una lectura para comenzar.</p>
+        </div>
+        <div>
+            <button id="unlock-btn" onclick="openUnlockModal()" class="btn btn-outline"
+                style="display: none; border-color: var(--primary-color); color: var(--text-primary); background: rgba(255,255,255,0.8);">
+                🔑 Activar Código Premium
+            </button>
+        </div>
+    </div>
+
+    <div id="unlock-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="glass-panel" style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
+            <h2 style="margin-bottom: 1rem; text-align: center;">🔓 Desbloquear Todo</h2>
+            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Introduce tu código de
+                invitación para acceder a todas las lecturas durante 1 año.</p>
+            <form id="unlock-form">
+                <input type="text" id="unlock-code" placeholder="CÓDIGO (Ej: X9Y2Z1)" required
+                    style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase;">
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; margin-bottom: 0.5rem;">Activar</button>
+                <button type="button" onclick="closeUnlockModal()" class="btn btn-outline"
+                    style="width: 100%;">Cancelar</button>
+            </form>
+        </div>
+    </div>
 
     <div id="prediction-card" class="card"
         style="background: #eff6ff; border-left: 4px solid var(--primary-color); margin-bottom: 1rem; display: none;">
@@ -110,25 +137,88 @@
     function renderTexts(texts) {
         const grid = document.getElementById('texts-grid');
         grid.innerHTML = '';
+
+        let hasLockedContent = false;
+
         texts.forEach(text => {
+            if (text.is_locked) hasLockedContent = true;
+
             const card = document.createElement('div');
             card.className = 'card';
+
+            // Locked Visuals
+            const opacity = text.is_locked ? '0.6' : '1';
+            const pointerEvents = text.is_locked ? 'none' : 'auto'; // Disable link click if locked (we handle wrapper click)
+            const lockIcon = text.is_locked ? '<div style="position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem;">🔒</div>' : '';
+            const blur = text.is_locked ? 'filter: grayscale(80%);' : '';
+
+            card.style.cssText = `position: relative; ${blur}`;
+
+            // If locked, clicking the card opens modal
+            if (text.is_locked) {
+                card.style.cursor = "pointer";
+                card.onclick = (e) => {
+                    e.preventDefault();
+                    openUnlockModal();
+                };
+            }
+
             card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: start;">
+                ${lockIcon}
+                <div style="display: flex; justify-content: space-between; align-items: start; opacity: ${opacity};">
                     <h3>${text.title}</h3>
                     ${text.is_completed ? `<div style="display: flex; align-items: center;"><span style="font-size: 0.85rem; color: var(--text-secondary); margin-right: 0.5rem; font-weight: 500;">${Math.round(text.score / 10)}/10</span><div style="width: 12px; height: 12px; background-color: #22c55e; border-radius: 50%;" title="Completado"></div></div>` : ''}
                 </div>
-                <div style="margin-bottom: 0.5rem;">
+                <div style="margin-bottom: 0.5rem; opacity: ${opacity};">
                     ${getCourseBadge(text.course_level)}
                     <span style="background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; color: var(--text-primary);">${getLangLabel(text.language)}</span>
                 </div>
                 <p style="color: var(--text-secondary); display: none;">Curso: ${text.course_level}</p>
-                <a href="/reading-room/${text.id}" class="btn btn-primary" style="margin-top: 1rem; width: 100%; text-decoration: none; text-align: center;">Leer y Escuchar</a>
+                <a href="${text.is_locked ? '#' : '/reading-room/' + text.id}" class="btn btn-primary" style="margin-top: 1rem; width: 100%; text-decoration: none; text-align: center; opacity: ${opacity}; pointer-events: ${pointerEvents};">
+                    ${text.is_locked ? 'Bloqueado' : 'Leer y Escuchar'}
+                </a>
             `;
             grid.appendChild(card);
         });
+
+        // Show unlock button if there is locked content
+        const unlockBtn = document.getElementById('unlock-btn');
+        if (unlockBtn) unlockBtn.style.display = hasLockedContent ? 'block' : 'none';
+
+        // If ALL content is unlocked (premium), maybe show a "Premium Active" badge?
+        if (!hasLockedContent && texts.length > 0) {
+            // Optional: Show premium badge
+        }
     }
 
+    // Modal Logic
+    function openUnlockModal() {
+        document.getElementById('unlock-modal').style.display = 'flex';
+    }
+
+    function closeUnlockModal() {
+        document.getElementById('unlock-modal').style.display = 'none';
+    }
+
+    document.getElementById('unlock-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = document.getElementById('unlock-code').value.toUpperCase().trim();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerText = "Verificando...";
+
+        try {
+            const response = await axios.post('/auth/unlock', { access_code: code });
+            alert(response.data.message);
+            closeUnlockModal();
+            loadDashboard(); // Reload to see unlocked content
+        } catch (error) {
+            alert('Error: ' + (error.response?.data?.detail || "Código incorrecto"));
+        } finally {
+            btn.innerText = "Activar";
+        }
+    });
+
+    // Existing Filters...
     function applyFilters() {
         const selectedLang = document.getElementById('lang-select').value;
         const selectedCourse = document.getElementById('course-select').value;

@@ -41,6 +41,11 @@
                         style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem;">🙈</span>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label for="access-code">Código de Acceso</label>
+                <input type="text" id="access-code" required placeholder="Código proporcionado por tu profesor">
+            </div>
             <button type="submit" class="btn btn-primary" style="width: 100%;">Registrarse</button>
         </form>
         <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
@@ -62,6 +67,7 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const course = document.getElementById('course').value;
+        const accessCode = document.getElementById('access-code').value;
 
         try {
             await axios.post('/auth/register', {

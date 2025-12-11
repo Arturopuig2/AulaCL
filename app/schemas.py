@@ -9,6 +9,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    access_code: Optional[str] = None
 
 class User(UserBase):
     id: int
@@ -46,6 +47,7 @@ class TextResponse(TextBase):
     is_completed: Optional[bool] = False
     score: Optional[float] = None
     language: Optional[str] = "es"
+    is_locked: Optional[bool] = False
     
     class Config:
         from_attributes = True
@@ -76,3 +78,6 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str
+
+class UnlockRequest(BaseModel):
+    access_code: str

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, JSON, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -9,11 +9,21 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    email = Column(String, unique=True, index=True, nullable=True) # Nullable for migration
-    course_level = Column(String)  # e.g., "1ESO", "2ESO"
+    email = Column(String, nullable=True)
+    course_level = Column(String, default="ALL")
+    access_expires_at = Column(DateTime, nullable=True)
     
     attempts = relationship("ReadingAttempt", back_populates="user")
     predictions = relationship("Prediction", back_populates="user")
+
+class InvitationCode(Base):
+    __tablename__ = "invitation_codes"
+
+    code = Column(String, primary_key=True, index=True)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    used_at = Column(DateTime, nullable=True)
+    used_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
 class Text(Base):
     __tablename__ = "texts"

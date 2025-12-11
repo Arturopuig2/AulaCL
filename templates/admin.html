@@ -77,7 +77,40 @@
         </form>
     </div>
 
+    <!-- ACCESS CODES SECTION -->
+    <div
+        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
+        <h2 style="margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem;">Generar Códigos de Acceso
+        </h2>
+        <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
+            <div style="flex: 1;">
+                <label for="code-count"
+                    style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Cantidad</label>
+                <input type="number" id="code-count" value="1" min="1" max="50"
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+            </div>
+            <button onclick="generateCodes()" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">Generar</button>
+        </div>
+
+        <h3 style="margin-bottom: 1rem; font-size: 1rem;">Códigos Existentes</h3>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead style="position: sticky; top: 0; background: white;">
+                    <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 0.5rem;">Código</th>
+                        <th style="padding: 0.5rem;">Estado</th>
+                        <th style="padding: 0.5rem;">Usado el</th>
+                    </tr>
+                </thead>
+                <tbody id="codes-table-body">
+                    <!-- Codes loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="table-container" style="overflow-x: auto;">
+        <h2 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem;">Gestión de Lecturas</h2>
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
@@ -127,9 +160,56 @@
         try {
             const response = await axios.get('/reading/admin/texts');
             renderTable(response.data);
+
+            // Load Codes
+            loadCodes();
         } catch (error) {
             console.error(error);
             alert('Error cargando datos. Verifica si eres admin.');
+        }
+    }
+
+    async function loadCodes() {
+        try {
+            const response = await axios.get('/auth/admin/codes');
+            const tbody = document.getElementById('codes-table-body');
+            tbody.innerHTML = '';
+
+            // Sort: Unused first, then by creation date
+            const codes = response.data.sort((a, b) => {
+                if (a.is_used === b.is_used) return 0;
+                return a.is_used ? 1 : -1;
+            });
+
+            codes.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f1f5f9';
+                tr.innerHTML = `
+                    <td style="padding: 0.5rem; font-family: monospace; font-weight: bold;">${c.code}</td>
+                    <td style="padding: 0.5rem;">
+                        ${c.is_used
+                        ? '<span style="color: #ef4444; font-size: 0.8rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Usado</span>'
+                        : '<span style="color: #22c55e; font-size: 0.8rem; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Disponible</span>'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${c.used_at ? new Date(c.used_at).toLocaleDateString() : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Error loading codes", error);
+        }
+    }
+
+    async function generateCodes() {
+        const count = document.getElementById('code-count').value;
+        try {
+            await axios.post(`/auth/admin/codes?count=${count}`);
+            loadCodes();
+            alert(`¡${count} códigos generados!`);
+        } catch (error) {
+            alert('Error generando códigos');
         }
     }
 

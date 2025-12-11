@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 from .. import database, models, schemas, auth
 
 router = APIRouter(
@@ -14,14 +15,32 @@ def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: S
     texts = db.query(models.Text).all()
     
     user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
-    # Map text_id to latest score (assuming ID order is chronological)
     attempts_map = {a.text_id: a.score for a in user_attempts}
+    
+    # Check Premium Status
+    is_premium = False
+    if current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow():
+        is_premium = True
+        
+    # Free Text Logic: First text created (lowest ID) is free.
+    # Assuming IDs are 1, 2, 3...
+    min_id = min([t.id for t in texts]) if texts else 0
     
     response = []
     for t in texts:
         t_resp = schemas.TextResponse.model_validate(t)
         t_resp.is_completed = t.id in attempts_map
         t_resp.score = attempts_map.get(t.id)
+        
+        # Lock Logic
+        if is_premium:
+            t_resp.is_locked = False
+        else:
+            if t.id == min_id: # First one is free
+                t_resp.is_locked = False
+            else:
+                t_resp.is_locked = True
+                
         response.append(t_resp)
         
     return response
@@ -32,6 +51,18 @@ def get_text(text_id: int, current_user: schemas.User = Depends(auth.get_current
     if not text:
         raise HTTPException(status_code=404, detail="Text not found")
     
+    # Enforcement Check
+    is_premium = False
+    if current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow():
+        is_premium = True
+        
+    # Recalculate if it's the free one (needs logic or DB query optimization, for MVP simple query)
+    first_text = db.query(models.Text).order_by(models.Text.id.asc()).first()
+    is_free = (first_text and text.id == first_text.id)
+    
+    if not is_premium and not is_free:
+        raise HTTPException(status_code=403, detail="Contenido bloqueado. Introduce un código para desbloquear.")
+
     # Read content from file
     try:
         with open(text.content_path, "r", encoding="utf-8") as f:
