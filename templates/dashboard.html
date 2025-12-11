@@ -6,6 +6,9 @@
         <div>
             <h1>Mi Panel - <span id="user-display"></span></h1>
             <p class="lead">Selecciona una lectura para comenzar.</p>
+            <div id="subscription-status" style="margin-top: 0.5rem; font-size: 0.9rem; font-weight: 500;">
+                <!-- Status will be loaded here -->
+            </div>
         </div>
         <div>
             <button id="unlock-btn" onclick="openUnlockModal()" class="btn btn-outline"
@@ -16,8 +19,9 @@
     </div>
 
     <div id="unlock-modal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="glass-panel" style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div class="glass-panel" onclick="event.stopPropagation()"
+            style="background: white; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h2 style="margin-bottom: 1rem; text-align: center;">🔓 Desbloquear Todo</h2>
             <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Introduce tu código de
                 invitación para acceder a todas las lecturas durante 1 año.</p>
@@ -104,6 +108,18 @@
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 
         try {
+            // Load User Info (Premium Status)
+            const userResponse = await axios.get('/auth/me');
+            const user = userResponse.data;
+            const statusDiv = document.getElementById('subscription-status');
+
+            if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
+                const date = new Date(user.access_expires_at).toLocaleDateString();
+                statusDiv.innerHTML = `<span style="color: #22c55e;">✨ Premium Activo</span> (Caduca: ${date})`;
+            } else {
+                statusDiv.innerHTML = `<span style="color: var(--text-secondary);">Modo Gratuito</span>`;
+            }
+
             const response = await axios.get('/reading/texts');
             allTexts = response.data;
             renderTexts(allTexts);
@@ -181,9 +197,24 @@
             grid.appendChild(card);
         });
 
-        // Show unlock button if there is locked content
+        // Always show unlock button (to allow extension), but change text if needed
         const unlockBtn = document.getElementById('unlock-btn');
-        if (unlockBtn) unlockBtn.style.display = hasLockedContent ? 'block' : 'none';
+        if (unlockBtn) {
+            unlockBtn.style.display = 'block';
+            if (!hasLockedContent) {
+                unlockBtn.innerHTML = '⚡ Extender Premium';
+                unlockBtn.classList.remove('btn-outline');
+                unlockBtn.style.background = '#f0fdf4';
+                unlockBtn.style.color = '#15803d';
+                unlockBtn.style.borderColor = '#15803d';
+            } else {
+                unlockBtn.innerHTML = '🔑 Activar Código Premium';
+                // Reset styles to default outline
+                unlockBtn.style.background = 'rgba(255,255,255,0.8)';
+                unlockBtn.style.color = 'var(--text-primary)';
+                unlockBtn.style.borderColor = 'var(--primary-color)';
+            }
+        }
 
         // If ALL content is unlocked (premium), maybe show a "Premium Active" badge?
         if (!hasLockedContent && texts.length > 0) {
@@ -192,13 +223,22 @@
     }
 
     // Modal Logic
+    const modal = document.getElementById('unlock-modal');
+
     function openUnlockModal() {
-        document.getElementById('unlock-modal').style.display = 'flex';
+        modal.style.display = 'flex';
     }
 
     function closeUnlockModal() {
-        document.getElementById('unlock-modal').style.display = 'none';
+        modal.style.display = 'none';
     }
+
+    // Close on click outside
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            closeUnlockModal();
+        }
+    });
 
     document.getElementById('unlock-form').addEventListener('submit', async (e) => {
         e.preventDefault();

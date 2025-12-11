@@ -133,17 +133,31 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
     if invitation.is_used:
         raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
 
-    # Grant 1 Year Access
-    current_user.access_expires_at = datetime.utcnow() + timedelta(days=365)
+    # Grant 1 Year Access (Cumulative)
+    now = datetime.utcnow()
+    one_year = timedelta(days=365)
+    
+    if current_user.access_expires_at and current_user.access_expires_at > now:
+        # Extend existing time
+        current_user.access_expires_at += one_year
+        message = "¡Suscripción extendida 1 año!"
+    else:
+        # Start new subscription
+        current_user.access_expires_at = now + one_year
+        message = "¡Contenido desbloqueado por 1 año!"
     
     # Mark code as used
     invitation.is_used = True
-    invitation.used_at = datetime.utcnow()
+    invitation.used_at = now
     invitation.used_by_user_id = current_user.id
     
     db.commit()
     
-    return {"message": "¡Contenido desbloqueado!", "expires_at": current_user.access_expires_at}
+    return {"message": message, "expires_at": current_user.access_expires_at}
+
+@router.get("/me", response_model=schemas.User)
+def read_users_me(current_user: schemas.User = Depends(auth.get_current_user)):
+    return current_user
 
 # --- ADMIN: CODE GENERATION ---
 @router.post("/admin/codes", response_model=List[str])
@@ -176,5 +190,12 @@ def get_codes(current_user: schemas.User = Depends(auth.get_current_user), db: S
         raise HTTPException(status_code=403, detail="Not authorized")
     
     codes = db.query(models.InvitationCode).all()
-    # Simple serialization
-    return [{"code": c.code, "is_used": c.is_used, "used_at": c.used_at, "created_at": c.created_at} for c in codes]
+    return [{
+        "code": c.code, 
+        "is_used": c.is_used, 
+        "used_at": c.used_at, 
+        "created_at": c.created_at,
+        "used_by": c.user.username if c.user else None,
+        "user_email": c.user.email if c.user else None,
+        "expires_at": c.user.access_expires_at if c.user else None
+    } for c in codes]

@@ -99,7 +99,10 @@
                     <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
                         <th style="padding: 0.5rem;">Código</th>
                         <th style="padding: 0.5rem;">Estado</th>
-                        <th style="padding: 0.5rem;">Usado el</th>
+                        <th style="padding: 0.5rem;">Usado por</th>
+                        <th style="padding: 0.5rem;">Email</th>
+                        <th style="padding: 0.5rem;">Fecha Uso</th>
+                        <th style="padding: 0.5rem;">Caducidad</th>
                     </tr>
                 </thead>
                 <tbody id="codes-table-body">
@@ -191,8 +194,17 @@
                         ? '<span style="color: #ef4444; font-size: 0.8rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Usado</span>'
                         : '<span style="color: #22c55e; font-size: 0.8rem; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Disponible</span>'}
                     </td>
+                    <td style="padding: 0.5rem; color: var(--text-primary); font-weight: 500;">
+                        ${c.used_by || '-'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${c.user_email || '-'}
+                    </td>
                     <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
                         ${c.used_at ? new Date(c.used_at).toLocaleDateString() : '-'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${c.expires_at ? new Date(c.expires_at).toLocaleDateString() : '-'}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -205,10 +217,28 @@
     async function generateCodes() {
         const count = document.getElementById('code-count').value;
         try {
-            await axios.post(`/auth/admin/codes?count=${count}`);
+            const response = await axios.post(`/auth/admin/codes?count=${count}`);
             loadCodes();
-            alert(`¡${count} códigos generados!`);
+
+            // Auto-Download Text File
+            const codes = response.data;
+            let fileContent = "CÓDIGOS DE ACCESO - AULA CL\n===========================\n\n";
+            fileContent += codes.join("\n");
+            fileContent += "\n\n===========================\nGenerado el: " + new Date().toLocaleString();
+
+            const blob = new Blob([fileContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `codigos_aulacl_${new Date().getTime()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            alert(`¡${count} códigos generados y descargados!`);
         } catch (error) {
+            console.error(error);
             alert('Error generando códigos');
         }
     }

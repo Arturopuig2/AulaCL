@@ -24,6 +24,8 @@ class InvitationCode(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     used_at = Column(DateTime, nullable=True)
     used_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    user = relationship("User")
 
 class Text(Base):
     __tablename__ = "texts"
