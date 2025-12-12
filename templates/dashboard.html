@@ -6,15 +6,15 @@
         <div>
             <h1>Mi Panel - <span id="user-display"></span></h1>
             <p class="lead">Selecciona una lectura para comenzar.</p>
-            <div id="subscription-status" style="margin-top: 0.5rem; font-size: 0.9rem; font-weight: 500;">
-                <!-- Status will be loaded here -->
-            </div>
         </div>
-        <div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
             <button id="unlock-btn" onclick="openUnlockModal()" class="btn btn-outline"
                 style="display: none; border-color: var(--primary-color); color: var(--text-primary); background: rgba(255,255,255,0.8);">
                 🔑 Activar Código Premium
             </button>
+            <div id="subscription-status" style="font-size: 0.85rem; font-weight: 500; text-align: right;">
+                <!-- Status will be loaded here -->
+            </div>
         </div>
     </div>
 
@@ -36,10 +36,10 @@
         </div>
     </div>
 
-    <div id="prediction-card" class="card"
-        style="background: #eff6ff; border-left: 4px solid var(--primary-color); margin-bottom: 1rem; display: none;">
-        <h3>🔮 Predicción de Futuro</h3>
-        <p id="prediction-text"></p>
+    <div id="prediction-card"
+        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem; display: none; box-shadow: none !important; transform: none !important; transition: none !important;">
+        <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-primary);">🔮 Predicción de Futuro</h3>
+        <p id="prediction-text" style="color: var(--text-secondary); margin-bottom: 0;"></p>
     </div>
 </div>
 
@@ -115,7 +115,10 @@
 
             if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
                 const date = new Date(user.access_expires_at).toLocaleDateString();
-                statusDiv.innerHTML = `<span style="color: #22c55e;">✨ Premium Activo</span> (Caduca: ${date})`;
+                statusDiv.innerHTML = `
+                    <div style="color: #22c55e;">Premium Activo</div>
+                    <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 2px;">Caduca: ${date}</div>
+                `;
             } else {
                 statusDiv.innerHTML = `<span style="color: var(--text-secondary);">Modo Gratuito</span>`;
             }
@@ -202,14 +205,20 @@
         if (unlockBtn) {
             unlockBtn.style.display = 'block';
             if (!hasLockedContent) {
-                unlockBtn.innerHTML = '⚡ Extender Premium';
+                unlockBtn.innerHTML = 'Extender Premium';
                 unlockBtn.classList.remove('btn-outline');
-                unlockBtn.style.background = '#f0fdf4';
-                unlockBtn.style.color = '#15803d';
-                unlockBtn.style.borderColor = '#15803d';
+                unlockBtn.classList.add('btn-premium');
+
+                // Clear inline overrides so CSS class works
+                unlockBtn.style.background = '';
+                unlockBtn.style.color = '';
+                unlockBtn.style.borderColor = '';
             } else {
                 unlockBtn.innerHTML = '🔑 Activar Código Premium';
-                // Reset styles to default outline
+                unlockBtn.classList.add('btn-outline');
+                unlockBtn.classList.remove('btn-premium');
+
+                // Restore default inline looks
                 unlockBtn.style.background = 'rgba(255,255,255,0.8)';
                 unlockBtn.style.color = 'var(--text-primary)';
                 unlockBtn.style.borderColor = 'var(--primary-color)';
