@@ -1,17 +1,87 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import List
-from .. import database, models, schemas, auth
+from app import schemas, models, security_utils
+from app.database import get_db
+from app.auth import authenticate_user, create_access_token, get_current_user, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, verify_password
 
 router = APIRouter(
     prefix="/auth",
-    tags=["authentication"]
+    tags=["auth"]
 )
 
+@router.get("/me")
+def read_users_me(current_user = Depends(get_current_active_user)):
+    return current_user
+
+@router.post("/login-code", response_model=schemas.Token)
+def login_with_code(
+    login_req: schemas.LoginCodeRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    # 1. Calculate identifiers
+    code = login_req.code
+    ip_address = request.client.host
+    code_index = security_utils.get_code_index(code)
+    
+    # 2. Check Rate Limit
+    if not security_utils.check_rate_limit(db, ip_address, code_index):
+        # Log the blocked attempt? (Optional, check_rate_limit usually implies we stop here)
+        # We record it as a failure just to keep the block alive? 
+        # For now, just 429.
+        security_utils.record_login_attempt(db, ip_address, code_index, success=False)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later."
+        )
+
+    # 3. Find User
+    subuser = db.query(models.SubUser).filter(models.SubUser.login_code_index == code_index).first()
+    
+    if not subuser:
+        # Invalid code (User not found)
+        security_utils.record_login_attempt(db, ip_address, code_index, success=False)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid login code",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    # 4. Verify Hash
+    if not subuser.login_code_hash or not security_utils.verify_code(code, subuser.login_code_hash):
+        security_utils.record_login_attempt(db, ip_address, code_index, success=False)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid login code",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    # 5. Success
+    security_utils.record_login_attempt(db, ip_address, code_index, success=True)
+    
+    # Check Expiry
+    if subuser.access_expires_at and subuser.access_expires_at < datetime.utcnow():
+         raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access expired. Please renew your license.",
+        )
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # We use subuser.name as the identity for now, or maybe a composite?
+    # Existing `get_current_user` expects `username`. SubUsers don't have usernames.
+    # We might need to encode a flag in the token, e.g. "subuser:123"
+    
+    access_token = create_access_token(
+        data={"sub": f"subuser:{subuser.id}"}, # Special prefix for subusers
+        expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
 @router.post("/register", response_model=schemas.User)
-def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -34,7 +104,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     # if invitation.is_used:
     #     raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
 
-    hashed_password = auth.get_password_hash(user.password)
+    hashed_password = get_password_hash(user.password)
     
     # Freemium: No expiration by default (or expired in past), until code is used.
     # We can set it to None, which means "Free Tier".
@@ -57,22 +127,22 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     return db_user
 
 @router.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
-    if not user or not auth.verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/forgot-password")
-def forgot_password(request: schemas.PasswordResetRequest, db: Session = Depends(database.get_db)):
+def forgot_password(request: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.email).first()
     if not user:
         # Don't reveal that the user does not exist (security best practice), or do it for UX in this MVP?
@@ -82,7 +152,7 @@ def forgot_password(request: schemas.PasswordResetRequest, db: Session = Depends
     
     # Generate Token
     access_token_expires = timedelta(minutes=15) # Short lived
-    reset_token = auth.create_access_token(
+    reset_token = create_access_token(
         data={"sub": user.username, "type": "reset"}, expires_delta=access_token_expires
     )
     
@@ -95,7 +165,7 @@ def forgot_password(request: schemas.PasswordResetRequest, db: Session = Depends
     return {"message": "Enlace enviado (Revisar consola del servidor)."}
 
 @router.post("/reset-password")
-def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(database.get_db)):
+def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(get_db)):
     try:
         # Verify Token
         from jose import jwt, JWTError
@@ -113,7 +183,7 @@ def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(
             raise HTTPException(status_code=400, detail="User not found")
         
         # Update Password
-        hashed_password = auth.get_password_hash(request.new_password)
+        hashed_password = get_password_hash(request.new_password)
         user.hashed_password = hashed_password
         db.commit()
         
@@ -123,7 +193,7 @@ def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
 @router.post("/unlock")
-def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Validate Code (Force Uppercase)
     code_input = request.access_code.upper().strip()
     invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
@@ -157,12 +227,12 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
     return {"message": message, "expires_at": current_user.access_expires_at}
 
 @router.get("/me", response_model=schemas.User)
-def read_users_me(current_user: schemas.User = Depends(auth.get_current_user)):
+def read_users_me_deprecated(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 # --- ADMIN: CODE GENERATION ---
 @router.post("/admin/codes", response_model=List[str])
-def generate_codes(count: int = 1, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+def generate_codes(count: int = 1, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -186,7 +256,7 @@ def generate_codes(count: int = 1, current_user: schemas.User = Depends(auth.get
     return new_codes
 
 @router.get("/admin/codes")
-def get_codes(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+def get_codes(current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     

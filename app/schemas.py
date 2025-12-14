@@ -83,3 +83,21 @@ class PasswordResetConfirm(BaseModel):
 
 class UnlockRequest(BaseModel):
     access_code: str
+
+class SubUserCreate(BaseModel):
+    name: str
+
+class SubUserResponse(BaseModel):
+    id: int
+    name: str
+    is_active: bool
+    access_expires_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class LicenseActivate(BaseModel):
+    license_key: str
+
+class LoginCodeRequest(BaseModel):
+    code: str

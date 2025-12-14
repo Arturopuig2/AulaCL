@@ -16,6 +16,7 @@ class User(Base):
     
     attempts = relationship("ReadingAttempt", back_populates="user")
     predictions = relationship("Prediction", back_populates="user")
+    subusers = relationship("SubUser", back_populates="parent_user")
 
 class InvitationCode(Base):
     __tablename__ = "invitation_codes"
@@ -75,3 +76,44 @@ class Prediction(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="predictions")
+
+class SubUser(Base):
+    __tablename__ = "subusers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    parent_user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String)
+    
+    # Security fields for code-based login
+    login_code_hash = Column(String, nullable=True) # Bcrypt hash
+    login_code_index = Column(String, index=True, nullable=True) # HMAC for lookup
+    
+    is_active = Column(Boolean, default=True)
+    access_expires_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    parent_user = relationship("User", back_populates="subusers")
+    licenses = relationship("License", back_populates="subuser")
+
+class License(Base):
+    __tablename__ = "licenses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, index=True) # The 9-char code
+    status = Column(String, default="ACTIVE") # ACTIVE, USED, REVOKED
+    duration_days = Column(Integer, default=365)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    activated_at = Column(DateTime, nullable=True)
+    
+    used_by_subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True)
+    subuser = relationship("SubUser", back_populates="licenses")
+
+class LoginAttempt(Base):
+    __tablename__ = "login_attempts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    ip_address = Column(String, index=True)
+    login_code_index = Column(String, index=True, nullable=True) # Targeted account (if known)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    success = Column(Boolean, default=False)

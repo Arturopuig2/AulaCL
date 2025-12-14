@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from .database import engine, Base
-from .routers import auth, reading
+from .routers import auth, reading, subusers
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
@@ -16,6 +16,7 @@ app.mount("/audio", StaticFiles(directory="static/audio"), name="audio_files") #
 # Include Routers
 app.include_router(auth.router)
 app.include_router(reading.router)
+app.include_router(subusers.router)
 templates = Jinja2Templates(directory="templates")
 
 from fastapi import Request
@@ -28,6 +29,10 @@ def read_root(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/login-code", response_class=HTMLResponse)
+def login_code_page(request: Request):
+    return templates.TemplateResponse("login_code.html", {"request": request})
 
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request):

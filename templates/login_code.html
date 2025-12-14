@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto; padding-top: 4rem;">
+    <div class="glass-panel" style="padding: 2rem;">
+        <h2 style="text-align: center;">Acceso Estudiantes</h2>
+        <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem;">
+            Introduce tu código de acceso único.
+        </p>
+        <form id="login-code-form">
+            <div class="form-group">
+                <label for="code">Código de Acceso</label>
+                <input type="text" id="code" required placeholder="CL123456ABC"
+                    style="text-align: center; font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase;">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+        </form>
+        <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+            <a href="/login" style="color: var(--text-secondary);">Soy profesor / padre (Login con email)</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('login-code-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = document.getElementById('code').value.toUpperCase().trim();
+        const btn = e.target.querySelector('button[type="submit"]');
+
+        btn.innerHTML = `Verificando...`;
+        btn.disabled = true;
+
+        try {
+            const response = await axios.post('/auth/login-code', { code: code });
+            const token = response.data.access_token;
+
+            localStorage.setItem('token', token);
+            localStorage.removeItem('username'); // Subusers don't use this, clears stale data
+
+            window.location.href = '/dashboard';
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = `Entrar`;
+
+            if (error.response && error.response.status === 429) {
+                alert('Demasiados intentos. Por favor espera unos minutos.');
+            } else {
+                alert('Código inválido o error de conexión.');
+            }
+        }
+    });
+</script>
+{% endblock %}
