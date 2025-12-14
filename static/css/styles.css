@@ -162,10 +162,25 @@ select:focus {
     border-radius: var(--radius);
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s;
+    /* transition: transform 0.2s; REMOVED per user request */
 }
 
 .card:hover {
-    transform: translateY(-4px);
+    /* transform: translateY(-4px); REMOVED per user request */
     box-shadow: var(--shadow-lg);
+}
+
+.question-card {
+    background: var(--surface);
+    border: 1px solid #e2e8f0;
+    /* Added explicit border */
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.question-card:hover {
+    box-shadow: var(--shadow-lg) !important;
+    /* No transform to avoid movement */
 }

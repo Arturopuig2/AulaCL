@@ -19,7 +19,9 @@
         <a href="/dashboard" class="btn btn-primary" style="margin-top: 1rem;">Volver al Dashboard</a>
     </div>
 
-    <button id="submit-quiz" class="btn btn-primary" style="margin-top: 2rem;">Enviar Respuestas</button>
+    <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+        <button id="submit-quiz" class="btn btn-primary">Enviar Respuestas</button>
+    </div>
 </div>
 
 <script>
@@ -43,7 +45,7 @@
 
             questionsData.forEach((q, index) => {
                 const qDiv = document.createElement('div');
-                qDiv.className = 'card';
+                qDiv.className = 'question-card';
                 qDiv.id = `q-card-${q.id}`;
                 qDiv.style.marginBottom = '1rem';
 

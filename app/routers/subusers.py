@@ -78,6 +78,7 @@ def activate_license(
     raw_code = security_utils.generate_login_code()
     subuser.login_code_hash = security_utils.hash_code(raw_code)
     subuser.login_code_index = security_utils.get_code_index(raw_code)
+    subuser.login_code_display = raw_code # Store for display
     
     db.commit()
     

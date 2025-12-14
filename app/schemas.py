@@ -92,6 +92,7 @@ class SubUserResponse(BaseModel):
     name: str
     is_active: bool
     access_expires_at: Optional[datetime] = None
+    login_code_display: Optional[str] = None
     
     class Config:
         from_attributes = True

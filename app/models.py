@@ -87,6 +87,7 @@ class SubUser(Base):
     # Security fields for code-based login
     login_code_hash = Column(String, nullable=True) # Bcrypt hash
     login_code_index = Column(String, index=True, nullable=True) # HMAC for lookup
+    login_code_display = Column(String, nullable=True) # RAW CODE FOR DISPLAY (User Request)
     
     is_active = Column(Boolean, default=True)
     access_expires_at = Column(DateTime, nullable=True)

@@ -23,10 +23,11 @@
         <div class="glass-panel" onclick="event.stopPropagation()"
             style="background: white; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h2 style="margin-bottom: 1rem; text-align: center;">🔓 Desbloquear Todo</h2>
-            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Introduce tu código de
-                invitación para acceder a todas las lecturas durante 1 año.</p>
+            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Introduce tu licencia
+                para acceder a todas las lecturas durante 1 año.</p>
             <form id="unlock-form">
-                <input type="text" id="unlock-code" placeholder="CÓDIGO (Ej: X9Y2Z1)" required
+                <input type="text" id="unlock-code" placeholder="XXXXXXXXX" onfocus="this.placeholder=''"
+                    onblur="this.placeholder='XXXXXXXXX'" required
                     style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase;">
                 <button type="submit" class="btn btn-primary"
                     style="width: 100%; margin-bottom: 0.5rem;">Activar</button>
@@ -42,126 +43,58 @@
         <p id="prediction-text" style="color: var(--text-secondary); margin-bottom: 0;"></p>
     </div>
 
-    <!-- Sub-users Section (Initially Hidden) -->
-    <div id="subusers-section"
-        style="display: none; background: white; border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; font-size: 1.5rem;">Mis Sub-usuarios</h2>
-            <button onclick="openAddSubUserModal()" class="btn btn-primary" style="font-size: 0.9rem;">
-                + Añadir Sub-usuario
-            </button>
-        </div>
-        <div id="subusers-list"
-            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
-            <!-- Subusers cards loaded here -->
-        </div>
-    </div>
-</div>
+    <!-- Sub-users Section removed (moved to separate page) -->
 
-<!-- Add SubUser Modal -->
-<div id="add-subuser-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
-    <div class="glass-panel" onclick="event.stopPropagation()"
-        style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
-        <h2 style="margin-bottom: 1rem; text-align: center;">Crear Sub-usuario</h2>
-        <form id="add-subuser-form">
-            <input type="text" id="subuser-name" placeholder="Nombre (Ej: Pepito)" required
-                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem;">
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Crear</button>
-            <button type="button" onclick="closeAddSubUserModal()" class="btn btn-outline"
-                style="width: 100%;">Cancelar</button>
-        </form>
-    </div>
-</div>
-
-<!-- Activate License Modal (SubUser) -->
-<div id="subuser-license-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
-    <div class="glass-panel" onclick="event.stopPropagation()"
-        style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
-        <h2 style="margin-bottom: 1rem; text-align: center;">Activar Licencia</h2>
-        <p id="subuser-target-name" style="text-align: center; color: var(--text-secondary); margin-bottom: 1rem;"></p>
-        <form id="subuser-license-form">
-            <input type="hidden" id="target-subuser-id">
-            <input type="text" id="subuser-license-key" placeholder="LICENCIA (Ej: A1B2C3D4)" required
-                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center; text-transform: uppercase; letter-spacing: 1px;">
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Activar y Generar
-                Código</button>
-            <button type="button" onclick="closeSubUserLicenseModal()" class="btn btn-outline"
-                style="width: 100%;">Cancelar</button>
-        </form>
-    </div>
-</div>
-
-<!-- Show Code Modal -->
-<div id="show-code-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
-    <div class="glass-panel" onclick="event.stopPropagation()"
-        style="background: white; padding: 2rem; max-width: 400px; width: 90%; text-align: center;">
-        <h2 style="margin-bottom: 0.5rem; color: #22c55e;">¡Licencia Activada!</h2>
-        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Guarda este código. Es la <strong>ÚNICA</strong>
-            forma de acceso para este usuario.</p>
-
-        <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-            <div id="generated-code-display"
-                style="font-family: monospace; font-size: 2rem; font-weight: bold; letter-spacing: 2px; color: var(--primary-color);">
-            </div>
+    <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+            <label for="course-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
+                Curso:</label>
+            <select id="course-select" onchange="applyFilters()"
+                style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
+                <option value="all">Todos los cursos</option>
+                <optgroup label="Primaria">
+                    <option value="1P">1º Primaria</option>
+                    <option value="2P">2º Primaria</option>
+                    <option value="3P">3º Primaria</option>
+                    <option value="4P">4º Primaria</option>
+                    <option value="5P">5º Primaria</option>
+                    <option value="6P">6º Primaria</option>
+                </optgroup>
+                <optgroup label="ESO">
+                    <option value="1ESO">1º ESO</option>
+                    <option value="2ESO">2º ESO</option>
+                    <option value="3ESO">3º ESO</option>
+                    <option value="4ESO">4º ESO</option>
+                </optgroup>
+                <optgroup label="Bachillerato">
+                    <option value="1BAT">1º Bachillerato</option>
+                    <option value="2BAT">2º Bachillerato</option>
+                </optgroup>
+                <option value="ALL">Sin Curso / General</option>
+            </select>
         </div>
 
-        <button type="button" onclick="closeShowCodeModal()" class="btn btn-primary" style="width: 100%;">Entendido, lo
-            he guardado</button>
-    </div>
-</div>
-
-<div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 200px;">
-        <label for="course-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
-            Curso:</label>
-        <select id="course-select" onchange="applyFilters()"
-            style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
-            <option value="all">Todos los cursos</option>
-            <optgroup label="Primaria">
-                <option value="1P">1º Primaria</option>
-                <option value="2P">2º Primaria</option>
-                <option value="3P">3º Primaria</option>
-                <option value="4P">4º Primaria</option>
-                <option value="5P">5º Primaria</option>
-                <option value="6P">6º Primaria</option>
-            </optgroup>
-            <optgroup label="ESO">
-                <option value="1ESO">1º ESO</option>
-                <option value="2ESO">2º ESO</option>
-                <option value="3ESO">3º ESO</option>
-                <option value="4ESO">4º ESO</option>
-            </optgroup>
-            <optgroup label="Bachillerato">
-                <option value="1BAT">1º Bachillerato</option>
-                <option value="2BAT">2º Bachillerato</option>
-            </optgroup>
-            <option value="ALL">Sin Curso / General</option>
-        </select>
+        <div style="flex: 1; min-width: 200px;">
+            <label for="lang-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
+                Idioma:</label>
+            <select id="lang-select" onchange="applyFilters()"
+                style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
+                <option value="all">Todos los idiomas</option>
+                <option value="es">Español</option>
+                <option value="val">Valencià</option>
+                <option value="cat">Català</option>
+                <option value="gal">Gallego</option>
+                <option value="eus">Euskera</option>
+                <option value="en">Inglés</option>
+                <option value="fr">Francés</option>
+            </select>
+        </div>
     </div>
 
-    <div style="flex: 1; min-width: 200px;">
-        <label for="lang-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
-            Idioma:</label>
-        <select id="lang-select" onchange="applyFilters()"
-            style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
-            <option value="all">Todos los idiomas</option>
-            <option value="es">Español</option>
-            <option value="val">Valencià</option>
-            <option value="cat">Català</option>
-            <option value="gal">Gallego</option>
-            <option value="eus">Euskera</option>
-            <option value="en">Inglés</option>
-            <option value="fr">Francés</option>
-        </select>
+    <div id="texts-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+        <!-- Texts will be loaded here -->
     </div>
-</div>
-
-<div id="texts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-    <!-- Texts will be loaded here -->
-</div>
 </div>
 
 <script>
@@ -206,8 +139,7 @@
 
             if (user.username) {
                 // Main User
-                document.getElementById('subusers-section').style.display = 'block';
-                loadSubUsers();
+                showSubUsersButton();
             } else {
                 // Sub User
                 document.getElementById('user-display').innerText = user.name || "Estudiante";
@@ -292,7 +224,7 @@
         if (unlockBtn) {
             unlockBtn.style.display = 'block';
             if (!hasLockedContent) {
-                unlockBtn.innerHTML = 'Extender Premium';
+                unlockBtn.innerHTML = 'Extender Licencia';
                 unlockBtn.classList.remove('btn-outline');
                 unlockBtn.classList.add('btn-premium');
 
@@ -384,98 +316,28 @@
         return `<span style="background: ${color}; color: white; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; margin-right: 0.5rem;">${label}</span>`;
     }
 
-    // --- Sub-user Logic ---
-    async function loadSubUsers() {
-        try {
-            const response = await axios.get('/subusers/');
-            const subusers = response.data;
-            const container = document.getElementById('subusers-list');
-            container.innerHTML = '';
+    // --- Navigation Logic ---
+    function showSubUsersButton() {
+        const navLinks = document.getElementById('nav-links');
 
-            subusers.forEach(u => {
-                const isActive = u.access_expires_at && new Date(u.access_expires_at) > new Date();
-                const statusHtml = isActive
-                    ? `<span style="color: #22c55e; font-size: 0.85rem; font-weight: 500;">Premium hasta ${new Date(u.access_expires_at).toLocaleDateString()}</span>`
-                    : `<span style="color: #f59e0b; font-size: 0.85rem; font-weight: 500;">Acceso Limitado</span>`;
+        // Create button
+        const btn = document.createElement('a');
+        btn.href = '/my-subusers';
+        btn.className = 'btn btn-outline';
+        // Match style with Logout button (small padding)
+        btn.style.padding = '0.4rem 0.8rem';
+        btn.style.fontSize = '0.8rem';
+        btn.style.marginRight = '0.5rem'; // Spacing to the right (before Logout)
+        btn.innerHTML = 'Mis Sub-usuarios';
 
-                const card = document.createElement('div');
-                card.style.cssText = "border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; background: #f8fafc;";
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                        <h3 style="margin: 0; font-size: 1.1rem;">${u.name}</h3>
-                        ${statusHtml}
-                    </div>
-                    <button onclick="openSubUserLicenseModal(${u.id}, '${u.name}')" class="btn btn-outline" style="width: 100%; font-size: 0.85rem; padding: 0.4rem;">
-                        ${isActive ? 'Extender Licencia' : 'Activar Licencia'}
-                    </button>
-                    <!-- Maybe Show Login Code if recently generated? No, requirement says generate once -->
-                `;
-                container.appendChild(card);
-            });
-
-            if (subusers.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center;">No tienes sub-usuarios creados.</p>';
-            }
-        } catch (error) {
-            console.error("Error loading subusers", error);
+        // Add to nav-links (insert CAREFULLY before Logout)
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            navLinks.insertBefore(btn, logoutBtn);
+        } else {
+            navLinks.appendChild(btn); // Fallback
         }
     }
-
-    // Modal helpers
-    function openAddSubUserModal() { document.getElementById('add-subuser-modal').style.display = 'flex'; }
-    function closeAddSubUserModal() { document.getElementById('add-subuser-modal').style.display = 'none'; }
-
-    function openSubUserLicenseModal(id, name) {
-        document.getElementById('target-subuser-id').value = id;
-        document.getElementById('subuser-target-name').innerText = `Para: ${name}`;
-        document.getElementById('subuser-license-modal').style.display = 'flex';
-    }
-    function closeSubUserLicenseModal() { document.getElementById('subuser-license-modal').style.display = 'none'; }
-
-    function closeShowCodeModal() {
-        document.getElementById('show-code-modal').style.display = 'none';
-        loadSubUsers(); // Refresh status
-    }
-
-    // Event Listeners
-    document.getElementById('add-subuser-modal').onclick = (e) => { if (e.target === document.getElementById('add-subuser-modal')) closeAddSubUserModal(); };
-    document.getElementById('subuser-license-modal').onclick = (e) => { if (e.target === document.getElementById('subuser-license-modal')) closeSubUserLicenseModal(); };
-
-    document.getElementById('add-subuser-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('subuser-name').value;
-        try {
-            await axios.post('/subusers/', { name: name });
-            closeAddSubUserModal();
-            loadSubUsers();
-            document.getElementById('subuser-name').value = ''; // Reset
-        } catch (error) {
-            alert('Error: ' + (error.response?.data?.detail || "Error al crear sub-usuario"));
-        }
-    });
-
-    document.getElementById('subuser-license-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('target-subuser-id').value;
-        const key = document.getElementById('subuser-license-key').value.trim();
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.innerText = "Activando...";
-
-        try {
-            const response = await axios.post(`/subusers/${id}/license`, { license_key: key });
-
-            // Success: Show code
-            closeSubUserLicenseModal();
-            document.getElementById('generated-code-display').innerText = response.data.login_code;
-            document.getElementById('show-code-modal').style.display = 'flex';
-            document.getElementById('subuser-license-key').value = ''; // Reset
-
-        } catch (error) {
-            alert('Error: ' + (error.response?.data?.detail || "Error al activar licencia"));
-        } finally {
-            btn.innerText = "Activar y Generar Código";
-        }
-    });
 
     loadDashboard();
 </script>

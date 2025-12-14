@@ -1,0 +1,204 @@
+{% extends "layout.html" %}
+
+{% block navbar_actions %}
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al Panel</a>
+{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 style="margin: 0; font-size: 1.8rem;">Mis Sub-usuarios</h1>
+        <button onclick="openAddSubUserModal()" class="btn btn-outline"
+            style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            + Añadir Sub-usuario
+        </button>
+    </div>
+
+    <!-- Sub-users List -->
+    <div id="subusers-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <!-- Subusers cards loaded here -->
+        <p style="text-align: center; color: var(--text-secondary);">Cargando...</p>
+    </div>
+</div>
+
+<!-- Add SubUser Modal -->
+<div id="add-subuser-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
+        <h2 style="margin-bottom: 1rem; text-align: center;">Crear Sub-usuario</h2>
+        <form id="add-subuser-form">
+            <input type="text" id="subuser-name" placeholder="Nombre (Ej: Pepito)" required
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem;">
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Crear</button>
+            <button type="button" onclick="closeAddSubUserModal()" class="btn btn-outline"
+                style="width: 100%;">Cancelar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Activate License Modal (SubUser) -->
+<div id="subuser-license-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
+        <h2 style="margin-bottom: 1rem; text-align: center;">Activar Licencia</h2>
+        <p id="subuser-target-name" style="text-align: center; color: var(--text-secondary); margin-bottom: 1rem;"></p>
+        <form id="subuser-license-form">
+            <input type="hidden" id="target-subuser-id">
+            <input type="text" id="subuser-license-key" placeholder="XXXXXXXXX" onfocus="this.placeholder=''"
+                onblur="this.placeholder='XXXXXXXXX'" required
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center; text-transform: uppercase; letter-spacing: 1px;">
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Activar y Generar
+                Código</button>
+            <button type="button" onclick="closeSubUserLicenseModal()" class="btn btn-outline"
+                style="width: 100%;">Cancelar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Show Code Modal -->
+<div id="show-code-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 400px; width: 90%; text-align: center;">
+        <h2 style="margin-bottom: 0.5rem; color: #22c55e;">¡Licencia Activada!</h2>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Guarda este código. Es la <strong>ÚNICA</strong>
+            forma de acceso para este usuario.</p>
+
+        <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            <div id="generated-code-display"
+                style="font-family: monospace; font-size: 2rem; font-weight: bold; letter-spacing: 2px; color: var(--primary-color);">
+            </div>
+        </div>
+
+        <button type="button" onclick="closeShowCodeModal()" class="btn btn-primary" style="width: 100%;">Entendido, lo
+            he guardado</button>
+    </div>
+</div>
+
+<script>
+    async function loadSubUsers() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+
+        try {
+            const response = await axios.get('/subusers/');
+            const subusers = response.data;
+            const container = document.getElementById('subusers-list');
+            container.innerHTML = '';
+
+            subusers.forEach(u => {
+                const isActive = u.access_expires_at && new Date(u.access_expires_at) > new Date();
+                const statusHtml = isActive
+                    ? `<span style="color: #22c55e; font-size: 0.85rem; font-weight: 300;">Premium hasta ${new Date(u.access_expires_at).toLocaleDateString()}</span>`
+                    : `<span style="color: #f59e0b; font-size: 0.85rem; font-weight: 500;">Acceso Limitado</span>`;
+
+                const card = document.createElement('div');
+                card.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem;";
+
+                // Icon button style
+                const btnColor = isActive ? 'var(--text-secondary)' : 'var(--primary-color)';
+                const btnBorder = isActive ? '#cbd5e1' : 'var(--primary-color)';
+
+                card.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button onclick="openSubUserLicenseModal(${u.id}, '${u.name}', ${isActive})" 
+                                class="btn btn-outline" 
+                                style="padding: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border-color: ${btnBorder}; color: ${btnColor}; min-width: 36px;"
+                                title="${isActive ? 'Extender Licencia' : 'Activar Licencia'}">
+                            🔑
+                        </button>
+                        <h3 style="margin: 0; font-size: 1rem;">${u.name}</h3>
+                        ${u.login_code_display ? `<span style="font-family: monospace; letter-spacing: 1px; background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 0.25rem; font-size: 0.9rem; margin-left: 0.5rem; color: var(--text-secondary);">${u.login_code_display}</span>` : ''}
+                    </div>
+                    <div>
+                        ${statusHtml}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (subusers.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center;">No tienes sub-usuarios creados.</p>';
+            }
+        } catch (error) {
+            console.error("Error loading subusers", error);
+            if (error.response && error.response.status === 401) window.location.href = '/login';
+        }
+    }
+
+    // Modal helpers
+    function openAddSubUserModal() { document.getElementById('add-subuser-modal').style.display = 'flex'; }
+    function closeAddSubUserModal() { document.getElementById('add-subuser-modal').style.display = 'none'; }
+
+    function openSubUserLicenseModal(id, name, isActive) {
+        document.getElementById('target-subuser-id').value = id;
+        document.getElementById('subuser-target-name').innerText = `Para: ${name}`;
+
+        const btn = document.querySelector('#subuser-license-form button[type="submit"]');
+        if (isActive) {
+            btn.innerText = "Extender";
+        } else {
+            btn.innerText = "Activar y Generar Código";
+        }
+
+        document.getElementById('subuser-license-modal').style.display = 'flex';
+    }
+    function closeSubUserLicenseModal() { document.getElementById('subuser-license-modal').style.display = 'none'; }
+
+    function closeShowCodeModal() {
+        document.getElementById('show-code-modal').style.display = 'none';
+        loadSubUsers(); // Refresh status
+    }
+
+    // Event Listeners
+    document.getElementById('add-subuser-modal').onclick = (e) => { if (e.target === document.getElementById('add-subuser-modal')) closeAddSubUserModal(); };
+    document.getElementById('subuser-license-modal').onclick = (e) => { if (e.target === document.getElementById('subuser-license-modal')) closeSubUserLicenseModal(); };
+
+    document.getElementById('add-subuser-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('subuser-name').value;
+        try {
+            await axios.post('/subusers/', { name: name });
+            closeAddSubUserModal();
+            loadSubUsers();
+            document.getElementById('subuser-name').value = ''; // Reset
+        } catch (error) {
+            alert('Error: ' + (error.response?.data?.detail || "Error al crear sub-usuario"));
+        }
+    });
+
+    document.getElementById('subuser-license-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('target-subuser-id').value;
+        const key = document.getElementById('subuser-license-key').value.trim();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerText = "Activando...";
+
+        try {
+            const response = await axios.post(`/subusers/${id}/license`, { license_key: key });
+
+            // Success: Show code
+            closeSubUserLicenseModal();
+            document.getElementById('generated-code-display').innerText = response.data.login_code;
+            document.getElementById('show-code-modal').style.display = 'flex';
+            document.getElementById('subuser-license-key').value = ''; // Reset
+
+        } catch (error) {
+            alert('Error: ' + (error.response?.data?.detail || "Error al activar licencia"));
+        } finally {
+            if (btn.innerText === "Activando...") {
+                btn.innerText = "Activar / Extender";
+            }
+        }
+    });
+
+    // Initial Load
+    loadSubUsers();
+</script>
+{% endblock %}
