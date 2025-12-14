@@ -45,6 +45,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
         hashed_password=hashed_password, 
         course_level=user.course_level,
         email=user.email,
+        name=user.name,
         access_expires_at=expires_at
     )
     db.add(db_user)

@@ -11,6 +11,7 @@ class User(Base):
     hashed_password = Column(String)
     email = Column(String, nullable=True)
     course_level = Column(String, default="ALL")
+    name = Column(String, nullable=True)
     access_expires_at = Column(DateTime, nullable=True)
     
     attempts = relationship("ReadingAttempt", back_populates="user")

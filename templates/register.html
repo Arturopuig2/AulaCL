@@ -6,46 +6,37 @@
         <h2 style="text-align: center;">Registro</h2>
         <form id="register-form">
             <div class="form-group">
-                <label for="username">Usuario</label>
-                <input type="text" id="username" required>
+                <label for="name">Nombre</label>
+                <input type="text" id="name" required placeholder="Tu Nombre">
             </div>
             <div class="form-group">
-                <label for="course">Curso</label>
-                <select id="course" required>
-                    <option value="" disabled selected>Selecciona tu curso</option>
-                    <optgroup label="Primaria">
-                        <option value="1P">1º Primaria</option>
-                        <option value="2P">2º Primaria</option>
-                        <option value="3P">3º Primaria</option>
-                        <option value="4P">4º Primaria</option>
-                        <option value="5P">5º Primaria</option>
-                        <option value="6P">6º Primaria</option>
-                    </optgroup>
-                    <optgroup label="ESO">
-                        <option value="1ESO">1º ESO</option>
-                        <option value="2ESO">2º ESO</option>
-                        <option value="3ESO">3º ESO</option>
-                        <option value="4ESO">4º ESO</option>
-                    </optgroup>
-                    <optgroup label="Bachillerato">
-                        <option value="1BAT">1º Bachillerato</option>
-                        <option value="2BAT">2º Bachillerato</option>
-                    </optgroup>
-                </select>
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" required placeholder="nombre@ejemplo.com">
             </div>
+            <div class="form-group">
+                <label for="confirm_email">Repetir Correo Electrónico</label>
+                <input type="email" id="confirm_email" required placeholder="nombre@ejemplo.com">
+            </div>
+
             <div class="form-group">
                 <label for="password">Contraseña</label>
                 <div style="position: relative;">
-                    <input type="password" id="password" required style="width: 100%; padding-right: 2.5rem;">
+                    <input type="text" id="password" required style="width: 100%; padding-right: 2.5rem;">
                     <span id="toggle-password"
-                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem;">🙈</span>
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem;">🐵</span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="access-code">Código de Acceso</label>
-                <input type="text" id="access-code" required placeholder="Código proporcionado por tu profesor">
+                <label for="confirm_password">Repetir Contraseña</label>
+                <div style="position: relative;">
+                    <input type="text" id="confirm_password" required style="width: 100%; padding-right: 2.5rem;">
+                    <span id="toggle-confirm-password"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem;">🐵</span>
+                </div>
             </div>
+
+
             <button type="submit" class="btn btn-primary" style="width: 100%;">Registrarse</button>
         </form>
         <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
@@ -55,30 +46,64 @@
 </div>
 
 <script>
-    document.getElementById('toggle-password').addEventListener('click', function () {
-        const passwordInput = document.getElementById('password');
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.textContent = type === 'password' ? '🙈' : '🐵';
-    });
+    function setupPasswordToggle(toggleId, inputId) {
+        document.getElementById(toggleId).addEventListener('click', function () {
+            const passwordInput = document.getElementById(inputId);
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '🙈' : '🐵';
+        });
+    }
+
+    setupPasswordToggle('toggle-password', 'password');
+    setupPasswordToggle('toggle-confirm-password', 'confirm_password');
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = document.getElementById('username').value;
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const confirmEmail = document.getElementById('confirm_email').value;
         const password = document.getElementById('password').value;
-        const course = document.getElementById('course').value;
-        const accessCode = document.getElementById('access-code').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+
+        if (email !== confirmEmail) {
+            alert('Los correos electrónicos no coinciden.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert('Las contraseñas no coinciden. Por favor verifícalas.');
+            return;
+        }
+
 
         try {
+            // 1. Register User (Send email as username)
             await axios.post('/auth/register', {
-                username: username,
-                password: password,
-                course_level: course
+                username: email,
+                name: name,
+                email: email,
+                password: password
             });
-            alert('Registro exitoso. Por favor inicia sesión.');
-            window.location.href = '/login';
+
+            // 2. Auto-Login
+            const formData = new FormData();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            const loginResponse = await axios.post('/auth/token', formData);
+
+            // 3. Store Token and Redirect
+            localStorage.setItem('token', loginResponse.data.access_token);
+            localStorage.setItem('username', email);
+
+            // alert('Registro exitoso. Redirigiendo...'); // Optional: removed for seamless experience
+            window.location.href = '/dashboard';
+
         } catch (error) {
-            alert('Error de registro: ' + (error.response?.data?.detail || error.message));
+            console.error(error);
+            alert('Error de registro/login: ' + (error.response?.data?.detail || error.message));
         }
     });
 </script>
