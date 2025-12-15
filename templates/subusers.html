@@ -1,16 +1,16 @@
 {% extends "layout.html" %}
 
 {% block navbar_actions %}
-<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al Panel</a>
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al panel</a>
 {% endblock %}
 
 {% block content %}
 <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h1 style="margin: 0; font-size: 1.8rem;">Mis Sub-usuarios</h1>
+        <h1 style="margin: 0; font-size: 1.8rem;">Mis Alumnos/as</h1>
         <button onclick="openAddSubUserModal()" class="btn btn-outline"
             style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-            + Añadir Sub-usuario
+            + Añadir Alumno/a
         </button>
     </div>
 
@@ -26,7 +26,7 @@
     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
     <div class="glass-panel" onclick="event.stopPropagation()"
         style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
-        <h2 style="margin-bottom: 1rem; text-align: center;">Crear Sub-usuario</h2>
+        <h2 style="margin-bottom: 1rem; text-align: center;">Crear Alumno/a</h2>
         <form id="add-subuser-form">
             <input type="text" id="subuser-name" placeholder="Nombre (Ej: Pepito)" required
                 style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem;">
@@ -77,6 +77,33 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirm-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2200; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 400px; width: 90%; border: 2px solid #ef4444;">
+        <h2 style="margin-bottom: 1rem; text-align: center; color: #ef4444;">⚠️ ADVERTENCIA SERIA</h2>
+        <p style="text-align: center; color: var(--text-primary); margin-bottom: 1.5rem;">
+            Estás a punto de eliminar al alumno/a <strong id="delete-target-name"></strong>.
+        </p>
+        <p style="text-align: center; color: #b91c1c; font-weight: 500; margin-bottom: 2rem;">
+            Esta acción borrará TODO su progreso y resultados de forma PERMANENTE e IRREVERSIBLE.
+            <br><br>
+            ¿Estás completamente seguro/a?
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button onclick="confirmDeleteAction()" class="btn"
+                style="background: #ef4444; color: white; border: none; width: 100%;">
+                SÍ, ELIMINAR ALUMNO/A
+            </button>
+            <button onclick="closeDeleteConfirmModal()" class="btn btn-outline" style="width: 100%;">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     async function loadSubUsers() {
         const token = localStorage.getItem('token');
@@ -113,6 +140,12 @@
                                 title="${isActive ? 'Extender Licencia' : 'Activar Licencia'}">
                             🔑
                         </button>
+                        <button onclick="confirmDeleteSubUser(${u.id}, '${u.name}')" 
+                                class="btn btn-outline" 
+                                style="padding: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border-color: #fca5a5; color: #ef4444; min-width: 36px;"
+                                title="Eliminar Alumno/a">
+                            🗑️
+                        </button>
                         <h3 style="margin: 0; font-size: 1rem;">${u.name}</h3>
                         ${u.login_code_display ? `<span style="font-family: monospace; letter-spacing: 1px; background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 0.25rem; font-size: 0.9rem; margin-left: 0.5rem; color: var(--text-secondary);">${u.login_code_display}</span>` : ''}
                     </div>
@@ -124,7 +157,7 @@
             });
 
             if (subusers.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center;">No tienes sub-usuarios creados.</p>';
+                container.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center;">No tienes alumnos/as creados.</p>';
             }
         } catch (error) {
             console.error("Error loading subusers", error);
@@ -156,6 +189,33 @@
         loadSubUsers(); // Refresh status
     }
 
+    // Delete Logic
+    let subUserToDeleteId = null;
+
+    function confirmDeleteSubUser(id, name) {
+        subUserToDeleteId = id;
+        document.getElementById('delete-target-name').innerText = name;
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+    }
+
+    function closeDeleteConfirmModal() {
+        document.getElementById('delete-confirm-modal').style.display = 'none';
+        subUserToDeleteId = null;
+    }
+
+    async function confirmDeleteAction() {
+        if (!subUserToDeleteId) return;
+
+        try {
+            await axios.delete(`/subusers/${subUserToDeleteId}`);
+            closeDeleteConfirmModal();
+            loadSubUsers();
+        } catch (error) {
+            console.error(error);
+            alert('Error al eliminar: ' + (error.response?.data?.detail || error.message));
+        }
+    }
+
     // Event Listeners
     document.getElementById('add-subuser-modal').onclick = (e) => { if (e.target === document.getElementById('add-subuser-modal')) closeAddSubUserModal(); };
     document.getElementById('subuser-license-modal').onclick = (e) => { if (e.target === document.getElementById('subuser-license-modal')) closeSubUserLicenseModal(); };
@@ -169,7 +229,7 @@
             loadSubUsers();
             document.getElementById('subuser-name').value = ''; // Reset
         } catch (error) {
-            alert('Error: ' + (error.response?.data?.detail || "Error al crear sub-usuario"));
+            alert('Error: ' + (error.response?.data?.detail || "Error al crear alumno/a"));
         }
     });
 

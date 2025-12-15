@@ -1,10 +1,14 @@
 {% extends "layout.html" %}
 
+{% block navbar_actions %}
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al panel</a>
+{% endblock %}
+
 {% block content %}
 <div class="glass-panel" style="padding: 2rem; max-width: 1000px; margin: 0 auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <h1>Administración</h1>
-        <a href="/dashboard" class="btn btn-outline" style="font-size: 0.9rem;">← Volver al Dashboard</a>
+
     </div>
 
     <div
@@ -121,6 +125,7 @@
                     <th style="padding: 1rem;">Título</th>
                     <th style="padding: 1rem;">Curso</th>
                     <th style="padding: 1rem;">Idioma</th>
+                    <th style="padding: 1rem;">Estado</th>
                     <th style="padding: 1rem;">Acciones</th>
                 </tr>
             </thead>
@@ -264,11 +269,53 @@
                     </select>
                 </td>
                 <td style="padding: 1rem;">
+                    <button 
+                        onclick="toggleTextActive(${text.id}, this)"
+                        class="btn"
+                        style="padding: 0.3rem 0.8rem; font-size: 0.85rem; background: ${text.is_active ? '#eff6ff' : '#fef2f2'}; color: ${text.is_active ? '#3b82f6' : '#ef4444'}; border: 1px solid ${text.is_active ? '#bfdbfe' : '#fecaca'};"
+                    >
+                        ${text.is_active ? 'Activo' : 'Inactivo'}
+                    </button>
+                </td>
+                <td style="padding: 1rem; display: flex; gap: 0.5rem;">
                     <button class="btn btn-primary" onclick="updateText(${text.id}, this)" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Guardar</button>
+                    <button class="btn" onclick="deleteText(${text.id})" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">Eliminar</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+    }
+
+    async function toggleTextActive(id, btn) {
+        try {
+            const response = await axios.patch(`/reading/admin/texts/${id}/toggle`);
+            const isActive = response.data.is_active;
+
+            // Update button styles
+            btn.innerText = isActive ? 'Activo' : 'Inactivo';
+            btn.style.background = isActive ? '#eff6ff' : '#fef2f2';
+            btn.style.color = isActive ? '#3b82f6' : '#ef4444';
+            btn.style.borderColor = isActive ? '#bfdbfe' : '#fecaca';
+
+        } catch (error) {
+            console.error(error);
+            alert('Error cambiando estado: ' + (error.response?.data?.detail || error.message));
+        }
+    }
+
+    async function deleteText(id) {
+        if (!confirm('¿Estás seguro de que quieres eliminar esta lectura? Esta acción no se puede deshacer.')) {
+            return;
+        }
+
+        try {
+            await axios.delete(`/reading/admin/texts/${id}`);
+            // Remove from UI immediately or reload
+            loadAdmin();
+        } catch (error) {
+            console.error(error);
+            alert('Error eliminando lectura: ' + (error.response?.data?.detail || error.message));
+        }
     }
 
     async function updateText(id, btn) {

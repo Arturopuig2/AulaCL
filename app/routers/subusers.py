@@ -87,3 +87,28 @@ def activate_license(
         "new_expiration": subuser.access_expires_at,
         "login_code": raw_code  # IMPORTANT: Display this to the user only once!
     }
+
+@router.delete("/{subuser_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_subuser(
+    subuser_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user)
+):
+    subuser = db.query(models.SubUser).filter(
+        models.SubUser.id == subuser_id,
+        models.SubUser.parent_user_id == current_user.id
+    ).first()
+    
+    if not subuser:
+        raise HTTPException(status_code=404, detail="Alumno/a no encontrado/a")
+        
+    # Handle associated licenses (Detach them, maybe keep status as USED or set to REVOKED)
+    # For now, let's keep them as USED but detach to allow deletion
+    licenses = db.query(models.License).filter(models.License.used_by_subuser_id == subuser.id).all()
+    for lic in licenses:
+        lic.used_by_subuser_id = None
+        # lic.status = "REVOKED" # Optional: could revoke, or leave as USED to prevent reuse
+        
+    db.delete(subuser)
+    db.commit()
+    return None

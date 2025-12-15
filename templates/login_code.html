@@ -10,14 +10,15 @@
         <form id="login-code-form">
             <div class="form-group">
                 <label for="code">Código de Acceso</label>
-                <input type="text" id="code" required placeholder="CL123456ABC"
-                    style="text-align: center; font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase;">
+                <input type="text" id="code" required placeholder="CL123456ABC" onfocus="this.placeholder=''"
+                    onblur="this.placeholder='CL123456ABC'" style="text-align: center; font-family: monospace; font-size: 1.2rem; letter-spacing: 2px;
+                text-transform: uppercase;">
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
         </form>
         <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
-            <a href="/login" style="color: var(--text-secondary);">Soy profesor / padre (Login con email)</a>
+            <a href="/login" style="color: var(--text-secondary);">No soy estudiante (Login con email)</a>
         </p>
     </div>
 </div>

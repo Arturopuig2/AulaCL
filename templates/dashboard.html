@@ -5,7 +5,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <h1>Mi Panel - <span id="user-display"></span></h1>
-            <p class="lead">Selecciona una lectura para comenzar.</p>
+
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
             <button id="unlock-btn" onclick="openUnlockModal()" class="btn btn-outline"
@@ -47,8 +47,7 @@
 
     <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 200px;">
-            <label for="course-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
-                Curso:</label>
+            <label for="course-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Curso:</label>
             <select id="course-select" onchange="applyFilters()"
                 style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
                 <option value="all">Todos los cursos</option>
@@ -75,8 +74,7 @@
         </div>
 
         <div style="flex: 1; min-width: 200px;">
-            <label for="lang-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Filtrar por
-                Idioma:</label>
+            <label for="lang-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Idioma:</label>
             <select id="lang-select" onchange="applyFilters()"
                 style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
                 <option value="all">Todos los idiomas</option>
@@ -99,6 +97,7 @@
 
 <script>
     let allTexts = [];
+    let currentUser = null;
 
     async function loadDashboard() {
         const token = localStorage.getItem('token');
@@ -107,16 +106,24 @@
             return;
         }
 
-        document.getElementById('user-display').innerText = localStorage.getItem('username');
+        document.getElementById('user-display').innerText = ''; // Clear initial
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 
         try {
             // Load User Info (Premium Status)
             const userResponse = await axios.get('/auth/me');
             const user = userResponse.data;
+            currentUser = user;
+
+            // Set Name Display
+            const displayName = user.name || user.username || "Usuario";
+            document.getElementById('user-display').innerText = displayName;
+
             const statusDiv = document.getElementById('subscription-status');
 
-            if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
+            if (user.username === 'admin') {
+                statusDiv.style.display = 'none';
+            } else if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
                 const date = new Date(user.access_expires_at).toLocaleDateString();
                 statusDiv.innerHTML = `
                     <div style="color: #22c55e;">Premium Activo</div>
@@ -137,12 +144,13 @@
             // But /auth/me returns different objects? 
             // Wait, /auth/me returns 'current_user' which is either User or SubUser object.
 
-            if (user.username) {
+            if (user.username && user.username !== 'admin') {
                 // Main User
                 showSubUsersButton();
             } else {
                 // Sub User
-                document.getElementById('user-display').innerText = user.name || "Estudiante";
+                // Name already set above
+                // document.getElementById('user-display').innerText = user.name || "Estudiante";
                 // Hide specific elements if needed
             }
 
@@ -221,26 +229,31 @@
 
         // Always show unlock button (to allow extension), but change text if needed
         const unlockBtn = document.getElementById('unlock-btn');
+
         if (unlockBtn) {
-            unlockBtn.style.display = 'block';
-            if (!hasLockedContent) {
-                unlockBtn.innerHTML = 'Extender Licencia';
-                unlockBtn.classList.remove('btn-outline');
-                unlockBtn.classList.add('btn-premium');
-
-                // Clear inline overrides so CSS class works
-                unlockBtn.style.background = '';
-                unlockBtn.style.color = '';
-                unlockBtn.style.borderColor = '';
+            if (currentUser && currentUser.username === 'admin') {
+                unlockBtn.style.display = 'none';
             } else {
-                unlockBtn.innerHTML = '🔑 Activar Código Premium';
-                unlockBtn.classList.add('btn-outline');
-                unlockBtn.classList.remove('btn-premium');
+                unlockBtn.style.display = 'block';
+                if (!hasLockedContent) {
+                    unlockBtn.innerHTML = 'Extender Licencia';
+                    unlockBtn.classList.remove('btn-outline');
+                    unlockBtn.classList.add('btn-premium');
 
-                // Restore default inline looks
-                unlockBtn.style.background = 'rgba(255,255,255,0.8)';
-                unlockBtn.style.color = 'var(--text-primary)';
-                unlockBtn.style.borderColor = 'var(--primary-color)';
+                    // Clear inline overrides so CSS class works
+                    unlockBtn.style.background = '';
+                    unlockBtn.style.color = '';
+                    unlockBtn.style.borderColor = '';
+                } else {
+                    unlockBtn.innerHTML = '🔑 Activar Código Premium';
+                    unlockBtn.classList.add('btn-outline');
+                    unlockBtn.classList.remove('btn-premium');
+
+                    // Restore default inline looks
+                    unlockBtn.style.background = 'rgba(255,255,255,0.8)';
+                    unlockBtn.style.color = 'var(--text-primary)';
+                    unlockBtn.style.borderColor = 'var(--primary-color)';
+                }
             }
         }
 
@@ -328,7 +341,7 @@
         btn.style.padding = '0.4rem 0.8rem';
         btn.style.fontSize = '0.8rem';
         btn.style.marginRight = '0.5rem'; // Spacing to the right (before Logout)
-        btn.innerHTML = 'Mis Sub-usuarios';
+        btn.innerHTML = 'Mis Alumnos/as';
 
         // Add to nav-links (insert CAREFULLY before Logout)
         const logoutBtn = document.getElementById('logout-btn');

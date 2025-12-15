@@ -13,7 +13,7 @@ def seed():
 
     # Create Text
     text = models.Text(
-        title="Don Quijote de la Mancha",
+        title="Don Quijote de la Mancha (Intro)",
         filename="el_quijote.txt",
         course_level="1ESO",
         content_path="data/texts/1ESO/el_quijote.txt",

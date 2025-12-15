@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (token && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         const username = localStorage.getItem('username');
         let adminLink = '';
-        if (username === 'admin') {
+        if (username === 'admin' && !window.location.pathname.startsWith('/admin')) {
             adminLink = `<a href="/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-right: 0.5rem;">Admin</a>`;
         }
 

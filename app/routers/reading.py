@@ -12,14 +12,21 @@ router = APIRouter(
 @router.get("/texts", response_model=List[schemas.TextResponse])
 def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     # Return all texts so frontend can filter by course
-    texts = db.query(models.Text).all()
+    is_admin = False
+    if hasattr(current_user, "username") and current_user.username == "admin":
+        is_admin = True
+        
+    if is_admin:
+        texts = db.query(models.Text).all()
+    else:
+        texts = db.query(models.Text).filter(models.Text.is_active == True).all()
     
     user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
     attempts_map = {a.text_id: a.score for a in user_attempts}
     
     # Check Premium Status
     is_premium = False
-    if current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow():
+    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
         is_premium = True
         
     # Free Text Logic: First text created (lowest ID) is free.
@@ -53,7 +60,7 @@ def get_text(text_id: int, current_user: schemas.User = Depends(auth.get_current
     
     # Enforcement Check
     is_premium = False
-    if current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow():
+    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
         is_premium = True
         
     # Recalculate if it's the free one (needs logic or DB query optimization, for MVP simple query)
@@ -201,3 +208,39 @@ def upload_text(
         raise HTTPException(status_code=400, detail=f"Error saving to DB (Title/Filename might be duplicate): {str(e)}")
         
     return new_text
+
+@router.patch("/admin/texts/{text_id}/toggle", response_model=schemas.TextResponse)
+def toggle_text_active(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
+    text.is_active = not text.is_active
+    db.commit()
+    db.refresh(text)
+    return text
+
+@router.delete("/admin/texts/{text_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_text(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+    
+    # Delete associated files
+    import os
+    if os.path.exists(text.content_path):
+        os.remove(text.content_path)
+    if text.audio_path:
+        full_audio_path = f"static/{text.audio_path}"
+        if os.path.exists(full_audio_path):
+            os.remove(full_audio_path)
+            
+    db.delete(text)
+    db.commit()
+    return None

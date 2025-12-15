@@ -39,6 +39,7 @@ class Text(Base):
     content_path = Column(String) # Path to the .txt file
     audio_path = Column(String, nullable=True) # Path to the .mp3 file
     language = Column(String, default="es") # "es", "en", "val", "cat", "gal", "eus", "fr"
+    is_active = Column(Boolean, default=True)
     
     questions = relationship("Question", back_populates="text")
     attempts = relationship("ReadingAttempt", back_populates="text")

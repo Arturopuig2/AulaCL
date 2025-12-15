@@ -49,6 +49,7 @@ class TextResponse(TextBase):
     is_completed: Optional[bool] = False
     score: Optional[float] = None
     language: Optional[str] = "es"
+    is_active: Optional[bool] = True
     is_locked: Optional[bool] = False
     
     class Config:
