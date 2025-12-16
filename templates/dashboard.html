@@ -37,11 +37,7 @@
         </div>
     </div>
 
-    <div id="prediction-card"
-        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem; display: none; box-shadow: none !important; transform: none !important; transition: none !important;">
-        <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-primary);">🔮 Predicción de Futuro</h3>
-        <p id="prediction-text" style="color: var(--text-secondary); margin-bottom: 0;"></p>
-    </div>
+
 
     <!-- Sub-users Section removed (moved to separate page) -->
 
@@ -155,22 +151,7 @@
             }
 
             // Load Prediction (existing code)
-            const predResponse = await axios.get('/reading/prediction');
-            const pred = predResponse.data;
-            if (pred.message && pred.message !== "Not enough data for prediction") {
-                document.getElementById('prediction-card').style.display = 'block';
-                const scoreOver10 = Math.round(pred.predicted_score / 10);
-                document.getElementById('prediction-text').innerHTML = `
-                    Basado en tus lecturas anteriores, predecimos que tu próxima puntuación será de: 
-                    <strong>${scoreOver10} / 10</strong>. 
-                `;
-            } else if (pred.predicted_score > 0) {
-                document.getElementById('prediction-card').style.display = 'block';
-                const scoreOver10 = Math.round(pred.predicted_score / 10);
-                document.getElementById('prediction-text').innerHTML = `
-                     Predicción de rendimiento futuro: <strong>${scoreOver10} / 10</strong>
-                  `;
-            }
+
 
         } catch (error) {
             if (error.response && error.response.status === 401) {
@@ -236,7 +217,7 @@
             } else {
                 unlockBtn.style.display = 'block';
                 if (!hasLockedContent) {
-                    unlockBtn.innerHTML = 'Extender Licencia';
+                    unlockBtn.innerHTML = '+ Licencia';
                     unlockBtn.classList.remove('btn-outline');
                     unlockBtn.classList.add('btn-premium');
 

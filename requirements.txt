@@ -11,3 +11,5 @@ scikit-learn
 pandas
 numpy
 aiofiles
+aiofiles
+openai

@@ -1,5 +1,12 @@
+@font-face {
+    font-family: 'AulaCNova';
+    src: url('../fonts/AulaCNova.ttf?v=1') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 :root {
-    --primary-color: #6366f1;
+    --primary-color: #2563eb;
     /* Indigo 500 */
     --primary-hover: #4f46e5;
     /* Indigo 600 */

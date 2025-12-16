@@ -1,0 +1,13 @@
+reading_id,title,grade,word_count,unique_words,sentence_count,avg_word_len,avg_sentence_len_words,has_dialogue,has_numbers,question_count,truefalse_count,mcq_count
+1,The Happy Cat.,1º de Primaria,38,25,7,3.237,5.429,0,0,6,2,4
+2,One Day with Pipo,1º de Primaria,34,26,8,4.235,4.25,1,0,5,1,4
+3,"TIN, the Funny Robot",1º de Primaria,65,42,11,3.446,5.909,1,0,6,3,3
+4,"Hello, My Name is Max",1º de Primaria,39,28,9,3.103,4.333,0,0,4,0,4
+5,Where is Bella?,1º de Primaria,38,21,10,3.474,3.8,1,0,6,3,3
+6,What Daisy Does Each Week,1º de Primaria,63,43,8,3.825,7.875,1,0,8,4,4
+7,Family Picnic,1º de Primaria,49,37,8,3.796,6.125,0,0,7,3,4
+8,Let’s Make Fruit Juice!,1º de Primaria,56,32,12,3.393,4.667,0,0,6,0,6
+9,Lunchtime!,1º de Primaria,46,27,11,3.848,4.182,1,0,6,0,6
+10,What Are You Wearing Today?,1º de Primaria,66,36,14,3.47,4.714,1,0,6,0,6
+11,How Are You Today?,1º de Primaria,58,39,14,3.379,4.143,1,0,6,0,6
+12,In the Classroom,1º de Primaria,58,33,12,3.569,4.833,1,0,6,2,4

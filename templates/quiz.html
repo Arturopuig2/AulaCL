@@ -1,13 +1,24 @@
 {% extends "layout.html" %}
 
 {% block navbar_actions %}
-<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Home</a>
+<a href="/reading-room/{{ text_id }}" class="btn btn-outline"
+    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-right: 0.5rem;">←
+    Lectura</a>
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Home</a>
 {% endblock %}
 
 {% block content %}
 
-<div class="glass-panel" style="padding: 2rem;">
-    <h1>Quiz: <span id="text-title"></span></h1>
+<div class="glass-panel" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h1 style="margin: 0;">Quiz: <span id="text-title"></span></h1>
+        <div style="display: flex; gap: 0.5rem;">
+            <button onclick="adjustFontSize(-0.1)" class="btn btn-outline"
+                style="padding: 0.2rem 0.6rem; font-size: 1rem;">A-</button>
+            <button onclick="adjustFontSize(0.1)" class="btn btn-outline"
+                style="padding: 0.2rem 0.6rem; font-size: 1rem;">A+</button>
+        </div>
+    </div>
 
     <div id="quiz-container">
         <!-- Questions loaded here -->
@@ -54,13 +65,13 @@
                     optionsHtml += `
                         <div id="opt-div-${q.id}-${optedIndex}" style="margin: 0.5rem 0; display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem;">
                             <input type="radio" name="q_${q.id}" value="${optedIndex}" id="q_${q.id}_${optedIndex}" style="width: auto; margin-right: 0.5rem;">
-                            <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer;">${opt}</label>
+                            <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer; font-size: 1.2rem;">${opt}</label>
                         </div>
                     `;
                 });
 
                 qDiv.innerHTML = `
-                    <h3>${index + 1}. ${q.question_content}</h3>
+                    <h3 style="font-size: 1.2rem;">${index + 1}. ${q.question_content}</h3>
                     ${optionsHtml}
                 `;
                 container.appendChild(qDiv);
@@ -141,5 +152,29 @@
     });
 
     loadQuiz();
+
+    let currentQSize = 1.2;
+    let currentOptSize = 1.2;
+
+    function adjustFontSize(change) {
+        currentQSize += change;
+        currentOptSize += change;
+
+        // Clamp
+        if (currentQSize < 1.0) currentQSize = 1.0;
+        if (currentQSize > 3.0) currentQSize = 3.0;
+        if (currentOptSize < 1.0) currentOptSize = 1.0;
+        if (currentOptSize > 3.0) currentOptSize = 3.0;
+
+        // Apply to all headers
+        document.querySelectorAll('.question-card h3').forEach(el => {
+            el.style.fontSize = currentQSize + 'rem';
+        });
+
+        // Apply to all labels
+        document.querySelectorAll('.question-card label').forEach(el => {
+            el.style.fontSize = currentOptSize + 'rem';
+        });
+    }
 </script>
 {% endblock %}

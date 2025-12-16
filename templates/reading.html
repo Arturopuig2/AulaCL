@@ -6,17 +6,32 @@
 
 {% block content %}
 
-<div class="glass-panel" style="padding: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+<div class="glass-panel" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
         <div>
             <h1 id="text-title" style="margin: 0;">Cargando...</h1>
         </div>
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
-            ⏱ <span id="timer">00:00</span>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="toggleFontStyle()" class="btn btn-outline"
+                    style="padding: 0.2rem 0.6rem; font-size: 1.5rem;" title="Cambiar tipo de letra (Imprenta/Ligada)">
+                    <span style="font-family: 'AulaCNova', cursive;">a</span>
+                </button>
+                <div style="width: 1px; background: #cbd5e1; margin: 0 0.5rem;"></div>
+                <button onclick="adjustFontSize(-0.1)" class="btn btn-outline"
+                    style="padding: 0.2rem 0.6rem; font-size: 1rem;">A-</button>
+                <button onclick="adjustFontSize(0.1)" class="btn btn-outline"
+                    style="padding: 0.2rem 0.6rem; font-size: 1rem;">A+</button>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color); cursor: pointer; display: flex; align-items: center;"
+                onclick="toggleTimer()" title="Clic para ocultar/mostrar tiempo">
+                <span>⏱</span> <span id="timer"
+                    style="display: inline-block; min-width: 80px; text-align: left; opacity: 0;">00:00</span>
+            </div>
         </div>
     </div>
 
-    <div style="margin-bottom: 2rem;">
+    <div style="margin-bottom: 1rem;">
         <audio id="audio-player" controls style="width: 100%; display: none;">
             <source id="audio-source" src="" type="audio/mpeg">
             Tu navegador no soporta audio.
@@ -24,19 +39,40 @@
     </div>
 
     <div id="text-content"
-        style="background: white; padding: 2rem; border-radius: var(--radius); line-height: 1.8; font-size: 1.1rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); max-height: 60vh; overflow-y: auto;">
+        style="background: white; padding: 2rem; border-radius: var(--radius); line-height: 1.8; font-size: 1.2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); max-height: 60vh; overflow-y: auto;">
         Cargando texto...
     </div>
 
-    <div style="margin-top: 2rem; text-align: right;">
-        <button id="finish-btn" class="btn btn-primary">Terminar Lectura e Ir a Preguntas</button>
-    </div>
+</div>
+
+<div style="margin-top: 2rem; text-align: right;">
+    <button id="finish-btn" class="btn btn-primary">Terminar Lectura e Ir a Preguntas</button>
 </div>
 
 <script>
     const textId = parseInt("{{ text_id }}");
     let startTime;
     let timerInterval;
+    let currentFontSize = 1.2; // Default rem size
+
+    function adjustFontSize(change) {
+        currentFontSize += change;
+        // Clamp limits (0.8rem to 3.0rem)
+        if (currentFontSize < 0.8) currentFontSize = 0.8;
+        if (currentFontSize > 3.0) currentFontSize = 3.0;
+
+        document.getElementById('text-content').style.fontSize = currentFontSize + 'rem';
+    }
+
+    function toggleFontStyle() {
+        const content = document.getElementById('text-content');
+        if (content.style.fontFamily.includes('AulaCNova')) {
+            content.style.fontFamily = "'Inter', sans-serif";
+            // Reset adjustments if needed
+        } else {
+            content.style.fontFamily = "'AulaCNova', cursive";
+        }
+    }
 
     function updateTimer() {
         const now = new Date();
@@ -44,6 +80,17 @@
         const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
         const seconds = (diff % 60).toString().padStart(2, '0');
         document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+    }
+
+    function toggleTimer() {
+        const timerSpan = document.getElementById('timer');
+        // Check if it's currently visible (1) or hidden (0 or default in CSS)
+        // Since we set opacity: 0 inline, we check against that.
+        if (timerSpan.style.opacity === '1') {
+            timerSpan.style.opacity = '0';
+        } else {
+            timerSpan.style.opacity = '1';
+        }
     }
 
     async function loadText() {
@@ -68,6 +115,24 @@
                 document.getElementById('audio-source').src = "/audio/" + text.audio_path;
                 audioPlayer.load();
                 audioPlayer.style.display = 'block';
+
+                // Background Music Logic
+                const bgMusic = new Audio('/static/audio/background_music.mp3');
+                bgMusic.loop = true;
+                bgMusic.volume = 0.04; // Low volume
+
+                audioPlayer.onplay = () => {
+                    bgMusic.play().catch(e => console.log("Background music not found or blocked"));
+                };
+
+                audioPlayer.onpause = () => {
+                    bgMusic.pause();
+                };
+
+                audioPlayer.onended = () => {
+                    bgMusic.pause();
+                    bgMusic.currentTime = 0;
+                };
             }
 
             // Start Timer

@@ -1,0 +1,27 @@
+The Happy Cat.
+
+[QUESTIONS]
+
+1. Who is Tom?
+   1) Tom is a big dog
+   2) Tom is a little cat
+
+2. What colour is Tom?
+   1) He is red and blue
+   2) He is black and white
+
+3. What does Tom like to do?
+   1) He likes to jump and run
+   2) He likes to swim
+
+4. What colour is the ball?
+   1) The ball is red
+   2) The ball is blue
+
+5. Tom sleeps in a big box.
+   1) True
+   2) False
+
+6. Tom is happy when he plays.
+   1) True
+   2) False
