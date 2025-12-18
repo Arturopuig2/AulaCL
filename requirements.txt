@@ -7,9 +7,8 @@ bcrypt==3.2.2
 python-multipart
 python-jose[cryptography]
 jinja2
-scikit-learn
-pandas
-numpy
+
 aiofiles
 aiofiles
-openai
+
+fpdf2

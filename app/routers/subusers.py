@@ -112,3 +112,23 @@ def delete_subuser(
     db.delete(subuser)
     db.commit()
     return None
+
+@router.put("/{subuser_id}", response_model=schemas.SubUserResponse)
+def update_subuser(
+    subuser_id: int,
+    subuser_update: schemas.SubUserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user)
+):
+    subuser = db.query(models.SubUser).filter(
+        models.SubUser.id == subuser_id,
+        models.SubUser.parent_user_id == current_user.id
+    ).first()
+    
+    if not subuser:
+        raise HTTPException(status_code=404, detail="Alumno/a no encontrado/a")
+        
+    subuser.name = subuser_update.name
+    db.commit()
+    db.refresh(subuser)
+    return subuser

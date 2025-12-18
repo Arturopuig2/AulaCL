@@ -108,19 +108,7 @@ def submit_attempt(attempt: schemas.AttemptCreate, current_user: schemas.User = 
     db.refresh(db_attempt)
     return db_attempt
 
-@router.get("/prediction", response_model=schemas.PredictionResponse)
-def get_prediction(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    from .. import ml
-    attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
-    predicted_score = ml.get_latest_prediction(attempts)
-    
-    # Save prediction?
-    if isinstance(predicted_score, float) or isinstance(predicted_score, int):
-        # It's a number
-        return {"predicted_score": float(predicted_score), "message": "Basado en tu rendimiento reciente."}
-    else:
-        # It's a string message
-        return {"predicted_score": 0.0, "message": str(predicted_score)}
+
 
 @router.get("/admin/texts", response_model=List[schemas.TextResponse])
 def get_all_texts_admin(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
@@ -223,24 +211,258 @@ def toggle_text_active(text_id: int, current_user: schemas.User = Depends(auth.g
     db.refresh(text)
     return text
 
-@router.delete("/admin/texts/{text_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_text(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    if current_user.username != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized")
-        
-    text = db.query(models.Text).filter(models.Text.id == text_id).first()
-    if not text:
-        raise HTTPException(status_code=404, detail="Text not found")
-    
-    # Delete associated files
-    import os
-    if os.path.exists(text.content_path):
-        os.remove(text.content_path)
-    if text.audio_path:
-        full_audio_path = f"static/{text.audio_path}"
-        if os.path.exists(full_audio_path):
-            os.remove(full_audio_path)
-            
     db.delete(text)
     db.commit()
     return None
+
+@router.get("/texts/{text_id}/pdf")
+def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str = "L", current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    # 1. Fetch Data & Check Access
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
+    # Check Premium/Free (Reuse logic or simplify)
+    is_premium = False
+    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
+        is_premium = True
+        
+    first_text = db.query(models.Text).order_by(models.Text.id.asc()).first()
+    is_free = (first_text and text.id == first_text.id)
+    
+    if not is_premium and not is_free:
+        raise HTTPException(status_code=403, detail="Contenido bloqueado.")
+
+    # Get Content
+    content = ""
+    try:
+        with open(text.content_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception:
+        content = "Error loading content."
+
+    # Get Questions
+    questions = db.query(models.Question).filter(models.Question.text_id == text_id).all()
+
+    # Uppercase Logic
+    is_uppercase = (font_style == "mayuscula")
+    if is_uppercase:
+        content = content.upper()
+        # Note: Questions and Options need to be uppercased during iteration
+        font_style = "imprenta" # Reset to standard font for rendering
+
+    # 2. Generate PDF
+    from fpdf import FPDF
+    import io
+    from fastapi.responses import StreamingResponse
+
+    class PDF(FPDF):
+        def header(self):
+            # Header always standard
+            self.set_font('Arial', 'B', 15)
+            self.cell(0, 10, 'Aula de Comprensión Lectora', 0, 1, 'C')
+            self.ln(5)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font('Arial', 'I', 8)
+            self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
+
+    pdf = PDF()
+    
+    # Calculate Base Sizes & Offsets
+    # Base (for "L" size - as requested "current")
+    # Title: 24 (was 20)
+    # Text (Imp): 18 (was 16), Text (Lig): 20 (was 18)
+    # Questions: 18 (was 16)
+    # Options: 17 (was 15)
+    
+    # Map input size to offset
+    size_offsets = {
+        "S": -4,
+        "M": -2,
+        "L": 0,
+        "XL": 6 
+    }
+    offset = size_offsets.get(font_size, 0)
+    
+    # Font Setup
+    main_font = "Arial"
+    base_text_size = 18 # Increased from 16
+    
+    if font_style == "ligada":
+        try:
+            # Register Custom Font
+            pdf.add_font("AulaCNova", style="", fname="static/fonts/AulaCNova.ttf")
+            main_font = "AulaCNova"
+            base_text_size = 20 # Increased from 18
+        except Exception as e:
+            print(f"Font loading error: {e}")
+            main_font = "Arial"
+
+    # Apply Offset
+    s_title = 24 + offset # Increased base from 20
+    s_text = base_text_size + offset
+    s_quest = 18 + offset # Increased base from 16
+    s_opt = 17 + offset # Increased base from 15
+    s_sol = 20 + offset # Increased base from 18
+
+    pdf.add_page()
+    
+    # helper for safe text
+    def safe_text(txt):
+        if is_uppercase:
+            txt = txt.upper()
+            
+        if main_font == "Arial":
+            # Replace common incompatible characters
+            replacements = {
+                "–": "-", "—": "-", "“": '"', "”": '"', "‘": "'", "’": "'", "…": "..."
+            }
+            for k, v in replacements.items():
+                txt = txt.replace(k, v)
+                
+            return txt.encode('latin-1', 'replace').decode('latin-1')
+        else:
+            # Custom fonts in fpdf2 usually handle utf-8 better, but let's be safe
+            # Actually fpdf2 handles utf-8 natively with TTF fonts
+            return txt
+
+    # Title
+    pdf.set_font("Arial", "B", s_title) # Increased from 18
+    pdf.multi_cell(0, 10, safe_text(text.title), align='C')
+    pdf.ln(10)
+
+    # Text Content
+    pdf.set_font(main_font, "", s_text)
+    # Adjust line height based on size (approx size * 0.5)
+    lh_text = s_text * 0.5 
+    if lh_text < 6: lh_text = 6
+    
+    pdf.multi_cell(0, lh_text, safe_text(content)) # Increased line height for text
+    pdf.ln(10)
+
+    # Questions
+    if questions:
+        pdf.add_page()
+        pdf.set_font("Arial", "B", s_quest) # Increased from 14
+        pdf.cell(0, 10, safe_text("Preguntas de Comprensión"), 0, 1)
+        pdf.ln(5)
+
+        pdf.set_font("Arial", "", s_quest) # Increased from 14
+        
+        # Helper to calculate height
+        def get_text_height(txt, w_available, font_family, font_style, font_size, line_height):
+            pdf.set_font(font_family, font_style, font_size)
+            # fpdf2 multi_cell with split_only=True returns list of lines
+            # If split_only not supported in some context, fallback to simpler estimation
+            try:
+                # split_only=True returns the lines that would be printed
+                lines = pdf.multi_cell(w_available, line_height, txt, split_only=True)
+                return len(lines) * line_height
+            except:
+                # Fallback: approximation
+                string_w = pdf.get_string_width(txt)
+                lines = int(string_w / w_available) + 1
+                return lines * line_height
+
+        for i, q in enumerate(questions):
+            # 1. Calculate Block Height
+            block_height = 0
+            
+            # Question
+            q_str = q.question_content
+            if is_uppercase: q_str = q_str.upper()
+            
+            q_text = f"{i+1}. {safe_text(q_str)}"
+            q_w = pdf.w - pdf.l_margin - pdf.r_margin
+            
+            lh_q = s_quest * 0.5
+            if lh_q < 7: lh_q = 7
+            
+            block_height += get_text_height(q_text, q_w, "Arial", "B", s_quest, lh_q) # Using new size 16, line height 8
+            
+            # Options
+            options = q.options if isinstance(q.options, list) else []
+            opt_w = pdf.w - pdf.l_margin - pdf.r_margin - 10
+            lh_opt = s_opt * 0.5
+            if lh_opt < 6: lh_opt = 6
+            
+            char_code = 97
+            
+            for opt in options:
+                opt_str = opt if not is_uppercase else opt.upper()
+                opt_text = f"{chr(char_code)}) {safe_text(opt_str)}"
+                block_height += get_text_height(opt_text, opt_w, "Arial", "", s_opt, lh_opt) # Using new size 15, line height 8
+                char_code += 1
+            
+            block_height += 5 # Bottom padding
+            
+            # 2. Check Space
+            # page_break_trigger is the Y position where auto-break happens
+            space_left = pdf.page_break_trigger - pdf.get_y()
+            if block_height > space_left:
+                pdf.add_page()
+
+            # 3. Render
+            pdf.set_font("Arial", "B", s_quest) # Increased from 14
+            pdf.multi_cell(0, lh_q, q_text) 
+            
+            pdf.set_font("Arial", "", s_opt) # Increased from 13
+            char_code = 97
+            for opt in options:
+                pdf.set_x(pdf.l_margin + 10) 
+                available_w = pdf.w - pdf.l_margin - pdf.r_margin - 10
+                
+                opt_str = opt if not is_uppercase else opt.upper()
+                pdf.multi_cell(available_w, lh_opt, f"{chr(char_code)}) {safe_text(opt_str)}") # Increased line height
+                char_code += 1
+            pdf.ln(5)
+
+    # Solutions Section
+    if questions:
+        pdf.add_page() # Start solutions on new page for privacy/teacher use
+        
+        # AulaCNova only has regular style registered. Avoid "B" if custom font.
+        sol_style = "B" if main_font == "Arial" else ""
+        pdf.set_font(main_font, sol_style, s_sol)
+        
+        pdf.cell(0, 10, safe_text("SOLUCIONES:"), 0, 1)
+        pdf.ln(5)
+        
+        pdf.set_font(main_font, "", s_text) # Use text size for solutions
+        for i, q in enumerate(questions):
+            # Resolve correct answer
+            opts = q.options if isinstance(q.options, list) else []
+            idx = q.correct_answer
+            
+            answer_text = "N/A"
+            letter = "?"
+            
+            if isinstance(idx, int) and 0 <= idx < len(opts):
+                letter = chr(97 + idx) # 0->a, 1->b...
+                answer_text = opts[idx]
+            
+            if is_uppercase:
+                answer_text = answer_text.upper()
+            
+            full_line_text = f"{i+1}. {letter}) {answer_text}"
+            
+            # Robust width and positioning
+            pdf.set_x(pdf.l_margin)
+            available_w = pdf.w - pdf.l_margin - pdf.r_margin
+            
+            pdf.multi_cell(available_w, lh_text, safe_text(full_line_text))
+
+    # Output
+    pdf_buffer = io.BytesIO()
+    pdf.output(pdf_buffer)
+    pdf_buffer.seek(0)
+    
+    filename = f"Ficha_{text.filename.replace('.txt', '')}.pdf"
+    
+    return StreamingResponse(
+        pdf_buffer, 
+        media_type="application/pdf", 
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

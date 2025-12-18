@@ -15,7 +15,6 @@ class User(Base):
     access_expires_at = Column(DateTime, nullable=True)
     
     attempts = relationship("ReadingAttempt", back_populates="user")
-    predictions = relationship("Prediction", back_populates="user")
     subusers = relationship("SubUser", back_populates="parent_user")
 
 class InvitationCode(Base):
@@ -68,15 +67,7 @@ class ReadingAttempt(Base):
     user = relationship("User", back_populates="attempts")
     text = relationship("Text", back_populates="attempts")
 
-class Prediction(Base):
-    __tablename__ = "predictions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    predicted_score = Column(Float)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-
-    user = relationship("User", back_populates="predictions")
 
 class SubUser(Base):
     __tablename__ = "subusers"

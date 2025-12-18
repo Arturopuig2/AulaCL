@@ -1,5 +1,25 @@
 {% extends "layout.html" %}
 
+{% block head %}
+<style>
+    .audio-sentence {
+        transition: background-color 0.3s ease, color 0.3s ease;
+        padding: 0.1rem 0;
+        border-radius: 4px;
+    }
+
+    .active-highlight {
+        background-color: #fef08a !important;
+        /* yellow-200 */
+        color: #854d0e !important;
+        /* yellow-800 */
+        font-weight: 500;
+        box-shadow: 0 0 0 2px #fef08a;
+        /* Extend bg slightly */
+    }
+</style>
+{% endblock %}
+
 {% block navbar_actions %}
 <a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Home</a>
 {% endblock %}
@@ -13,6 +33,10 @@
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="display: flex; gap: 0.5rem;">
+                <button onclick="openPdfModal()" class="btn btn-outline"
+                    style="padding: 0.2rem 0.6rem; font-size: 1rem;" title="Descargar Ficha PDF">
+                    🖨️ Ficha
+                </button>
                 <button onclick="toggleFontStyle()" class="btn btn-outline"
                     style="padding: 0.2rem 0.6rem; font-size: 1.5rem;" title="Cambiar tipo de letra (Imprenta/Ligada)">
                     <span style="font-family: 'AulaCNova', cursive;">a</span>
@@ -46,7 +70,51 @@
 </div>
 
 <div style="margin-top: 2rem; text-align: right;">
-    <button id="finish-btn" class="btn btn-primary">Terminar Lectura e Ir a Preguntas</button>
+    <button id="finish-btn" class="btn btn-primary">Ir a Preguntas</button>
+</div>
+
+<!-- PDF Options Modal -->
+<div id="pdf-options-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
+        <h2 style="margin-bottom: 1.5rem; text-align: center;">Opciones de Ficha PDF</h2>
+
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Tipo de Letra</label>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="selectPdfFont(this, 'imprenta')"
+                    id="btn-font-imprenta">
+                    Imprenta
+                </button>
+                <button type="button" class="btn btn-outline" style="flex: 1; font-family: 'AulaCNova', cursive;"
+                    onclick="selectPdfFont(this, 'ligada')" id="btn-font-ligada">
+                    Ligada
+                </button>
+            </div>
+            <button type="button" class="btn btn-outline" style="width: 100%; text-transform: uppercase;"
+                onclick="selectPdfFont(this, 'mayuscula')" id="btn-font-mayuscula">
+                MAYÚSCULA
+            </button>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Tamaño de Letra</label>
+            <input type="range" min="1" max="4" value="3" class="slider" id="pdf-font-size" style="width: 100%;">
+            <div
+                style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+                <span>Pequeño</span>
+                <span>Medio</span>
+                <span>Grande</span>
+                <span>Gigante</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button onclick="confirmDownloadPDF()" class="btn btn-primary" style="flex: 1;">Descargar</button>
+            <button onclick="closePdfModal()" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -55,12 +123,44 @@
     let timerInterval;
     let currentFontSize = 1.2; // Default rem size
 
+    // Karaoke Logic: Rough timestamps for Demo (Text ID 2)
+    // Adjusted: Shifted +4s based on user feedback (was too fast)
+    // Karaoke Logic: Timestamps calibrated by user (Text ID 2)
+    // Fixed: Prepend 0-11.27s for the first sentence
+    const demoTimestamps = [
+        { "start": 0, "end": 11.27 },
+        { "start": 11.27, "end": 17.61 },
+        { "start": 17.61, "end": 25.6 },
+        { "start": 25.6, "end": 30.49 },
+        { "start": 30.49, "end": 34.88 },
+        { "start": 34.88, "end": 39.74 },
+        { "start": 39.74, "end": 48.17 },
+        { "start": 48.17, "end": 53.89 },
+        { "start": 53.89, "end": 61.14 },
+        { "start": 61.14, "end": 68.64 },
+        { "start": 68.64, "end": 73.45 },
+        { "start": 73.45, "end": 79.45 },
+        { "start": 79.45, "end": 85.39 },
+        { "start": 85.39, "end": 91.8 },
+        { "start": 91.8, "end": 97.88 },
+        { "start": 97.88, "end": 105.87 },
+        { "start": 105.87, "end": 116.03 },
+        { "start": 116.03, "end": 120.64 },
+        { "start": 120.64, "end": 128.52 },
+        { "start": 128.52, "end": 135.31 },
+        { "start": 135.31, "end": 136.96 },
+        { "start": 136.96, "end": 143.8 },
+        { "start": 143.8, "end": 146.54 },
+        { "start": 146.54, "end": 152.66 },
+        { "start": 152.66, "end": 159.55 },
+        { "start": 159.55, "end": 165.12 },
+        { "start": 165.12, "end": 171.52 }
+    ];
+
     function adjustFontSize(change) {
         currentFontSize += change;
-        // Clamp limits (0.8rem to 3.0rem)
         if (currentFontSize < 0.8) currentFontSize = 0.8;
         if (currentFontSize > 3.0) currentFontSize = 3.0;
-
         document.getElementById('text-content').style.fontSize = currentFontSize + 'rem';
     }
 
@@ -68,9 +168,12 @@
         const content = document.getElementById('text-content');
         if (content.style.fontFamily.includes('AulaCNova')) {
             content.style.fontFamily = "'Inter', sans-serif";
-            // Reset adjustments if needed
+            currentFontSize = 1.2;
+            content.style.fontSize = currentFontSize + 'rem';
         } else {
             content.style.fontFamily = "'AulaCNova', cursive";
+            currentFontSize = 1.8;
+            content.style.fontSize = currentFontSize + 'rem';
         }
     }
 
@@ -84,13 +187,32 @@
 
     function toggleTimer() {
         const timerSpan = document.getElementById('timer');
-        // Check if it's currently visible (1) or hidden (0 or default in CSS)
-        // Since we set opacity: 0 inline, we check against that.
         if (timerSpan.style.opacity === '1') {
             timerSpan.style.opacity = '0';
         } else {
             timerSpan.style.opacity = '1';
         }
+    }
+
+    // Process text into sentences for karaoke
+    function processTextContent(text) {
+        // Robust splitting for various newline formats
+        const lines = text.split(/\r?\n/);
+        let htmlContent = '';
+        let globalIndex = 0;
+
+        lines.forEach(line => {
+            if (line.trim() === '') {
+                htmlContent += '<br><br>';
+                return;
+            }
+
+            // Wrap content
+            htmlContent += `<span id="sent-${globalIndex}" class="audio-sentence">${line}</span><br>`;
+            globalIndex++;
+        });
+
+        return htmlContent;
     }
 
     async function loadText() {
@@ -99,30 +221,35 @@
 
         try {
             const response = await axios.get(`/reading/texts/${textId}`);
-            const text = response.data;
+            const textData = response.data;
 
-            document.getElementById('text-title').innerText = text.title;
+            document.getElementById('text-title').innerText = textData.title;
 
-            // Content is now served by the API directly
-            if (text.content) {
-                document.getElementById('text-content').innerText = text.content;
+            if (textData.content) {
+                // Loosen check: ID 2 OR Title contains Liebre
+                if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
+                    console.log("Enabling Karaoke Mode formatting...");
+                    document.getElementById('text-content').innerHTML = processTextContent(textData.content);
+                } else {
+                    document.getElementById('text-content').innerText = textData.content;
+                }
             } else {
                 document.getElementById('text-content').innerText = "No se pudo cargar el contenido.";
             }
 
-            if (text.audio_path) {
+            if (textData.audio_path) {
                 const audioPlayer = document.getElementById('audio-player');
-                document.getElementById('audio-source').src = "/audio/" + text.audio_path;
+                document.getElementById('audio-source').src = "/audio/" + textData.audio_path;
                 audioPlayer.load();
                 audioPlayer.style.display = 'block';
 
                 // Background Music Logic
                 const bgMusic = new Audio('/static/audio/background_music.mp3');
                 bgMusic.loop = true;
-                bgMusic.volume = 0.04; // Low volume
+                bgMusic.volume = 0.04;
 
                 audioPlayer.onplay = () => {
-                    bgMusic.play().catch(e => console.log("Background music not found or blocked"));
+                    bgMusic.play().catch(e => console.log("Background music blocked"));
                 };
 
                 audioPlayer.onpause = () => {
@@ -133,6 +260,36 @@
                     bgMusic.pause();
                     bgMusic.currentTime = 0;
                 };
+
+                // Karaoke Sync Listener
+                // Enforce calibration: Only runs on valid text
+                if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
+                    audioPlayer.ontimeupdate = () => {
+                        const t = audioPlayer.currentTime;
+
+                        // Find active sentence
+                        let activeIdx = -1;
+                        for (let i = 0; i < demoTimestamps.length; i++) {
+                            if (t >= demoTimestamps[i].start && t < demoTimestamps[i].end) {
+                                activeIdx = i;
+                                break;
+                            }
+                        }
+
+                        // Update UI
+                        const allSpans = document.querySelectorAll('.audio-sentence');
+                        allSpans.forEach(span => span.classList.remove('active-highlight'));
+
+                        if (activeIdx !== -1) {
+                            const activeSpan = document.getElementById(`sent-${activeIdx}`);
+                            if (activeSpan) {
+                                activeSpan.classList.add('active-highlight');
+                                // Auto-scroll
+                                activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
+                    };
+                }
             }
 
             // Start Timer
@@ -149,12 +306,97 @@
         clearInterval(timerInterval);
         const now = new Date();
         const timeSpent = (now - startTime) / 1000;
-
-        // Store time spent to send later
         localStorage.setItem(`time_spent_${textId}`, timeSpent);
-
         window.location.href = `/quiz/${textId}`;
     });
+
+    let selectedPdfFont = 'imprenta';
+
+    function openPdfModal() {
+        const modal = document.getElementById('pdf-options-modal');
+        modal.style.display = 'flex';
+
+        // Auto-select current font
+        const content = document.getElementById('text-content');
+        const currentStyle = content.style.fontFamily.includes('AulaCNova') ? 'ligada' : 'imprenta';
+
+        // Reset buttons
+        document.querySelectorAll('[id^="btn-font-"]').forEach(btn => {
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--primary-color)';
+        });
+
+        // Select active
+        const btn = document.getElementById(`btn-font-${currentStyle}`);
+        if (btn) selectPdfFont(btn, currentStyle);
+        else selectPdfFont(document.getElementById('btn-font-imprenta'), 'imprenta');
+    }
+
+    function closePdfModal() {
+        document.getElementById('pdf-options-modal').style.display = 'none';
+    }
+
+    function selectPdfFont(btn, type) {
+        selectedPdfFont = type;
+        // Reset all
+        document.querySelectorAll('[id^="btn-font-"]').forEach(b => {
+            b.style.background = 'transparent';
+            b.style.color = 'var(--primary-color)';
+        });
+        // Set active
+        btn.style.background = 'var(--primary-color)';
+        btn.style.color = 'white';
+    }
+
+    async function confirmDownloadPDF() {
+        closePdfModal();
+        const btn = document.querySelector('button[title="Descargar Ficha PDF"]');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Generando...";
+        btn.disabled = true;
+
+        const sizeVal = document.getElementById('pdf-font-size').value;
+        // Map slider 1-4 to S, M, L, XL
+        const sizes = ['S', 'M', 'L', 'XL'];
+        const size = sizes[sizeVal - 1];
+
+        try {
+            const response = await axios.get(`/reading/texts/${textId}/pdf`, {
+                params: {
+                    font_style: selectedPdfFont,
+                    font_size: size
+                },
+                responseType: 'blob'
+            });
+
+            // Create Blob URL
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+
+            // Try to extract filename from header or default
+            let filename = `Ficha_Texto_${textId}.pdf`;
+            const disposition = response.headers['content-disposition'];
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+        } catch (error) {
+            console.error("Download failed", error);
+            alert("Error al descargar la ficha. Verifica tu sesión.");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
 
     loadText();
 </script>

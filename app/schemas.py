@@ -71,9 +71,7 @@ class AttemptResponse(AttemptCreate):
     class Config:
         from_attributes = True
 
-class PredictionResponse(BaseModel):
-    predicted_score: float
-    message: Optional[str] = None
+
 
 class PasswordResetRequest(BaseModel):
     email: str
@@ -86,6 +84,9 @@ class UnlockRequest(BaseModel):
     access_code: str
 
 class SubUserCreate(BaseModel):
+    name: str
+
+class SubUserUpdate(BaseModel):
     name: str
 
 class SubUserResponse(BaseModel):

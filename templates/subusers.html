@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block navbar_actions %}
-<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al panel</a>
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Panel</a>
 {% endblock %}
 
 {% block content %}
@@ -10,7 +10,7 @@
         <h1 style="margin: 0; font-size: 1.8rem;">Mis Alumnos/as</h1>
         <button onclick="openAddSubUserModal()" class="btn btn-outline"
             style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-            + Añadir Alumno/a
+            + Alumno/a
         </button>
     </div>
 
@@ -34,6 +34,55 @@
             <button type="button" onclick="closeAddSubUserModal()" class="btn btn-outline"
                 style="width: 100%;">Cancelar</button>
         </form>
+    </div>
+</div>
+
+<!-- Edit SubUser Modal -->
+<div id="edit-subuser-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 450px; width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; font-size: 1.5rem;">Editar Perfil</h2>
+            <button onclick="closeEditSubUserModal()"
+                style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <!-- Name Edit Section -->
+        <div style="margin-bottom: 2rem;">
+            <label style="font-size: 0.9rem; margin-bottom: 0.3rem;">Nombre del Alumno/a</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="edit-subuser-name"
+                    style="flex: 1; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                <button onclick="saveSubUserName()" class="btn btn-primary"
+                    style="padding: 0.6rem 1rem;">Guardar</button>
+            </div>
+        </div>
+
+        <div style="height: 1px; background: #e2e8f0; margin-bottom: 1.5rem;"></div>
+
+        <!-- License Section -->
+        <div style="margin-bottom: 2rem;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Licencia y Acceso</h3>
+            <div id="edit-license-status" style="margin-bottom: 1rem; font-size: 0.9rem;"></div>
+            <button id="edit-license-btn" class="btn btn-outline" style="width: 100%;">
+                Activar / Extender Licencia
+            </button>
+        </div>
+
+        <div style="height: 1px; background: #e2e8f0; margin-bottom: 1.5rem;"></div>
+
+        <!-- Delete Section -->
+        <div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #ef4444;">Zona de Peligro</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                El alumnado borrado no se puede recuperar.
+            </p>
+            <button id="edit-delete-btn" class="btn"
+                style="width: 100%; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5;">
+                Eliminar Alumno/a
+            </button>
+        </div>
     </div>
 </div>
 
@@ -134,17 +183,10 @@
 
                 card.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <button onclick="openSubUserLicenseModal(${u.id}, '${u.name}', ${isActive})" 
+                        <button onclick='openEditSubUserModal(${JSON.stringify(u)})' 
                                 class="btn btn-outline" 
-                                style="padding: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border-color: ${btnBorder}; color: ${btnColor}; min-width: 36px;"
-                                title="${isActive ? 'Extender Licencia' : 'Activar Licencia'}">
-                            🔑
-                        </button>
-                        <button onclick="confirmDeleteSubUser(${u.id}, '${u.name}')" 
-                                class="btn btn-outline" 
-                                style="padding: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border-color: #fca5a5; color: #ef4444; min-width: 36px;"
-                                title="Eliminar Alumno/a">
-                            🗑️
+                                style="padding: 0.2rem 0.6rem; font-size: 0.85rem; border-radius: 0.5rem;">
+                            Editar
                         </button>
                         <h3 style="margin: 0; font-size: 1rem;">${u.name}</h3>
                         ${u.login_code_display ? `<span style="font-family: monospace; letter-spacing: 1px; background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 0.25rem; font-size: 0.9rem; margin-left: 0.5rem; color: var(--text-secondary);">${u.login_code_display}</span>` : ''}
@@ -257,6 +299,65 @@
             }
         }
     });
+
+    // Edit Modal Logic
+    let currentEditingSubUser = null;
+
+    function openEditSubUserModal(subuser) {
+        currentEditingSubUser = subuser; // Store full object
+        document.getElementById('edit-subuser-name').value = subuser.name;
+
+        // Status Logic
+        const isActive = subuser.access_expires_at && new Date(subuser.access_expires_at) > new Date();
+        const statusDiv = document.getElementById('edit-license-status');
+
+        if (isActive) {
+            statusDiv.innerHTML = `<span style="color: #22c55e;">✅ Licencia Activa hasta ${new Date(subuser.access_expires_at).toLocaleDateString()}</span>`;
+            document.getElementById('edit-license-btn').innerText = "Extender Licencia";
+        } else {
+            statusDiv.innerHTML = `<span style="color: #f59e0b;">⚠️ Acceso Limitado (Sin Licencia)</span>`;
+            document.getElementById('edit-license-btn').innerText = "Activar Licencia";
+        }
+
+        // Bind Buttons
+        document.getElementById('edit-license-btn').onclick = () => {
+            closeEditSubUserModal();
+            openSubUserLicenseModal(subuser.id, subuser.name, isActive);
+        };
+
+        document.getElementById('edit-delete-btn').onclick = () => {
+            closeEditSubUserModal();
+            confirmDeleteSubUser(subuser.id, subuser.name);
+        };
+
+        document.getElementById('edit-subuser-modal').style.display = 'flex';
+    }
+
+    function closeEditSubUserModal() {
+        document.getElementById('edit-subuser-modal').style.display = 'none';
+        currentEditingSubUser = null;
+    }
+
+    async function saveSubUserName() {
+        if (!currentEditingSubUser) return;
+        const newName = document.getElementById('edit-subuser-name').value;
+        if (!newName.trim()) return alert("El nombre no puede estar vacío");
+
+        try {
+            await axios.put(`/subusers/${currentEditingSubUser.id}`, { name: newName });
+            // Update local object to reflect change immediately if needed, or just reload
+            closeEditSubUserModal();
+            loadSubUsers();
+        } catch (error) {
+            console.error(error);
+            alert('Error al actualizar nombre: ' + (error.response?.data?.detail || error.message));
+        }
+    }
+
+    // Modal BG Click
+    document.getElementById('edit-subuser-modal').onclick = (e) => {
+        if (e.target === document.getElementById('edit-subuser-modal')) closeEditSubUserModal();
+    };
 
     // Initial Load
     loadSubUsers();
