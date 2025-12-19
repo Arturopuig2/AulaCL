@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+.venv/
+env/
+
+# Data (Don't include local SQLite DB or heavy local data if not needed)
+aula_cl.db
+render.yaml
+
+# IDE
+.idea/
+.vscode/
