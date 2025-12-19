@@ -12,3 +12,5 @@ aiofiles
 aiofiles
 
 fpdf2
+gunicorn
+psycopg2-binary
