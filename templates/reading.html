@@ -239,7 +239,8 @@
 
             if (textData.audio_path) {
                 const audioPlayer = document.getElementById('audio-player');
-                document.getElementById('audio-source').src = "/audio/" + textData.audio_path;
+                // Use /static/ because DB stores 'audio/filename.mp3'
+                document.getElementById('audio-source').src = "/static/" + textData.audio_path;
                 audioPlayer.load();
                 audioPlayer.style.display = 'block';
 

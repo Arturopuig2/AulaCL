@@ -211,9 +211,18 @@ def toggle_text_active(text_id: int, current_user: schemas.User = Depends(auth.g
     db.refresh(text)
     return text
 
+@router.delete("/admin/texts/{text_id}")
+def delete_text(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
     db.delete(text)
     db.commit()
-    return None
+    return {"message": "Text deleted successfully"}
 
 @router.get("/texts/{text_id}/pdf")
 def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str = "L", current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
