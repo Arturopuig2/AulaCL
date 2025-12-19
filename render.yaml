@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: aula-cl
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker app.main:app
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aula-cl-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+databases:
+  - name: aula-cl-db
+    databaseName: aulacldb
+    user: aula_user
+    plan: free # Render ofrece un plan gratuito para Postgres por 90 días, luego es de pago. O pueden usar el plan "starter".
+    # El plan 'free' de postgres en Render expira a los 90 días.
+    # El usuario puede cambiar esto a 'starter' si prefiere.
