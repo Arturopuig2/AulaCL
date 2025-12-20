@@ -713,6 +713,25 @@ def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.Us
         json_content = response.choices[0].message.content
         json_content = json_content.replace("```json", "").replace("```", "").strip()
         data = json.loads(json_content)
+
+        # --- REPAIR LOGIC: Ensure options are never empty ---
+        if "questions" in data and isinstance(data["questions"], list):
+            for i, q in enumerate(data["questions"]):
+                # 1. Ensure options is a list
+                if "options" not in q or not isinstance(q["options"], list):
+                    q["options"] = []
+                
+                # 2. Fill empty options
+                if len(q["options"]) < 2:
+                    if i >= 5: # Last 5 are T/F per prompt
+                        q["options"] = ["Verdadero", "Falso"]
+                    else:
+                        q["options"] = ["Opción A", "Opción B", "Opción C"]
+                        
+                # 3. Ensure correct_index is safe
+                if "correct_index" not in q or not isinstance(q["correct_index"], int):
+                    q["correct_index"] = 0
+        # ----------------------------------------------------
         
         return schemas.MagicDraftResponse(**data)
 
