@@ -270,3 +270,30 @@ def get_codes(current_user: schemas.User = Depends(get_current_user), db: Sessio
         "user_email": c.user.email if c.user else None,
         "expires_at": c.user.access_expires_at if c.user else None
     } for c in codes]
+
+@router.get("/debug-openai")
+def debug_openai_config():
+    import os
+    import openai
+    
+    key = os.getenv("OPENAI_API_KEY")
+    report = {
+        "key_present": bool(key),
+        "key_length": len(key) if key else 0,
+        "key_preview": f"{key[:5]}..." if key else "None",
+        "api_call": "Not attempted"
+    }
+    
+    if key:
+        try:
+            client = openai.OpenAI(api_key=key)
+            client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": "Test"}],
+                max_tokens=5
+            )
+            report["api_call"] = "Success"
+        except Exception as e:
+            report["api_call"] = f"Failed: {str(e)}"
+            
+    return report

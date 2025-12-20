@@ -195,7 +195,182 @@ def upload_text(
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Error saving to DB (Title/Filename might be duplicate): {str(e)}")
         
+    # 4. Parse & Save Questions
+    # Read content to parse questions
+    try:
+        with open(content_path, "r", encoding="utf-8") as f:
+            full_content = f.read()
+            
+        # Split Content vs Questions
+        # Look for typical separators
+        import re
+        separator_pattern = r"(--- Preguntas ---|Preguntas:|--- PREGUNTAS ---|PREGUNTAS:)"
+        parts = re.split(separator_pattern, full_content)
+        
+        main_text = parts[0].strip()
+        questions_text = ""
+        if len(parts) > 1:
+            # Reconstruct the rest (in case multiple separators, take all after first)
+            questions_text = "".join(parts[2:]).strip()
+            
+            # Update the file to ONLY contain the text (hide questions from reading view)
+            with open(content_path, "w", encoding="utf-8") as f:
+                f.write(main_text)
+                
+            # Parse Questions Logic
+            # Expected format:
+            # 1. Question text?
+            # a) Option 1
+            # b) Option 2 ...
+            # * Solution (optional logic, but for now let's assume first is correct or randomized? 
+            # Actually, let's assume standard format and try to detect 'CORRECT' or just take index.
+            # SIMPLE PARSER:
+            lines = questions_text.split('\n')
+            current_q = None
+            current_options = []
+            current_correct = 0 # Default to 0 (a)
+            
+            for line in lines:
+                line = line.strip()
+                if not line: continue
+                
+                # Detect Question (starts with digit + dot/paren)
+                if re.match(r"^\d+[\.\)]", line):
+                    # Save previous if exists
+                    if current_q:
+                        db_q = models.Question(
+                            text_id=new_text.id,
+                            question_content=current_q,
+                            options=current_options,
+                            correct_answer=current_correct
+                        )
+                        db.add(db_q)
+                    
+                    # Start new
+                    current_q = re.sub(r"^\d+[\.\)]\s*", "", line)
+                    current_options = []
+                    current_correct = 0
+                    
+                # Detect Option (starts with a) b) or - )
+                elif re.match(r"^[a-z][\.\)]", line) or line.startswith("-"):
+                    opt_text = re.sub(r"^[a-z][\.\)]\s*|-\s*", "", line)
+                    
+                    # Check if marked as correct (e.g. ends with *)
+                    if "*" in line:
+                        current_correct = len(current_options)
+                        opt_text = opt_text.replace("*", "").strip()
+                        
+                    current_options.append(opt_text)
+            
+            # Save last one
+            if current_q:
+                db_q = models.Question(
+                    text_id=new_text.id,
+                    question_content=current_q,
+                    options=current_options,
+                    correct_answer=current_correct
+                )
+                db.add(db_q)
+                
+            db.commit()
+
+    except Exception as e:
+        print(f"Error parsing questions: {e}")
+        # Non-blocking, text is saved anyway
+        pass
+        
+    
+    # 5. IF NO MANUAL QUESTIONS -> AI GENERATION
+    # Check if questions were added manually
+    existing_questions = db.query(models.Question).filter(models.Question.text_id == new_text.id).count()
+    
+    if existing_questions == 0:
+        print("No manual questions found. Triggering AI Generation...")
+        try:
+            generate_questions_openai(new_text.id, main_text, db)
+            print("AI Generation Success")
+        except Exception as e:
+            print(f"AI Generation Failed: {e}")
+            # Don't fail the upload, but log it
+            pass
+        
     return new_text
+
+def generate_questions_openai(text_id: int, content: str, db: Session):
+    import openai
+    import os
+    import json
+    from dotenv import load_dotenv
+    
+    load_dotenv()
+    
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("OPENAI_API_KEY missing")
+        return
+
+    client = openai.OpenAI(api_key=api_key)
+    
+    # Truncate content if too long (approx 4000 chars to be safe)
+    safe_content = content[:4000]
+    
+    prompt = f"""
+    Genera un examen de comprensión lectora basándote en el siguiente texto.
+    
+    REQUISITOS OBLIGATORIOS:
+    1. Genera EXACTAMENTE 10 preguntas.
+    2. Las primeras 5 deben ser de Selección Múltiple con 3 opciones (a, b, c).
+    3. Las últimas 5 deben ser de Verdadero o Falso (2 opciones).
+    4. Indica claramente la respuesta correcta (índice 0, 1, 2).
+    5. Devuelve SOLO un JSON válido con esta estructura:
+    
+    [
+      {{
+        "question": "¿Pregunta?",
+        "options": ["Opción A", "Opción B", "Opción C"],
+        "correct_index": 0
+      }},
+      ...
+    ]
+    
+    TEXTO:
+    {safe_content}
+    """
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Eres un asistente educativo experto en crear evaluaciones de lectura."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+        
+        json_content = response.choices[0].message.content
+        # Sanitize code blocks if present
+        json_content = json_content.replace("```json", "").replace("```", "").strip()
+        
+        questions_data = json.loads(json_content)
+        
+        for q in questions_data:
+            # Validate format strictly
+            if "options" not in q or "question" not in q or "correct_index" not in q:
+                continue
+                
+            db_q = models.Question(
+                text_id=text_id,
+                question_content=q["question"],
+                options=q["options"],
+                correct_answer=q["correct_index"]
+            )
+            db.add(db_q)
+            
+        db.commit()
+        
+    except Exception as e:
+        print(f"OpenAI Error: {e}")
+        raise e
 
 @router.patch("/admin/texts/{text_id}/toggle", response_model=schemas.TextResponse)
 def toggle_text_active(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
