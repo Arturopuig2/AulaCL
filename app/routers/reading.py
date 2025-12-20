@@ -652,3 +652,121 @@ def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str
         media_type="application/pdf", 
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+# --- MAGIC WRITER ENDPOINTS ---
+
+@router.post("/admin/magic/generate", response_model=schemas.MagicDraftResponse)
+def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.User = Depends(auth.get_current_user)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    import openai
+    import os
+    import json
+    from dotenv import load_dotenv
+    
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY missing")
+
+    client = openai.OpenAI(api_key=api_key)
+
+    prompt = f"""
+    Escribe un cuento para niños con los siguientes parámetros:
+    - TEMA: {request.topic}
+    - EDAD LECTORES: {request.age_target}
+    - LONGITUD: Aprox {request.word_count} palabras.
+    - IDIOMA: {request.language}
+
+    Y genera 10 preguntas de comprensión (5 Test 3 opciones, 5 Verdadero/Falso).
+
+    FORMATO JSON OBLIGATORIO:
+    {{
+        "title": "Un título creativo",
+        "content": "El texto del cuento...",
+        "questions": [
+            {{
+                "question": "¿Pregunta?",
+                "options": ["Opción A", "Opción B", "Opción C"],
+                "correct_index": 0
+            }},
+            ...
+        ]
+    }}
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Eres un escritor de cuentos infantiles experto."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+        
+        json_content = response.choices[0].message.content
+        json_content = json_content.replace("```json", "").replace("```", "").strip()
+        data = json.loads(json_content)
+        
+        return schemas.MagicDraftResponse(**data)
+
+    except Exception as e:
+        print(f"Magic Gen Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generando cuento: {str(e)}")
+
+@router.post("/admin/magic/save", response_model=schemas.TextResponse)
+def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    import os
+    import re
+
+    # 1. Generate Safe Filename
+    safe_title = re.sub(r'[^\w\s-]', '', request.title).strip().lower()
+    safe_title = re.sub(r'[-\s]+', '_', safe_title)
+    filename = f"{safe_title}.txt"
+    
+    # 2. Save File
+    save_dir = f"data/texts/{request.course_level}"
+    os.makedirs(save_dir, exist_ok=True)
+    content_path = f"{save_dir}/{filename}"
+    
+    # Check if exists (append random valid if needed? for now just overwrite or error)
+    if os.path.exists(content_path):
+        import uuid
+        filename = f"{safe_title}_{str(uuid.uuid4())[:4]}.txt"
+        content_path = f"{save_dir}/{filename}"
+
+    with open(content_path, "w", encoding="utf-8") as f:
+        f.write(request.content)
+
+    # 3. Create DB Entry
+    new_text = models.Text(
+        title=request.title,
+        filename=filename,
+        course_level=request.course_level,
+        language=request.language,
+        content_path=content_path,
+        audio_path=None
+    )
+    
+    db.add(new_text)
+    db.commit()
+    db.refresh(new_text)
+
+    # 4. Save Questions
+    for q in request.questions:
+        db_q = models.Question(
+            text_id=new_text.id,
+            question_content=q.question,
+            options=q.options,
+            correct_answer=q.correct_index
+        )
+        db.add(db_q)
+    
+    db.commit()
+    
+    return new_text

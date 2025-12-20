@@ -12,72 +12,164 @@
     </div>
 
     <div
-        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-        <h2 style="margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem;">Subir Nueva Lectura</h2>
-        <form id="upload-form"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
-                <input type="text" id="new-title" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+        style="margin-bottom: 3rem; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); padding: 1.5rem; border-radius: 1rem; border: 1px solid #bfdbfe; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);">
+        <h2
+            style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            ✨ Escritor Mágico IA
+            <span
+                style="font-size: 0.8rem; background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: normal;">Nuevo</span>
+        </h2>
+
+        <!-- MAGIC CONFIG -->
+        <div id="magic-config">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tema / Sinopsis</label>
+                    <input type="text" id="magic-topic" placeholder="Ej: Dos astronautas descubren una flor en la Luna"
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Edad Lectores</label>
+                    <input type="text" id="magic-age" placeholder="Ej: 8-10 años"
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Nº Palabras (Aprox)</label>
+                    <input type="number" id="magic-words" value="300" step="50"
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+                    <select id="magic-lang"
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="val">Valencià</option>
+                        <option value="fr">Francés</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Guardar en Curso</label>
+                    <select id="magic-course"
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                        <option value="ALL">Sin Curso / General</option>
+                        <optgroup label="Primaria">
+                            <option value="1P">1º P</option>
+                            <option value="2P">2º P</option>
+                            <option value="3P">3º P</option>
+                            <option value="4P">4º P</option>
+                            <option value="5P">5º P</option>
+                            <option value="6P">6º P</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <button onclick="generateMagicStory()" id="btn-magic-gen" class="btn btn-primary"
+                    style="width: 100%; height: 42px; background: #2563eb;">
+                    🪄 Generar Cuento
+                </button>
+            </div>
+        </div>
+
+        <!-- MAGIC EDITOR -->
+        <div id="magic-editor"
+            style="display: none; margin-top: 2rem; border-top: 2px dashed #bfdbfe; padding-top: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: #1e40af;">Revisión y Edición</h3>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="font-weight: bold;">Título</label>
+                <input type="text" id="edit-title"
+                    style="width: 100%; padding: 0.5rem; font-weight: bold; font-size: 1.1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
             </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
-                <select id="new-course" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                    <option value="" disabled selected>Seleccionar...</option>
-                    <optgroup label="Primaria">
-                        <option value="1P">1º Primaria</option>
-                        <option value="2P">2º Primaria</option>
-                        <option value="3P">3º Primaria</option>
-                        <option value="4P">4º Primaria</option>
-                        <option value="5P">5º Primaria</option>
-                        <option value="6P">6º Primaria</option>
-                    </optgroup>
-                    <optgroup label="ESO">
-                        <option value="1ESO">1º ESO</option>
-                        <option value="2ESO">2º ESO</option>
-                        <option value="3ESO">3º ESO</option>
-                        <option value="4ESO">4º ESO</option>
-                    </optgroup>
-                    <optgroup label="Bachillerato">
-                        <option value="1BAT">1º Bachillerato</option>
-                        <option value="2BAT">2º Bachillerato</option>
-                    </optgroup>
-                    <option value="ALL">Sin Curso / General</option>
-                </select>
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="font-weight: bold;">Historia</label>
+                <textarea id="edit-content"
+                    style="width: 100%; height: 300px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: sans-serif; line-height: 1.6;"></textarea>
             </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
-                <select id="new-lang" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                    <option value="es" selected>Español</option>
-                    <option value="val">Valencià</option>
-                    <option value="en">Inglés</option>
-                    <option value="fr">Francés</option>
-                    <option value="cat">Català</option>
-                    <option value="gal">Gallego</option>
-                    <option value="eus">Euskera</option>
-                </select>
+            <h4 style="margin-bottom: 1rem; color: #1e40af;">Editar Preguntas</h4>
+            <div id="questions-container" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                <!-- JS will popualte this -->
             </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="text-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
-                    (.txt)</label>
-                <input type="file" id="text-file" accept=".txt" required style="font-size: 0.9rem;">
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="saveMagicStory()" id="btn-magic-save" class="btn btn-primary"
+                    style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar en Librería</button>
+                <button onclick="cancelMagic()" class="btn btn-outline" style="flex: 1;">Cancelar</button>
             </div>
+        </div>
+    </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="audio-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
-                    (Opcional)</label>
-                <input type="file" id="audio-file" accept=".mp3" style="font-size: 0.9rem;">
-            </div>
+    <div <form id="upload-form"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
+            <input type="text" id="new-title" required
+                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+        </div>
 
-            <div style="grid-column: 1 / -1;">
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
-            </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
+            <select id="new-course" required
+                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                <option value="" disabled selected>Seleccionar...</option>
+                <optgroup label="Primaria">
+                    <option value="1P">1º Primaria</option>
+                    <option value="2P">2º Primaria</option>
+                    <option value="3P">3º Primaria</option>
+                    <option value="4P">4º Primaria</option>
+                    <option value="5P">5º Primaria</option>
+                    <option value="6P">6º Primaria</option>
+                </optgroup>
+                <optgroup label="ESO">
+                    <option value="1ESO">1º ESO</option>
+                    <option value="2ESO">2º ESO</option>
+                    <option value="3ESO">3º ESO</option>
+                    <option value="4ESO">4º ESO</option>
+                </optgroup>
+                <optgroup label="Bachillerato">
+                    <option value="1BAT">1º Bachillerato</option>
+                    <option value="2BAT">2º Bachillerato</option>
+                </optgroup>
+                <option value="ALL">Sin Curso / General</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+            <select id="new-lang" required
+                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                <option value="es" selected>Español</option>
+                <option value="val">Valencià</option>
+                <option value="en">Inglés</option>
+                <option value="fr">Francés</option>
+                <option value="cat">Català</option>
+                <option value="gal">Gallego</option>
+                <option value="eus">Euskera</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="text-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
+                (.txt)</label>
+            <input type="file" id="text-file" accept=".txt" required style="font-size: 0.9rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="audio-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
+                (Opcional)</label>
+            <input type="file" id="audio-file" accept=".mp3" style="font-size: 0.9rem;">
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
+        </div>
         </form>
     </div>
 
@@ -390,6 +482,149 @@
             btn.disabled = false;
         }
     });
+
+    // --- MAGIC WRITER LOGIC ---
+    let currentMagicDraft = null;
+
+    async function generateMagicStory() {
+        const topic = document.getElementById('magic-topic').value;
+        const age = document.getElementById('magic-age').value;
+        const words = document.getElementById('magic-words').value;
+        const lang = document.getElementById('magic-lang').value;
+
+        if (!topic || !age) {
+            alert("Por favor, rellena el tema y la edad.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-magic-gen');
+        const originalText = btn.innerText;
+        btn.innerText = "✨ Creando Magia... (aprox 10s)";
+        btn.disabled = true;
+
+        try {
+            const response = await axios.post('/reading/admin/magic/generate', {
+                topic: topic,
+                age_target: age,
+                word_count: parseInt(words),
+                language: lang
+            });
+
+            currentMagicDraft = response.data;
+            renderMagicEditor(currentMagicDraft);
+
+            // UI Switch
+            document.getElementById('magic-config').style.display = 'none';
+            document.getElementById('magic-editor').style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            alert("Error generando cuento: " + (error.response?.data?.detail || error.message));
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function renderMagicEditor(draft) {
+        document.getElementById('edit-title').value = draft.title;
+        document.getElementById('edit-content').value = draft.content;
+
+        const qContainer = document.getElementById('questions-container');
+        qContainer.innerHTML = '';
+
+        draft.questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.style.background = '#f8fafc';
+            card.style.padding = '1rem';
+            card.style.border = '1px solid #e2e8f0';
+            card.style.borderRadius = '0.5rem';
+
+            card.innerHTML = `
+                <div style="margin-bottom: 0.5rem; font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
+                <input type="text" class="q-input" value="${q.question}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+                
+                <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
+                    ${q.options.map((opt, optIndex) => `
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''}>
+                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" value="${opt}" style="flex: 1; padding: 0.3rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            qContainer.appendChild(card);
+        });
+    }
+
+    async function saveMagicStory() {
+        if (!currentMagicDraft) return;
+
+        const btn = document.getElementById('btn-magic-save');
+        btn.innerText = "Guardando...";
+        btn.disabled = true;
+
+        try {
+            // 1. Collect Data
+            const title = document.getElementById('edit-title').value;
+            const content = document.getElementById('edit-content').value;
+            const course = document.getElementById('magic-course').value;
+            const lang = document.getElementById('magic-lang').value;
+
+            // 2. Reconstruct Questions
+            const questions = [];
+            const qContainer = document.getElementById('questions-container');
+
+            // Loop by children count
+            for (let i = 0; i < qContainer.children.length; i++) {
+                const card = qContainer.children[i];
+                const qText = card.querySelector('.q-input').value;
+
+                // Get options
+                const optInputs = card.querySelectorAll('.q-opt-input');
+                const options = Array.from(optInputs).map(input => input.value);
+
+                // Get checked radio
+                const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
+                const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+                questions.push({
+                    question: qText,
+                    options: options,
+                    correct_index: correctIndex
+                });
+            }
+
+            // 3. Send API
+            await axios.post('/reading/admin/magic/save', {
+                title: title,
+                content: content,
+                questions: questions,
+                course_level: course,
+                language: lang
+            });
+
+            alert("¡Cuento guardado correctamente! 📚");
+            cancelMagic(); // Reset UI
+            loadAdmin(); // Reload table
+
+        } catch (error) {
+            console.error(error);
+            alert("Error guardando: " + (error.response?.data?.detail || error.message));
+        } finally {
+            btn.innerText = "💾 Guardar en Librería";
+            btn.disabled = false;
+        }
+    }
+
+    function cancelMagic() {
+        document.getElementById('magic-config').style.display = 'block';
+        document.getElementById('magic-editor').style.display = 'none';
+        currentMagicDraft = null;
+        document.getElementById('edit-title').value = '';
+        document.getElementById('edit-content').value = '';
+        document.getElementById('questions-container').innerHTML = '';
+    }
 
     loadAdmin();
 </script>

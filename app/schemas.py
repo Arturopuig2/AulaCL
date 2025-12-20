@@ -104,3 +104,27 @@ class LicenseActivate(BaseModel):
 
 class LoginCodeRequest(BaseModel):
     code: str
+
+# Magic Writer Schemas
+class QuestionDraft(BaseModel):
+    question: str
+    options: List[str]
+    correct_index: int
+
+class MagicRequest(BaseModel):
+    topic: str
+    age_target: str
+    word_count: int
+    language: str
+
+class MagicDraftResponse(BaseModel):
+    title: str
+    content: str
+    questions: List[QuestionDraft]
+
+class MagicSaveRequest(BaseModel):
+    title: str
+    content: str
+    questions: List[QuestionDraft]
+    course_level: str
+    language: str
