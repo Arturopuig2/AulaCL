@@ -75,7 +75,9 @@ def get_text(text_id: int, current_user: schemas.User = Depends(auth.get_current
         with open(text.content_path, "r", encoding="utf-8") as f:
             content = f.read()
     except Exception as e:
-        content = "Error loading text content."
+        import os
+        cwd = os.getcwd()
+        content = f"Error loading text content. Path: '{text.content_path}'. CWD: '{cwd}'. Error: {str(e)}"
 
     # Create a response object including the content
     # We need to manually construct the dict or object because we are enhancing the DB model
