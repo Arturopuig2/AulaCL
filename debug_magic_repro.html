@@ -40,16 +40,16 @@
             card.style.border = '1px solid #e2e8f0';
             card.style.borderRadius = '0.5rem';
 
-            // EXACT LOGIC FROM admin.html (REFACTORED for DOM Safety)
+            // EXACT LOGIC FROM admin.html (REFACTORED for DOM Safety & Layout Fix)
             card.innerHTML = `
                 <div style="margin-bottom: 0.5rem; font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
-                <input type="text" class="q-input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b;">
+                <input type="text" class="q-input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
                 
                 <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
                     ${q.options.map((_, optIndex) => `
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''}>
-                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" style="flex: 1; padding: 0.3rem; border: 1px solid #e2e8f0; border-radius: 4px; color: #1e293b;">
+                            <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 20px; height: 20px; flex-shrink: 0; margin-right: 0.5rem;">
+                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" placeholder="Escribe una opción..." style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0;">
                         </div>
                     `).join('')}
                 </div>
