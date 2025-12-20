@@ -118,65 +118,90 @@
     <div
         style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
         <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Subir Lectura</h2>
-        <form id="upload-form"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
-                <input type="text" id="new-title" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+        <form id="upload-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- ROW 1: METADATA -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="new-title"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
+                    <input type="text" id="new-title" required
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="new-course"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
+                    <select id="new-course" required
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <optgroup label="Primaria">
+                            <option value="1P">1º Primaria</option>
+                            <option value="2P">2º Primaria</option>
+                            <option value="3P">3º Primaria</option>
+                            <option value="4P">4º Primaria</option>
+                            <option value="5P">5º Primaria</option>
+                            <option value="6P">6º Primaria</option>
+                        </optgroup>
+                        <optgroup label="ESO">
+                            <option value="1ESO">1º ESO</option>
+                            <option value="2ESO">2º ESO</option>
+                            <option value="3ESO">3º ESO</option>
+                            <option value="4ESO">4º ESO</option>
+                        </optgroup>
+                        <optgroup label="Bachillerato">
+                            <option value="1BAT">1º Bachillerato</option>
+                            <option value="2BAT">2º Bachillerato</option>
+                        </optgroup>
+                        <option value="ALL">Sin Curso / General</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="new-lang"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+                    <select id="new-lang" required
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                        <option value="es" selected>Español</option>
+                        <option value="val">Valencià</option>
+                        <option value="en">Inglés</option>
+                        <option value="fr">Francés</option>
+                        <option value="cat">Català</option>
+                        <option value="gal">Gallego</option>
+                        <option value="eus">Euskera</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
-                <select id="new-course" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                    <option value="" disabled selected>Seleccionar...</option>
-                    <optgroup label="Primaria">
-                        <option value="1P">1º Primaria</option>
-                        <option value="2P">2º Primaria</option>
-                        <option value="3P">3º Primaria</option>
-                        <option value="4P">4º Primaria</option>
-                        <option value="5P">5º Primaria</option>
-                        <option value="6P">6º Primaria</option>
-                    </optgroup>
-                    <optgroup label="ESO">
-                        <option value="1ESO">1º ESO</option>
-                        <option value="2ESO">2º ESO</option>
-                        <option value="3ESO">3º ESO</option>
-                        <option value="4ESO">4º ESO</option>
-                    </optgroup>
-                    <optgroup label="Bachillerato">
-                        <option value="1BAT">1º Bachillerato</option>
-                        <option value="2BAT">2º Bachillerato</option>
-                    </optgroup>
-                    <option value="ALL">Sin Curso / General</option>
-                </select>
-            </div>
+            <!-- ROW 2: FILES -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
+                        (.txt)</label>
+                    <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                        <input type="file" id="text-file" accept=".txt" required style="display: none;"
+                            onchange="document.getElementById('text-file-name').textContent = this.files[0]?.name || ''">
+                        <button type="button" onclick="document.getElementById('text-file').click()"
+                            style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
+                            Seleccionar Archivo
+                        </button>
+                        <span id="text-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
+                    </div>
+                </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
-                <select id="new-lang" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                    <option value="es" selected>Español</option>
-                    <option value="val">Valencià</option>
-                    <option value="en">Inglés</option>
-                    <option value="fr">Francés</option>
-                    <option value="cat">Català</option>
-                    <option value="gal">Gallego</option>
-                    <option value="eus">Euskera</option>
-                </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="text-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
-                    (.txt)</label>
-                <input type="file" id="text-file" accept=".txt" required style="font-size: 0.9rem;">
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="audio-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
-                    (Opcional)</label>
-                <input type="file" id="audio-file" accept=".mp3" style="font-size: 0.9rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
+                        (Opcional)</label>
+                    <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                        <input type="file" id="audio-file" accept=".mp3" style="display: none;"
+                            onchange="document.getElementById('audio-file-name').textContent = this.files[0]?.name || ''">
+                        <button type="button" onclick="document.getElementById('audio-file').click()"
+                            style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
+                            Seleccionar Audio
+                        </button>
+                        <span id="audio-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
+                    </div>
+                </div>
             </div>
 
             <div style="grid-column: 1 / -1;">
