@@ -679,7 +679,11 @@ def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.Us
     - LONGITUD: Aprox {request.word_count} palabras.
     - IDIOMA: {request.language}
 
-    Y genera 10 preguntas de comprensión (5 Test 3 opciones, 5 Verdadero/Falso).
+    Y genera 10 preguntas de comprensión:
+    - 5 PREGUNTAS TIPO TEST (3 opciones: A, B, C).
+    - 5 PREGUNTAS VERDADERO/FALSO (2 opciones: Verdadero, Falso).
+
+    IMPORTANTE: El campo 'options' debe ser SIEMPRE una lista de cadenas de texto. El campo 'correct_index' es el índice (0, 1 o 2).
 
     FORMATO JSON OBLIGATORIO:
     {{
@@ -687,11 +691,10 @@ def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.Us
         "content": "El texto del cuento...",
         "questions": [
             {{
-                "question": "¿Pregunta?",
+                "question": "Pregunta de ejemplo...",
                 "options": ["Opción A", "Opción B", "Opción C"],
                 "correct_index": 0
-            }},
-            ...
+            }}
         ]
     }}
     """
@@ -700,10 +703,11 @@ def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.Us
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Eres un escritor de cuentos infantiles experto."},
+                {"role": "system", "content": "Eres un asistente experto que SOLO responde en JSON válido."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7
+            temperature=0.7,
+            response_format={"type": "json_object"}
         )
         
         json_content = response.choices[0].message.content
