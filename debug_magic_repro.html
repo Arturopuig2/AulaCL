@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Writer Debug</title>
+</head>
+
+<body>
+    <div id="questions-container"></div>
+
+    <script>
+        const draft = {
+            questions: [
+                {
+                    question: "Question with \"quotes\" in it?",
+                    options: ["Option \"A\"", "Option 'B'", "Option C"],
+                    correct_index: 0
+                }
+            ]
+        };
+
+        const qContainer = document.getElementById('questions-container');
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        draft.questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.style.background = '#f8fafc';
+            card.style.padding = '1rem';
+            card.style.border = '1px solid #e2e8f0';
+            card.style.borderRadius = '0.5rem';
+
+            // EXACT LOGIC FROM admin.html (FIXED)
+            card.innerHTML = `
+                <div style="margin-bottom: 0.5rem; font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
+                <input type="text" class="q-input" value="${escapeHtml(q.question)}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+                
+                <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
+                    ${q.options.map((opt, optIndex) => `
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''}>
+                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" value="${escapeHtml(opt)}" style="flex: 1; padding: 0.3rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            qContainer.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

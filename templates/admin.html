@@ -527,6 +527,16 @@
         }
     }
 
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     function renderMagicEditor(draft) {
         document.getElementById('edit-title').value = draft.title;
         document.getElementById('edit-content').value = draft.content;
@@ -543,13 +553,13 @@
 
             card.innerHTML = `
                 <div style="margin-bottom: 0.5rem; font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
-                <input type="text" class="q-input" value="${q.question}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <input type="text" class="q-input" value="${escapeHtml(q.question)}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 4px;">
                 
                 <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
                     ${q.options.map((opt, optIndex) => `
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''}>
-                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" value="${opt}" style="flex: 1; padding: 0.3rem; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" value="${escapeHtml(opt)}" style="flex: 1; padding: 0.3rem; border: 1px solid #e2e8f0; border-radius: 4px;">
                         </div>
                     `).join('')}
                 </div>
