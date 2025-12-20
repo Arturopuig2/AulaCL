@@ -179,7 +179,7 @@
             const lockIcon = text.is_locked ? '<div style="position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem;">🔒</div>' : '';
             const blur = text.is_locked ? 'filter: grayscale(80%);' : '';
 
-            card.style.cssText = `position: relative; ${blur}`;
+            card.style.cssText = `position: relative; ${blur}; display: flex; flex-direction: column; height: 100%;`;
 
             // If locked, clicking the card opens modal
             if (text.is_locked) {
@@ -196,12 +196,16 @@
                     <h3>${text.title}</h3>
                     ${text.is_completed ? `<div style="display: flex; align-items: center;"><span style="font-size: 0.85rem; color: var(--text-secondary); margin-right: 0.5rem; font-weight: 500;">${Math.round(text.score / 10)}/10</span><div style="width: 12px; height: 12px; background-color: #22c55e; border-radius: 50%;" title="Completado"></div></div>` : ''}
                 </div>
-                <div style="margin-bottom: 0.5rem; opacity: ${opacity};">
+                
+                <p style="color: var(--text-secondary); display: none;">Curso: ${text.course_level}</p>
+                <div style="flex-grow: 1;"></div> 
+
+                <div style="margin-bottom: 0.75rem; opacity: ${opacity};">
                     ${getCourseBadge(text.course_level)}
                     <span style="background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; color: var(--text-primary);">${getLangLabel(text.language)}</span>
                 </div>
-                <p style="color: var(--text-secondary); display: none;">Curso: ${text.course_level}</p>
-                <a href="${text.is_locked ? '#' : '/reading-room/' + text.id}" class="btn btn-primary" style="margin-top: 1rem; width: 100%; text-decoration: none; text-align: center; opacity: ${opacity}; pointer-events: ${pointerEvents};">
+
+                <a href="${text.is_locked ? '#' : '/reading-room/' + text.id}" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center; opacity: ${opacity}; pointer-events: ${pointerEvents};">
                     ${text.is_locked ? 'Bloqueado' : 'Leer y Escuchar'}
                 </a>
             `;

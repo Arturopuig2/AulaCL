@@ -12,13 +12,8 @@
     </div>
 
     <div
-        style="margin-bottom: 3rem; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); padding: 1.5rem; border-radius: 1rem; border: 1px solid #bfdbfe; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);">
-        <h2
-            style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            ✨ Escritor Mágico IA
-            <span
-                style="font-size: 0.8rem; background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: normal;">Nuevo</span>
-        </h2>
+        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Escritor Mágico IA</h2>
 
         <!-- MAGIC CONFIG -->
         <div id="magic-config">
@@ -27,22 +22,28 @@
                 <div class="form-group" style="grid-column: span 2;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tema / Sinopsis</label>
                     <input type="text" id="magic-topic" placeholder="Ej: Dos astronautas descubren una flor en la Luna"
+                        onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                        onblur="this.placeholder=this.dataset.ph"
                         style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
                 </div>
 
                 <div class="form-group">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Edad Lectores</label>
                     <input type="text" id="magic-age" placeholder="Ej: 8-10 años"
+                        onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                        onblur="this.placeholder=this.dataset.ph"
                         style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
                 </div>
 
                 <div class="form-group">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="magic-words">
-                        Longitud (palabras) <span class="text-xs text-blue-500">(v1.5)</span>
+                        Longitud (palabras)
                     </label>
                     <input type="number" id="magic-words" value="150" step="50"
                         style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
                 </div>
+
+
 
                 <div class="form-group">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
@@ -71,10 +72,16 @@
                     </select>
                 </div>
 
-                <button onclick="generateMagicStory()" id="btn-magic-gen" class="btn btn-primary"
-                    style="width: 100%; height: 42px; background: #2563eb;">
-                    🪄 Generar Cuento
-                </button>
+                <div class="form-group" style="margin-left: 2rem;">
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500; visibility: hidden;">Generar</label>
+                    <button onclick="generateMagicStory()" id="btn-magic-gen" class="btn btn-primary"
+                        style="width: 100%; height: 42px; background: #2563eb;">
+                        🪄 Generar Cuento
+                    </button>
+                </div>
+
+
             </div>
         </div>
 
@@ -108,77 +115,80 @@
         </div>
     </div>
 
-    <div <form id="upload-form"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
-            <input type="text" id="new-title" required
-                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-        </div>
+    <div
+        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
+        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Subir Lectura</h2>
+        <form id="upload-form"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
+                <input type="text" id="new-title" required
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+            </div>
 
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
-            <select id="new-course" required
-                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                <option value="" disabled selected>Seleccionar...</option>
-                <optgroup label="Primaria">
-                    <option value="1P">1º Primaria</option>
-                    <option value="2P">2º Primaria</option>
-                    <option value="3P">3º Primaria</option>
-                    <option value="4P">4º Primaria</option>
-                    <option value="5P">5º Primaria</option>
-                    <option value="6P">6º Primaria</option>
-                </optgroup>
-                <optgroup label="ESO">
-                    <option value="1ESO">1º ESO</option>
-                    <option value="2ESO">2º ESO</option>
-                    <option value="3ESO">3º ESO</option>
-                    <option value="4ESO">4º ESO</option>
-                </optgroup>
-                <optgroup label="Bachillerato">
-                    <option value="1BAT">1º Bachillerato</option>
-                    <option value="2BAT">2º Bachillerato</option>
-                </optgroup>
-                <option value="ALL">Sin Curso / General</option>
-            </select>
-        </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
+                <select id="new-course" required
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                    <option value="" disabled selected>Seleccionar...</option>
+                    <optgroup label="Primaria">
+                        <option value="1P">1º Primaria</option>
+                        <option value="2P">2º Primaria</option>
+                        <option value="3P">3º Primaria</option>
+                        <option value="4P">4º Primaria</option>
+                        <option value="5P">5º Primaria</option>
+                        <option value="6P">6º Primaria</option>
+                    </optgroup>
+                    <optgroup label="ESO">
+                        <option value="1ESO">1º ESO</option>
+                        <option value="2ESO">2º ESO</option>
+                        <option value="3ESO">3º ESO</option>
+                        <option value="4ESO">4º ESO</option>
+                    </optgroup>
+                    <optgroup label="Bachillerato">
+                        <option value="1BAT">1º Bachillerato</option>
+                        <option value="2BAT">2º Bachillerato</option>
+                    </optgroup>
+                    <option value="ALL">Sin Curso / General</option>
+                </select>
+            </div>
 
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
-            <select id="new-lang" required
-                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                <option value="es" selected>Español</option>
-                <option value="val">Valencià</option>
-                <option value="en">Inglés</option>
-                <option value="fr">Francés</option>
-                <option value="cat">Català</option>
-                <option value="gal">Gallego</option>
-                <option value="eus">Euskera</option>
-            </select>
-        </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+                <select id="new-lang" required
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                    <option value="es" selected>Español</option>
+                    <option value="val">Valencià</option>
+                    <option value="en">Inglés</option>
+                    <option value="fr">Francés</option>
+                    <option value="cat">Català</option>
+                    <option value="gal">Gallego</option>
+                    <option value="eus">Euskera</option>
+                </select>
+            </div>
 
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="text-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
-                (.txt)</label>
-            <input type="file" id="text-file" accept=".txt" required style="font-size: 0.9rem;">
-        </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="text-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
+                    (.txt)</label>
+                <input type="file" id="text-file" accept=".txt" required style="font-size: 0.9rem;">
+            </div>
 
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="audio-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
-                (Opcional)</label>
-            <input type="file" id="audio-file" accept=".mp3" style="font-size: 0.9rem;">
-        </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="audio-file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
+                    (Opcional)</label>
+                <input type="file" id="audio-file" accept=".mp3" style="font-size: 0.9rem;">
+            </div>
 
-        <div style="grid-column: 1 / -1;">
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
-        </div>
+            <div style="grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
+            </div>
         </form>
     </div>
 
     <!-- ACCESS CODES SECTION -->
     <div
         style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-        <h2 style="margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem;">Generar Códigos de Acceso
+        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Generar Códigos de Acceso
         </h2>
         <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
             <div style="flex: 1;">
@@ -210,8 +220,9 @@
         </div>
     </div>
 
-    <div class="table-container" style="overflow-x: auto;">
-        <h2 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem;">Gestión de Lecturas</h2>
+    <div class="table-container"
+        style="overflow-x: auto; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
+        <h2 style="margin-bottom: 1rem; color: #1e40af; font-size: 1.5rem;">Gestión de Lecturas</h2>
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
@@ -562,7 +573,10 @@
                 <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
                     ${q.options.map((_, optIndex) => `
                         <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
-                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" placeholder="Escribe una opción..." style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
+                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" placeholder="Escribe una opción..." 
+                                onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                                onblur="this.placeholder=this.dataset.ph"
+                                style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
                             <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;">
                         </div>
                     `).join('')}
