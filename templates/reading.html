@@ -299,7 +299,11 @@
 
         } catch (error) {
             console.error(error);
-            alert("Error cargando el texto");
+            if (error.response) {
+                alert(`Error ${error.response.status}: ${error.response.data.detail || 'Error cargando el texto'}`);
+            } else {
+                alert("Error de conexión o desconocido cargando el texto");
+            }
         }
     }
 
