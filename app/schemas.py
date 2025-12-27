@@ -113,7 +113,7 @@ class QuestionDraft(BaseModel):
 
 class MagicRequest(BaseModel):
     topic: str
-    age_target: str
+    course_level: str
     word_count: int
     language: str
 
@@ -128,3 +128,14 @@ class MagicSaveRequest(BaseModel):
     questions: List[QuestionDraft]
     course_level: str
     language: str
+
+class MagicStoryResponse(BaseModel):
+    title: str
+    content: str
+
+class MagicQuestionsRequest(BaseModel):
+    content: str
+    topic: Optional[str] = None
+
+class MagicQuestionsResponse(BaseModel):
+    questions: List[QuestionDraft]

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
+from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
@@ -653,10 +654,12 @@ def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
+
+
 # --- MAGIC WRITER ENDPOINTS ---
 
-@router.post("/admin/magic/generate", response_model=schemas.MagicDraftResponse)
-def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.User = Depends(auth.get_current_user)):
+@router.post("/admin/magic/story", response_model=schemas.MagicStoryResponse)
+def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.User = Depends(auth.get_current_user)):
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
 
@@ -664,38 +667,38 @@ def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.Us
     import os
     import json
     from dotenv import load_dotenv
+    import traceback
     
     load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
+        print("❌ CRITICAL: OPENAI_API_KEY is missing/None in generate_magic_story")
         raise HTTPException(status_code=500, detail="OPENAI_API_KEY missing")
 
     client = openai.OpenAI(api_key=api_key)
 
+    # Context Loading
+    context_instruction = ""
+    try:
+        if os.path.exists("data/magic_context.txt"):
+            with open("data/magic_context.txt", "r", encoding="utf-8") as f:
+                context_content = f.read().strip()
+                if context_content:
+                    context_instruction = f"\n    - CONTEXTO/INSTRUCCIONES ADICIONALES: {context_content}"
+    except Exception as e:
+        print(f"Warning: Could not read magic_context.txt: {e}")
+
     prompt = f"""
     Escribe un cuento para niños con los siguientes parámetros:
     - TEMA: {request.topic}
-    - EDAD LECTORES: {request.age_target}
+    - NIVEL ESCOLAR: {request.course_level}
     - LONGITUD: Aprox {request.word_count} palabras.
-    - IDIOMA: {request.language}
-
-    Y genera 10 preguntas de comprensión:
-    - 5 PREGUNTAS TIPO TEST (3 opciones: A, B, C).
-    - 5 PREGUNTAS VERDADERO/FALSO (2 opciones: Verdadero, Falso).
-
-    IMPORTANTE: El campo 'options' debe ser SIEMPRE una lista de cadenas de texto. El campo 'correct_index' es el índice (0, 1 o 2).
+    - IDIOMA: {request.language}{context_instruction}
 
     FORMATO JSON OBLIGATORIO:
     {{
         "title": "Un título creativo",
-        "content": "El texto del cuento...",
-        "questions": [
-            {{
-                "question": "Pregunta de ejemplo...",
-                "options": ["Opción A", "Opción B", "Opción C"],
-                "correct_index": 0
-            }}
-        ]
+        "content": "El texto del cuento..."
     }}
     """
 
@@ -712,32 +715,231 @@ def generate_magic_draft(request: schemas.MagicRequest, current_user: schemas.Us
         
         json_content = response.choices[0].message.content
         json_content = json_content.replace("```json", "").replace("```", "").strip()
-        data = json.loads(json_content)
-
-        # --- REPAIR LOGIC: Ensure options are never empty ---
-        if "questions" in data and isinstance(data["questions"], list):
-            for i, q in enumerate(data["questions"]):
-                # 1. Ensure options is a list
-                if "options" not in q or not isinstance(q["options"], list):
-                    q["options"] = []
-                
-                # 2. Fill empty options
-                if len(q["options"]) < 2:
-                    if i >= 5: # Last 5 are T/F per prompt
-                        q["options"] = ["Verdadero", "Falso"]
-                    else:
-                        q["options"] = ["Opción A", "Opción B", "Opción C"]
-                        
-                # 3. Ensure correct_index is safe
-                if "correct_index" not in q or not isinstance(q["correct_index"], int):
-                    q["correct_index"] = 0
-        # ----------------------------------------------------
         
-        return schemas.MagicDraftResponse(**data)
+        try:
+            data = json.loads(json_content)
+        except json.JSONDecodeError as je:
+            print(f"❌ JSON Decode Error: {je} - Content: {json_content}")
+            raise HTTPException(status_code=500, detail="Error de IA: Respuesta no es un JSON válido")
+
+        # Robust Type Handling
+        if isinstance(data, list):
+            if len(data) > 0 and isinstance(data[0], dict):
+                data = data[0]
+            else:
+                raise HTTPException(status_code=500, detail="Error de IA: Formato inesperado")
+
+        data["title"] = str(data.get("title") or "Cuento Generado")
+        data["content"] = str(data.get("content") or "Error generando contenido")
+        
+        return schemas.MagicStoryResponse(title=data["title"], content=data["content"])
 
     except Exception as e:
-        print(f"Magic Gen Error: {e}")
+        print("❌ CRITICAL EXCEPTION IN GENERATE_MAGIC_STORY")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generando cuento: {str(e)}")
+
+
+@router.post("/admin/magic/questions", response_model=schemas.MagicQuestionsResponse)
+def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current_user: schemas.User = Depends(auth.get_current_user)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    import openai
+    import os
+    import json
+    from dotenv import load_dotenv
+    import traceback
+    
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI(api_key=api_key)
+
+    # Context Loading
+    context_instruction = ""
+    try:
+        if os.path.exists("data/magic_context.txt"):
+            with open("data/magic_context.txt", "r", encoding="utf-8") as f:
+                context_content = f.read().strip()
+                if context_content:
+                    context_instruction = f"\n    CONTEXTO ADICIONAL PARA GENERACIÓN: {context_content}\n"
+    except Exception as e:
+        print(f"Warning: Could not read magic_context.txt: {e}")
+
+    prompt = f"""
+    Genera 13 preguntas de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
+    
+    TEXTO:
+    {request.content}
+
+    {context_instruction}
+    
+    DEFINICIONES DE TIPOS DE PREGUNTAS (LOMLOE):
+
+    A) LITERAL (Comprensión):
+       - La respuesta está ESCRITA en el texto. Se puede señalar con el dedo.
+       - Fórmula: Texto = Respuesta.
+       - Si la respuesta usa las mismas palabras, ES LITERAL.
+
+    B) INFERENCIAL (Comprensión):
+       - La respuesta NO está escrita explícitamente. Requiere "leer entre líneas".
+       - Fórmula: Pistas del texto + Conocimiento previo = Inferencia.
+       - Indaga en el "por qué", "conclusiones" o "sentimientos" no explicados.
+    
+    C) VOCABULARIO (Léxico):
+       - Identificación de significados, contrarios o sentido figurado.
+    
+    D) EXPRESIÓN ORAL (Comunicación):
+       - Propuestas para hablar, debatir o explicar algo verbalmente.
+    
+    E) EXPRESIÓN ESCRITA (Creación):
+       - Propuestas para escribir frases, finales alternativos o descripciones.
+    
+    F) ACTIVIDAD LÚDICA (Juego):
+       - Dramatización, dibujo, ritmos o retos divertidos basados en el texto.
+    
+    G) ACTIVIDAD REFLEXIVA (Valores/Crítico):
+       - Relación con valores, emociones o pensamiento crítico (ODS).
+
+    REQUISITOS (Total 13 preguntas/actividades):
+
+    1. 2 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
+       - Respuesta explícita en el texto.
+       - REASONING: Cita la frase exacta.
+
+    2. 2 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
+       - Respuesta deducida.
+       - IMPERATIVO: Si la respuesta está en el texto, CÁMBIALA a Literal o haz otra pregunta.
+       - REASONING: Explica la deducción.
+
+    3. 2 PREGUNTAS DE VERDADERO O FALSO.
+       - Opciones: ["Verdadero", "Falso"].
+       - Indica si es [LITERAL] o [INFERENCIAL].
+
+    4. 2 PREGUNTAS DE "RELLENAR HUECO".
+       - Enunciado: "Completa la frase: ... ______ ...".
+       - REGLA DE ORO: Si es cita exacta -> LITERAL. Si es conclusión -> INFERENCIAL.
+
+    5. 1 PREGUNTA DE VOCABULARIO.
+       - Ej: Buscar antónimo, sinónimo o significado. (Tipo Test u Abierta).
+       
+    6. 1 ACTIVIDAD DE EXPRESIÓN ORAL.
+       - Ej: "Explica a tus compañeros...", "Debate sobre...".
+       - Options: [] (Array vacío).
+       
+    7. 1 ACTIVIDAD DE EXPRESIÓN ESCRITA.
+       - Ej: "Escribe un final alternativo...", "Inventa una frase...".
+       - Options: [] (Array vacío).
+
+    8. 1 ACTIVIDAD LÚDICA.
+       - Ej: "Dibuja...", "Dramatiza...", "Canta...".
+       - Options: [] (Array vacío).
+
+    9. 1 ACTIVIDAD REFLEXIVA.
+       - Ej: "¿Qué harías tú...?", "¿Por qué es importante...?".
+       - Options: [] (Array vacío).
+
+    IMPORTANTE: El campo 'options' debe ser una lista de textos. Si es una actividad abierta, usa [].
+
+    FORMATO JSON OBLIGATORIO:
+    {{
+        "questions": [
+            {{
+                "question": "Texto de la pregunta/actividad...",
+                "options": ["Opción A", "Opción B"] o [],
+                "correct_index": 0,
+                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "ORAL" | "ESCRITA" | "LUDICA" | "REFLEXIVA",
+                "reasoning": "Explicación de la clasificación"
+            }}
+        ]
+    }}
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Eres un asistente experto que SOLO responde en JSON válido."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            response_format={"type": "json_object"}
+        )
+
+        json_content = response.choices[0].message.content
+        json_content = json_content.replace("```json", "").replace("```", "").strip()
+
+        try:
+            data = json.loads(json_content)
+        except json.JSONDecodeError as je:
+            print(f"❌ JSON Decode Error: {je}")
+            raise HTTPException(status_code=500, detail="Error de IA: Respuesta inválida")
+
+        if isinstance(data, list):
+             if len(data) > 0 and isinstance(data[0], dict):
+                data = data[0]
+        
+        if "questions" not in data or not isinstance(data["questions"], list):
+            data["questions"] = []
+
+        valid_questions = []
+        for i, q in enumerate(data["questions"]):
+            if not isinstance(q, dict): continue
+            
+            # Format Question Text with Type Tag
+            q_text = str(q.get("question") or f"Pregunta {i+1}")
+            q_type = str(q.get("type", "")).upper().strip()
+            
+            # Map types to nice labels
+            type_label = ""
+            if "INFERENCIA" in q_type or "INFERENCIAL" in q_type:
+                type_label = "[INFERENCIA]"
+            elif "LITERAL" in q_type:
+                type_label = "[LITERAL]"
+            elif "VOCABULARIO" in q_type:
+                type_label = "[VOCABULARIO]"
+            elif "ORAL" in q_type:
+                type_label = "[EXPRESIÓN ORAL]"
+            elif "ESCRITA" in q_type:
+                type_label = "[EXPRESIÓN ESCRITA]"
+            elif "LUDICA" in q_type or "LÚDICA" in q_type:
+                type_label = "[LÚDICA]"
+            elif "REFLEXIVA" in q_type:
+                type_label = "[REFLEXIVA]"
+            
+            if type_label:
+                q["question"] = f"{type_label} {q_text}"
+            else:
+                q["question"] = q_text
+            
+            if "options" not in q or not isinstance(q["options"], list):
+                q["options"] = []
+            
+            q["options"] = [str(opt) for opt in q["options"] if opt is not None]
+            
+            # Use strict option count only for Test types
+            is_open_activity = any(x in q_type for x in ["ORAL", "ESCRITA", "LUDICA", "LÚDICA", "REFLEXIVA"])
+            
+            # For standard test types, ensure at least 2 options
+            if not is_open_activity:
+                 while len(q["options"]) < 2:
+                    q["options"].append(f"Opción {len(q['options'])+1}")
+
+            try:
+                idx = int(q.get("correct_index", 0))
+                if idx < 0 or idx >= len(q["options"]): idx = 0
+                q["correct_index"] = idx
+            except:
+                q["correct_index"] = 0
+                
+            valid_questions.append(q)
+
+        return schemas.MagicQuestionsResponse(questions=valid_questions)
+
+    except Exception as e:
+        print("❌ CRITICAL EXCEPTION IN GENERATE_QUESTIONS")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generando preguntas: {str(e)}")
 
 @router.post("/admin/magic/save", response_model=schemas.TextResponse)
 def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):

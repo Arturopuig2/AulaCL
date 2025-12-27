@@ -2,7 +2,11 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from .database import engine, Base
+from .database import engine, Base
 from .routers import auth, reading, subusers
+from . import schemas # Import schemas
+from fastapi import Request, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
@@ -65,4 +69,8 @@ def subusers_page(request: Request):
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request})
+
+@app.get("/admin/magic", response_class=HTMLResponse)
+def magic_writer_page(request: Request):
+    return templates.TemplateResponse("magic_writer.html", {"request": request})
 

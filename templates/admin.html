@@ -5,265 +5,175 @@
 {% endblock %}
 
 {% block content %}
-<div class="glass-panel" style="padding: 2rem; max-width: 1000px; margin: 0 auto;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h1>Administración</h1>
+<h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Administración</h1>
+
+<div style="max-width: 1000px; margin: 0 auto;">
+    <!-- Actions if any -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 2rem;">
 
     </div>
 
     <div
-        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Escritor Mágico IA</h2>
-
-        <!-- MAGIC CONFIG -->
-        <div id="magic-config">
-            <div
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
-                <div class="form-group" style="grid-column: span 2;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tema / Sinopsis</label>
-                    <input type="text" id="magic-topic" placeholder="Ej: Dos astronautas descubren una flor en la Luna"
-                        onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                        onblur="this.placeholder=this.dataset.ph"
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                </div>
-
-                <div class="form-group">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Edad Lectores</label>
-                    <input type="text" id="magic-age" placeholder="Ej: 8-10 años"
-                        onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                        onblur="this.placeholder=this.dataset.ph"
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                </div>
-
-                <div class="form-group">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="magic-words">
-                        Longitud (palabras)
-                    </label>
-                    <input type="number" id="magic-words" value="150" step="50"
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                </div>
-
-
-
-                <div class="form-group">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
-                    <select id="magic-lang"
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                        <option value="es">Español</option>
-                        <option value="en">Inglés</option>
-                        <option value="val">Valencià</option>
-                        <option value="fr">Francés</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Guardar en Curso</label>
-                    <select id="magic-course"
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                        <option value="ALL">Sin Curso / General</option>
-                        <optgroup label="Primaria">
-                            <option value="1P">1º P</option>
-                            <option value="2P">2º P</option>
-                            <option value="3P">3º P</option>
-                            <option value="4P">4º P</option>
-                            <option value="5P">5º P</option>
-                            <option value="6P">6º P</option>
-                        </optgroup>
-                    </select>
-                </div>
-
-                <div class="form-group" style="margin-left: 2rem;">
-                    <label
-                        style="display: block; margin-bottom: 0.5rem; font-weight: 500; visibility: hidden;">Generar</label>
-                    <button onclick="generateMagicStory()" id="btn-magic-gen" class="btn btn-primary"
-                        style="width: 100%; height: 42px; background: #2563eb;">
-                        🪄 Generar Cuento
-                    </button>
-                </div>
-
-
-            </div>
+        style="margin-bottom: 3rem; background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">Escritor Mágico IA</h2>
+            <p style="color: #64748b; margin: 0;">Genera cuentos personalizados y preguntas de comprensión
+                automáticamente.</p>
         </div>
-
-        <!-- MAGIC EDITOR -->
-        <div id="magic-editor"
-            style="display: none; margin-top: 2rem; border-top: 2px dashed #bfdbfe; padding-top: 2rem;">
-            <h3 style="margin-bottom: 1rem; color: #1e40af;">Revisión y Edición</h3>
-
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <label style="font-weight: bold;">Título</label>
-                <input type="text" id="edit-title"
-                    style="width: 100%; padding: 0.5rem; font-weight: bold; font-size: 1.1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
-            </div>
-
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <label style="font-weight: bold;">Historia</label>
-                <textarea id="edit-content"
-                    style="width: 100%; height: 300px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: sans-serif; line-height: 1.6;"></textarea>
-            </div>
-
-            <h4 style="margin-bottom: 1rem; color: #1e40af;">Editar Preguntas</h4>
-            <div id="questions-container" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-                <!-- JS will popualte this -->
-            </div>
-
-            <div style="display: flex; gap: 1rem;">
-                <button onclick="saveMagicStory()" id="btn-magic-save" class="btn btn-primary"
-                    style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar en Librería</button>
-                <button onclick="cancelMagic()" class="btn btn-outline" style="flex: 1;">Cancelar</button>
-            </div>
-        </div>
+        <a href="/admin/magic" class="btn btn-primary"
+            style="padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; text-decoration: none;">
+            ✨ Ir al Escritor Mágico
+        </a>
     </div>
 
-    <div
-        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Subir Lectura</h2>
-        <form id="upload-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- MAIN CONTAINER END (Old Magic Writer removed) -->
+</div>
 
-            <!-- ROW 1: METADATA -->
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; align-items: end;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="new-title"
-                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
-                    <input type="text" id="new-title" required
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                </div>
+<div
+    style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; max-width: 1000px; margin-left: auto; margin-right: auto;">
+    <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Subir Lectura</h2>
+    <form id="upload-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
 
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="new-course"
-                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
-                    <select id="new-course" required
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                        <option value="" disabled selected>Seleccionar...</option>
-                        <optgroup label="Primaria">
-                            <option value="1P">1º Primaria</option>
-                            <option value="2P">2º Primaria</option>
-                            <option value="3P">3º Primaria</option>
-                            <option value="4P">4º Primaria</option>
-                            <option value="5P">5º Primaria</option>
-                            <option value="6P">6º Primaria</option>
-                        </optgroup>
-                        <optgroup label="ESO">
-                            <option value="1ESO">1º ESO</option>
-                            <option value="2ESO">2º ESO</option>
-                            <option value="3ESO">3º ESO</option>
-                            <option value="4ESO">4º ESO</option>
-                        </optgroup>
-                        <optgroup label="Bachillerato">
-                            <option value="1BAT">1º Bachillerato</option>
-                            <option value="2BAT">2º Bachillerato</option>
-                        </optgroup>
-                        <option value="ALL">Sin Curso / General</option>
-                    </select>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="new-lang"
-                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
-                    <select id="new-lang" required
-                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                        <option value="es" selected>Español</option>
-                        <option value="val">Valencià</option>
-                        <option value="en">Inglés</option>
-                        <option value="fr">Francés</option>
-                        <option value="cat">Català</option>
-                        <option value="gal">Gallego</option>
-                        <option value="eus">Euskera</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- ROW 2: FILES -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
-                        (.txt)</label>
-                    <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
-                        <input type="file" id="text-file" accept=".txt" required style="display: none;"
-                            onchange="document.getElementById('text-file-name').textContent = this.files[0]?.name || ''">
-                        <button type="button" onclick="document.getElementById('text-file').click()"
-                            style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
-                            Seleccionar Archivo
-                        </button>
-                        <span id="text-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
-                        (Opcional)</label>
-                    <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
-                        <input type="file" id="audio-file" accept=".mp3" style="display: none;"
-                            onchange="document.getElementById('audio-file-name').textContent = this.files[0]?.name || ''">
-                        <button type="button" onclick="document.getElementById('audio-file').click()"
-                            style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
-                            Seleccionar Audio
-                        </button>
-                        <span id="audio-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="grid-column: 1 / -1;">
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- ACCESS CODES SECTION -->
-    <div
-        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Generar Códigos de Acceso
-        </h2>
-        <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
-            <div style="flex: 1;">
-                <label for="code-count"
-                    style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Cantidad</label>
-                <input type="number" id="code-count" value="1" min="1" max="50"
+        <!-- ROW 1: METADATA -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
+                <input type="text" id="new-title" required
                     style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
             </div>
-            <button onclick="generateCodes()" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">Generar</button>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
+                <select id="new-course" required
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                    <option value="" disabled selected>Seleccionar...</option>
+                    <optgroup label="Primaria">
+                        <option value="1P">1º Primaria</option>
+                        <option value="2P">2º Primaria</option>
+                        <option value="3P">3º Primaria</option>
+                        <option value="4P">4º Primaria</option>
+                        <option value="5P">5º Primaria</option>
+                        <option value="6P">6º Primaria</option>
+                    </optgroup>
+                    <optgroup label="ESO">
+                        <option value="1ESO">1º ESO</option>
+                        <option value="2ESO">2º ESO</option>
+                        <option value="3ESO">3º ESO</option>
+                        <option value="4ESO">4º ESO</option>
+                    </optgroup>
+                    <optgroup label="Bachillerato">
+                        <option value="1BAT">1º Bachillerato</option>
+                        <option value="2BAT">2º Bachillerato</option>
+                    </optgroup>
+                    <option value="ALL">Sin Curso / General</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+                <select id="new-lang" required
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                    <option value="es" selected>Español</option>
+                    <option value="val">Valencià</option>
+                    <option value="en">Inglés</option>
+                    <option value="fr">Francés</option>
+                    <option value="cat">Català</option>
+                    <option value="gal">Gallego</option>
+                    <option value="eus">Euskera</option>
+                </select>
+            </div>
         </div>
 
-        <h3 style="margin-bottom: 1rem; font-size: 1rem;">Códigos Existentes</h3>
-        <div style="max-height: 200px; overflow-y: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                <thead style="position: sticky; top: 0; background: white;">
-                    <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
-                        <th style="padding: 0.5rem;">Código</th>
-                        <th style="padding: 0.5rem;">Estado</th>
-                        <th style="padding: 0.5rem;">Usado por</th>
-                        <th style="padding: 0.5rem;">Email</th>
-                        <th style="padding: 0.5rem;">Fecha Uso</th>
-                        <th style="padding: 0.5rem;">Caducidad</th>
-                    </tr>
-                </thead>
-                <tbody id="codes-table-body">
-                    <!-- Codes loaded via JS -->
-                </tbody>
-            </table>
+        <!-- ROW 2: FILES -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
+                    (.txt)</label>
+                <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                    <input type="file" id="text-file" accept=".txt" required style="display: none;"
+                        onchange="document.getElementById('text-file-name').textContent = this.files[0]?.name || ''">
+                    <button type="button" onclick="document.getElementById('text-file').click()"
+                        style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
+                        Seleccionar Archivo
+                    </button>
+                    <span id="text-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
+                    (Opcional)</label>
+                <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                    <input type="file" id="audio-file" accept=".mp3" style="display: none;"
+                        onchange="document.getElementById('audio-file-name').textContent = this.files[0]?.name || ''">
+                    <button type="button" onclick="document.getElementById('audio-file').click()"
+                        style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
+                        Seleccionar Audio
+                    </button>
+                    <span id="audio-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
+                </div>
+            </div>
         </div>
+
+        <div style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
+        </div>
+    </form>
+</div>
+
+<!-- ACCESS CODES SECTION -->
+<div
+    style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; max-width: 1000px; margin-left: auto; margin-right: auto;">
+    <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Generar Códigos de Acceso
+    </h2>
+    <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
+        <div style="flex: 1;">
+            <label for="code-count" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Cantidad</label>
+            <input type="number" id="code-count" value="1" min="1" max="50"
+                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+        </div>
+        <button onclick="generateCodes()" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">Generar</button>
     </div>
 
-    <div class="table-container"
-        style="overflow-x: auto; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-        <h2 style="margin-bottom: 1rem; color: #1e40af; font-size: 1.5rem;">Gestión de Lecturas</h2>
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
-                    <th style="padding: 1rem;">ID</th>
-                    <th style="padding: 1rem;">Título</th>
-                    <th style="padding: 1rem;">Curso</th>
-                    <th style="padding: 1rem;">Idioma</th>
-                    <th style="padding: 1rem;">Estado</th>
-                    <th style="padding: 1rem;">Acciones</th>
+    <h3 style="margin-bottom: 1rem; font-size: 1rem;">Códigos Existentes</h3>
+    <div style="max-height: 200px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead style="position: sticky; top: 0; background: white;">
+                <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
+                    <th style="padding: 0.5rem;">Código</th>
+                    <th style="padding: 0.5rem;">Estado</th>
+                    <th style="padding: 0.5rem;">Usado por</th>
+                    <th style="padding: 0.5rem;">Email</th>
+                    <th style="padding: 0.5rem;">Fecha Uso</th>
+                    <th style="padding: 0.5rem;">Caducidad</th>
                 </tr>
             </thead>
-            <tbody id="texts-table-body">
-                <!-- Rows loaded via JS -->
+            <tbody id="codes-table-body">
+                <!-- Codes loaded via JS -->
             </tbody>
         </table>
     </div>
+</div>
+
+<div class="table-container"
+    style="overflow-x: auto; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; max-width: 1000px; margin-left: auto; margin-right: auto;">
+    <h2 style="margin-bottom: 1rem; color: #1e40af; font-size: 1.5rem;">Gestión de Lecturas</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
+                <th style="padding: 1rem;">ID</th>
+                <th style="padding: 1rem;">Título</th>
+                <th style="padding: 1rem;">Curso</th>
+                <th style="padding: 1rem;">Idioma</th>
+                <th style="padding: 1rem;">Estado</th>
+                <th style="padding: 1rem;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="texts-table-body">
+            <!-- Rows loaded via JS -->
+        </tbody>
+    </table>
+</div>
 </div>
 
 <script>
@@ -276,6 +186,8 @@
         { value: '3ESO', label: '3º ESO' }, { value: '4ESO', label: '4º ESO' },
         { value: '1BAT', label: '1º Bachillerato' }, { value: '2BAT', label: '2º Bachillerato' }
     ];
+
+
 
     const langOptions = [
         { value: 'es', label: 'Español' }, { value: 'en', label: 'Inglés' },
@@ -521,173 +433,8 @@
         }
     });
 
-    // --- MAGIC WRITER LOGIC ---
-    let currentMagicDraft = null;
 
-    async function generateMagicStory() {
-        const topic = document.getElementById('magic-topic').value;
-        const age = document.getElementById('magic-age').value;
-        const words = document.getElementById('magic-words').value;
-        const lang = document.getElementById('magic-lang').value;
 
-        if (!topic || !age) {
-            alert("Por favor, rellena el tema y la edad.");
-            return;
-        }
-
-        const btn = document.getElementById('btn-magic-gen');
-        const originalText = btn.innerText;
-        btn.innerText = "✨ Creando Magia... (aprox 10s)";
-        btn.disabled = true;
-
-        try {
-            const response = await axios.post('/reading/admin/magic/generate', {
-                topic: topic,
-                age_target: age,
-                word_count: parseInt(words),
-                language: lang
-            });
-
-            currentMagicDraft = response.data;
-            console.log("Magic Draft Received:", currentMagicDraft); // Debug Log
-            renderMagicEditor(currentMagicDraft);
-
-            // UI Switch
-            document.getElementById('magic-config').style.display = 'none';
-            document.getElementById('magic-editor').style.display = 'block';
-
-        } catch (error) {
-            console.error(error);
-            alert("Error generando cuento: " + (error.response?.data?.detail || error.message));
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-    }
-
-    function escapeHtml(text) {
-        if (!text) return "";
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    function renderMagicEditor(draft) {
-        console.log("Rendering Draft:", draft); // Debugging
-        document.getElementById('edit-title').value = draft.title;
-        document.getElementById('edit-content').value = draft.content;
-
-        const qContainer = document.getElementById('questions-container');
-        qContainer.innerHTML = '';
-
-        draft.questions.forEach((q, index) => {
-            const card = document.createElement('div');
-            card.style.background = '#f8fafc';
-            card.style.padding = '1rem';
-            card.style.border = '1px solid #e2e8f0';
-            card.style.borderRadius = '0.5rem';
-
-            // Generate HTML structure (values set via JS below for safety)
-            card.innerHTML = `
-                <div style="margin-bottom: 0.5rem; font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
-                <input type="text" class="q-input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
-                
-                <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
-                    ${q.options.map((_, optIndex) => `
-                        <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
-                            <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" placeholder="Escribe una opción..." 
-                                onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                                onblur="this.placeholder=this.dataset.ph"
-                                style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
-                            <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;">
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            // Set values safely via DOM properties (avoids all escaping issues)
-            card.querySelector('.q-input').value = q.question;
-            const optInputs = card.querySelectorAll('.q-opt-input');
-            q.options.forEach((opt, i) => {
-                const safeOpt = (opt === null || opt === undefined) ? "" : opt;
-                if (optInputs[i]) optInputs[i].value = safeOpt;
-            });
-
-            qContainer.appendChild(card);
-        });
-    }
-
-    async function saveMagicStory() {
-        if (!currentMagicDraft) return;
-
-        const btn = document.getElementById('btn-magic-save');
-        btn.innerText = "Guardando...";
-        btn.disabled = true;
-
-        try {
-            // 1. Collect Data
-            const title = document.getElementById('edit-title').value;
-            const content = document.getElementById('edit-content').value;
-            const course = document.getElementById('magic-course').value;
-            const lang = document.getElementById('magic-lang').value;
-
-            // 2. Reconstruct Questions
-            const questions = [];
-            const qContainer = document.getElementById('questions-container');
-
-            // Loop by children count
-            for (let i = 0; i < qContainer.children.length; i++) {
-                const card = qContainer.children[i];
-                const qText = card.querySelector('.q-input').value;
-
-                // Get options
-                const optInputs = card.querySelectorAll('.q-opt-input');
-                const options = Array.from(optInputs).map(input => input.value);
-
-                // Get checked radio
-                const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
-                const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
-
-                questions.push({
-                    question: qText,
-                    options: options,
-                    correct_index: correctIndex
-                });
-            }
-
-            // 3. Send API
-            await axios.post('/reading/admin/magic/save', {
-                title: title,
-                content: content,
-                questions: questions,
-                course_level: course,
-                language: lang
-            });
-
-            alert("¡Cuento guardado correctamente! 📚");
-            cancelMagic(); // Reset UI
-            loadAdmin(); // Reload table
-
-        } catch (error) {
-            console.error(error);
-            alert("Error guardando: " + (error.response?.data?.detail || error.message));
-        } finally {
-            btn.innerText = "💾 Guardar en Librería";
-            btn.disabled = false;
-        }
-    }
-
-    function cancelMagic() {
-        document.getElementById('magic-config').style.display = 'block';
-        document.getElementById('magic-editor').style.display = 'none';
-        currentMagicDraft = null;
-        document.getElementById('edit-title').value = '';
-        document.getElementById('edit-content').value = '';
-        document.getElementById('questions-container').innerHTML = '';
-    }
 
     loadAdmin();
 </script>
