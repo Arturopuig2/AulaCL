@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import List
+import os
 from app import schemas, models, security_utils
 from app.database import get_db
 from app.auth import authenticate_user, create_access_token, get_current_user, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, verify_password
@@ -79,6 +80,105 @@ def login_with_code(
         expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+from authlib.integrations.starlette_client import OAuth
+
+# OAUTH SETUP
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+@router.get("/google")
+async def login_google(request: Request):
+    # Determine redirect URI dynamically or from env
+    # For local: http://127.0.0.1:8000/auth/google/callback
+    redirect_uri = request.url_for('auth_google_callback')
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@router.get("/google/callback")
+async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except Exception as e:
+         print(f"OAuth Error: {e}")
+         raise HTTPException(status_code=400, detail="Google Auth Failed")
+
+    user_info = token.get('userinfo')
+    if not user_info:
+         # Sometimes userinfo is in the token 'id_token' claims, lets try to parse or fetch if missing
+         # With 'openid email profile' scope and server_metadata_url, authlib usually parses it.
+         # If not, we might need explicitly userinfo_endpoint.
+         # For now assume it works or we fetch from userinfo endpoint if needed.
+         # Let's fallback to id_token claims if userinfo is empty
+         user_info = token.get('id_token') # Authlib parses this automatically usually?
+    
+    # Authlib + Starlette: token is a dict. 'userinfo' might be present if we requested openid.
+    # If using 'server_metadata_url', userinfo parsing from id_token is automatic in some versions.
+    # Let's ensure we have email.
+    
+    email = user_info.get('email')
+    name = user_info.get('name')
+    
+    if not email:
+         raise HTTPException(status_code=400, detail="Email not found in Google Account")
+
+    # LOGIN / REGISTER LOGIC
+    user = db.query(models.User).filter(models.User.email == email).first()
+    
+    if not user:
+        # Create new user
+        # Generate random username and password
+        import secrets
+        import string
+        
+        # Username logic: email prefix + random suffix to ensure uniqueness
+        base_username = email.split("@")[0]
+        # Clean username
+        base_username = "".join(c for c in base_username if c.isalnum())
+        
+        # Check if username exists
+        # Loop mainly just in case
+        clean_username = base_username
+        while db.query(models.User).filter(models.User.username == clean_username).first():
+            suffix = ''.join(secrets.choice(string.digits) for _ in range(4))
+            clean_username = f"{base_username}{suffix}"
+            
+        random_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
+        hashed_pwd = get_password_hash(random_password)
+        
+        new_user = models.User(
+            username=clean_username,
+            email=email,
+            name=name,
+            hashed_password=hashed_pwd,
+            course_level="NONE" # Default
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        user = new_user
+
+    # Create JWT
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires
+    )
+    
+    # Redirect to Dashboard with token (Frontend needs to handle this)
+    # Since we can't easily set localStorage from here without a splash page,
+    # we will redirect to a special frontend route `/google-success?token=...`
+    # or `/login?token=...` that parses it and sets localStorage.
+    
+    response = RedirectResponse(url=f"/login?google_token={access_token}&username={user.username}")
+    return response
 
 @router.post("/register", response_model=schemas.User)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):

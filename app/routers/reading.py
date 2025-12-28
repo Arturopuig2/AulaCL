@@ -688,8 +688,17 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
     except Exception as e:
         print(f"Warning: Could not read magic_context.txt: {e}")
 
+    prompt_type_map = {
+        "story": "un cuento para niños",
+        "news": "una noticia periodística adecuada para niños",
+        "poem": "un poema o poesía infantil",
+        "recipe": "una receta de cocina divertida y realizable"
+    }
+    
+    text_type_desc = prompt_type_map.get(request.text_type, "un texto")
+
     prompt = f"""
-    Escribe un cuento para niños con los siguientes parámetros:
+    Escribe {text_type_desc} con los siguientes parámetros:
     - TEMA: {request.topic}
     - NIVEL ESCOLAR: {request.course_level}
     - LONGITUD: Aprox {request.word_count} palabras.
@@ -698,7 +707,7 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
     FORMATO JSON OBLIGATORIO:
     {{
         "title": "Un título creativo",
-        "content": "El texto del cuento..."
+        "content": "El contenido del texto..."
     }}
     """
 

@@ -43,6 +43,13 @@
                 <input type="number" id="magic-words" placeholder="Palabras aprox (ej: 100)" class="form-control"
                     value="100">
 
+                <select id="magic-type" class="form-control">
+                    <option value="story" selected>Cuento / Historia</option>
+                    <option value="news">Noticia</option>
+                    <option value="poem">Poesía</option>
+                    <option value="recipe">Receta de Cocina</option>
+                </select>
+
                 <select id="magic-lang" class="form-control">
                     <option value="es">Español</option>
                     <option value="en">Inglés</option>
@@ -86,6 +93,11 @@
                 <!-- JS will popualte this -->
             </div>
 
+            <button onclick="addQuestion()" class="btn btn-outline"
+                style="width: 100%; margin-bottom: 2rem; border-color: #22c55e; color: #16a34a; border-style: dashed;">
+                + Añadir Pregunta Manual
+            </button>
+
             <div style="display: flex; gap: 1rem;">
                 <button onclick="saveMagicStory()" id="btn-magic-save" class="btn btn-primary"
                     style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar en Librería</button>
@@ -114,6 +126,7 @@
         const course = document.getElementById('magic-course-select').value;
         const words = document.getElementById('magic-words').value;
         const lang = document.getElementById('magic-lang').value;
+        const type = document.getElementById('magic-type').value;
 
         if (!topic) {
             alert("Por favor, rellena el tema.");
@@ -131,7 +144,8 @@
                 topic: topic,
                 course_level: course,
                 word_count: parseInt(words),
-                language: lang
+                language: lang,
+                text_type: type
             });
 
             currentMagicDraft = response.data; // now just {title, content}
@@ -177,7 +191,12 @@
 
         // Generate HTML structure (values set via JS below for safety)
         card.innerHTML = `
-            <div style="margin-bottom: 0.5rem; font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
+                <button onclick="deleteQuestion(${index})" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; background: transparent;">
+                    Eliminar
+                </button>
+            </div>
             <input type="text" class="q-input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
             
             <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
@@ -204,6 +223,51 @@
         qContainer.appendChild(card);
     }
 
+    function deleteQuestion(index) {
+        if (!confirm("¿Seguro que quieres eliminar esta pregunta?")) return;
+        saveCurrentEditorStateToDraft(); // Save changes before re-render
+        currentMagicDraft.questions.splice(index, 1);
+        renderMagicEditor(currentMagicDraft);
+    }
+
+    function addQuestion() {
+        saveCurrentEditorStateToDraft(); // Save changes before re-render
+        currentMagicDraft.questions.push({
+            question: "Nueva pregunta...",
+            options: ["Opción A", "Opción B", "Opción C"],
+            correct_index: 0
+        });
+        renderMagicEditor(currentMagicDraft);
+    }
+
+    // Helper to sync inputs back to state before re-rendering
+    function saveCurrentEditorStateToDraft() {
+        const qContainer = document.getElementById('questions-container');
+        const updatedQuestions = [];
+
+        for (let i = 0; i < qContainer.children.length; i++) {
+            const card = qContainer.children[i];
+            const qText = card.querySelector('.q-input').value;
+
+            const optInputs = card.querySelectorAll('.q-opt-input');
+            const options = Array.from(optInputs).map(input => input.value);
+
+            const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
+            const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+            updatedQuestions.push({
+                question: qText,
+                options: options,
+                correct_index: correctIndex
+            });
+        }
+
+        currentMagicDraft.questions = updatedQuestions;
+        // Don't forget title/content if needed, but questions is the main dynamic part here
+        currentMagicDraft.title = document.getElementById('edit-title').value;
+        currentMagicDraft.content = document.getElementById('edit-content').value;
+    }
+
     async function generateMagicQuestions() {
         const content = document.getElementById('edit-content').value;
         const topic = document.getElementById('edit-title').value; // Optional context
@@ -224,13 +288,9 @@
                 topic: topic
             });
 
-            const questions = response.data.questions;
-            const qContainer = document.getElementById('questions-container');
-            qContainer.innerHTML = ''; // Clear previous if any
-
-            questions.forEach((q, index) => {
-                renderQuestionCard(q, index);
-            });
+            // Replace questions but keep text
+            currentMagicDraft.questions = response.data.questions;
+            renderMagicEditor(currentMagicDraft);
 
         } catch (error) {
             console.error(error);

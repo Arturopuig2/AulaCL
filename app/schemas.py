@@ -116,6 +116,7 @@ class MagicRequest(BaseModel):
     course_level: str
     word_count: int
     language: str
+    text_type: Optional[str] = "story"
 
 class MagicDraftResponse(BaseModel):
     title: str

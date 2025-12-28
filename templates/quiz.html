@@ -54,26 +54,57 @@
 
             const container = document.getElementById('quiz-container');
 
+            let scorableCount = 0;
+
             questionsData.forEach((q, index) => {
                 const qDiv = document.createElement('div');
                 qDiv.className = 'question-card';
                 qDiv.id = `q-card-${q.id}`;
-                qDiv.style.marginBottom = '1rem';
+                qDiv.style.marginBottom = '2rem';
+                qDiv.style.padding = '1rem';
+                qDiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                qDiv.style.borderRadius = '12px';
 
-                let optionsHtml = '';
-                q.options.forEach((opt, optedIndex) => {
-                    optionsHtml += `
-                        <div id="opt-div-${q.id}-${optedIndex}" style="margin: 0.5rem 0; display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem;">
-                            <input type="radio" name="q_${q.id}" value="${optedIndex}" id="q_${q.id}_${optedIndex}" style="width: auto; margin-right: 0.5rem;">
-                            <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer; font-size: 1.2rem;">${opt}</label>
+                // Check for special types
+                const isWritten = q.question_content.includes("[EXPRESIÓN ESCRITA]");
+                const isReflexive = q.question_content.includes("[REFLEXIVA]");
+                const isOral = q.question_content.includes("[EXPRESIÓN ORAL]");
+                const isLudica = q.question_content.includes("[LÚDICA]") || q.question_content.includes("[LUDICA]");
+
+                // Show input for Written/Reflexive
+                // Show only instruction for Oral/Ludica
+                // Show options for others (Literal, Referential, Vocab, True/False)
+
+                if (isWritten || isReflexive) {
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: 1.2rem;">${index + 1}. ${q.question_content}</h3>
+                        <textarea id="ans_${q.id}" rows="4" style="width: 100%; border-radius: 8px; padding: 0.5rem; margin-top: 0.5rem;" placeholder="Escribe tu respuesta aquí..."></textarea>
+                    `;
+                } else if (isOral || isLudica) {
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: 1.2rem;">${index + 1}. ${q.question_content}</h3>
+                        <div style="margin-top: 0.5rem; font-style: italic; color: #666;">
+                            (Actividad para realizar en clase o en casa. No se evalúa aquí.)
                         </div>
                     `;
-                });
+                } else {
+                    // Standard Test Question
+                    let optionsHtml = '';
+                    q.options.forEach((opt, optedIndex) => {
+                        optionsHtml += `
+                            <div id="opt-div-${q.id}-${optedIndex}" style="margin: 0.5rem 0; display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem;">
+                                <input type="radio" name="q_${q.id}" value="${optedIndex}" id="q_${q.id}_${optedIndex}" style="width: auto; margin-right: 0.5rem;">
+                                <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer; font-size: 1.2rem;">${opt}</label>
+                            </div>
+                        `;
+                    });
 
-                qDiv.innerHTML = `
-                    <h3 style="font-size: 1.2rem;">${index + 1}. ${q.question_content}</h3>
-                    ${optionsHtml}
-                `;
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: 1.2rem;">${index + 1}. ${q.question_content}</h3>
+                        ${optionsHtml}
+                    `;
+                }
+
                 container.appendChild(qDiv);
             });
 
@@ -92,8 +123,26 @@
         }
 
         let score = 0;
+        let scorableQuestions = 0;
 
         questionsData.forEach(q => {
+            const isWritten = q.question_content.includes("[EXPRESIÓN ESCRITA]");
+            const isReflexive = q.question_content.includes("[REFLEXIVA]");
+            const isOral = q.question_content.includes("[EXPRESIÓN ORAL]");
+            const isLudica = q.question_content.includes("[LÚDICA]") || q.question_content.includes("[LUDICA]");
+
+            // If it is one of the excluded types, skip scoring logic
+            if (isWritten || isReflexive || isOral || isLudica) {
+                // For Written/Reflexive, we might want to save the answer, but for now just disable input
+                if (isWritten || isReflexive) {
+                    const txt = document.getElementById(`ans_${q.id}`);
+                    if (txt) txt.disabled = true;
+                }
+                return;
+            }
+
+            scorableQuestions++;
+
             const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
             const correctIndex = q.correct_answer;
 
@@ -128,14 +177,17 @@
             inputs.forEach(input => input.disabled = true);
         });
 
-        const finalScore = (score / questionsData.length) * 100;
+        // Avoid division by zero if all questions are non-scorable
+        if (scorableQuestions === 0) scorableQuestions = 1;
+
+        const finalScore = (score / scorableQuestions) * 100;
         const timeSpent = parseFloat(localStorage.getItem(`time_spent_${textId}`)) || 0;
 
         // Display Result
         document.getElementById('submit-quiz').style.display = 'none';
         const resultPanel = document.getElementById('result-panel');
         resultPanel.style.display = 'block';
-        document.getElementById('score-display').innerText = `${score} / ${questionsData.length}`;
+        document.getElementById('score-display').innerText = `${score} / ${scorableQuestions}`;
 
         // Scroll to bottom
         resultPanel.scrollIntoView({ behavior: 'smooth' });

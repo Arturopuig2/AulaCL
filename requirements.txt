@@ -17,3 +17,6 @@ psycopg2-binary
 
 openai
 python-dotenv
+authlib
+itsdangerous
+httpx

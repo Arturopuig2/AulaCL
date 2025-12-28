@@ -30,6 +30,13 @@ from fastapi.responses import HTMLResponse
 def read_root(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
+from starlette.middleware.sessions import SessionMiddleware
+import os
+# Secret key for session signing. defaulting to a random string if not set, 
+# but in prod it should be fixed to keep sessions valid across restarts.
+SESSION_SECRET = os.getenv("SESSION_SECRET", "super-secret-session-key-change-me")
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
+
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
