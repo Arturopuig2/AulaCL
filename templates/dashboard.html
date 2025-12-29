@@ -1,10 +1,17 @@
 {% extends "layout.html" %}
 
+{% block navbar_actions %}
+<div id="admin-back-btn" style="display: none;">
+    <a href="/reading/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al
+        Panel</a>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <h1>Mi Panel - <span id="user-display"></span></h1>
+            <h1 id="dashboard-title">Lecturas - <span id="user-display"></span></h1>
 
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
@@ -115,6 +122,10 @@
             const displayName = user.name || user.username || "Usuario";
             document.getElementById('user-display').innerText = displayName;
 
+            if (user.username === 'admin') {
+                document.getElementById('dashboard-title').innerText = "Lecturas";
+            }
+
             const statusDiv = document.getElementById('subscription-status');
 
             if (user.username === 'admin') {
@@ -143,12 +154,18 @@
             if (user.username && user.username !== 'admin') {
                 // Main User
                 showSubUsersButton();
-            } else {
-                // Sub User
-                // Name already set above
-                // document.getElementById('user-display').innerText = user.name || "Estudiante";
-                // Hide specific elements if needed
             }
+
+            // ADMIN TOOLS LINK (For Arturo etc)
+            // ADMIN TOOLS LINK (REMOVED as per request)
+            if (user.username === 'admin') {
+                document.getElementById('admin-back-btn').style.display = 'block';
+            }
+
+            // Sub User
+            // Name already set above
+            // document.getElementById('user-display').innerText = user.name || "Estudiante";
+            // Hide specific elements if needed
 
 
 
@@ -336,6 +353,8 @@
             navLinks.appendChild(btn); // Fallback
         }
     }
+
+
 
     loadDashboard();
 </script>

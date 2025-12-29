@@ -1,7 +1,8 @@
 {% extends "layout.html" %}
 
 {% block navbar_actions %}
-<a href="/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver a Admin</a>
+<a href="/reading/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al
+    Panel</a>
 {% endblock %}
 
 {% block content %}
@@ -210,6 +211,11 @@
                     </div>
                 `).join('')}
             </div>
+            <!-- Hidden Category Field -->
+            <input type="hidden" class="q-category" value="${q.category || 'LITERAL'}">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-align: right; margin-top: 0.5rem;">
+                Tipo: ${q.category || 'LITERAL'}
+            </div>
         `;
 
         // Set values safely via DOM properties (avoids all escaping issues)
@@ -235,7 +241,8 @@
         currentMagicDraft.questions.push({
             question: "Nueva pregunta...",
             options: ["Opción A", "Opción B", "Opción C"],
-            correct_index: 0
+            correct_index: 0,
+            category: "LITERAL"
         });
         renderMagicEditor(currentMagicDraft);
     }
@@ -255,10 +262,13 @@
             const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
             const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
 
+            const category = card.querySelector('.q-category').value;
+
             updatedQuestions.push({
                 question: qText,
                 options: options,
-                correct_index: correctIndex
+                correct_index: correctIndex,
+                category: category // Preserve category
             });
         }
 
@@ -331,10 +341,13 @@
                 const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
                 const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
 
+                const category = card.querySelector('.q-category').value;
+
                 questions.push({
                     question: qText,
                     options: options,
-                    correct_index: correctIndex
+                    correct_index: correctIndex,
+                    category: category // Send category to API
                 });
             }
 

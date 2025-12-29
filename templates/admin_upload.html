@@ -1,0 +1,412 @@
+{% extends "layout.html" %}
+
+{% block navbar_actions %}
+<a href="/reading/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al
+    Panel</a>
+{% endblock %}
+
+{% block content %}
+<h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Subir Lectura</h1>
+
+<div style="max-width: 1000px; margin: 0 auto;">
+
+    <!-- UPLOAD FORM -->
+    <div id="upload-form-container"
+        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
+        <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Nueva Lectura</h2>
+        <form id="upload-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- ROW 1: METADATA -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="new-title"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
+                    <input type="text" id="new-title" required
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="new-course"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
+                    <select id="new-course" required
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <optgroup label="Primaria">
+                            <option value="1P">1º Primaria</option>
+                            <option value="2P">2º Primaria</option>
+                            <option value="3P">3º Primaria</option>
+                            <option value="4P">4º Primaria</option>
+                            <option value="5P">5º Primaria</option>
+                            <option value="6P">6º Primaria</option>
+                        </optgroup>
+                        <optgroup label="ESO">
+                            <option value="1ESO">1º ESO</option>
+                            <option value="2ESO">2º ESO</option>
+                            <option value="3ESO">3º ESO</option>
+                            <option value="4ESO">4º ESO</option>
+                        </optgroup>
+                        <optgroup label="Bachillerato">
+                            <option value="1BAT">1º Bachillerato</option>
+                            <option value="2BAT">2º Bachillerato</option>
+                        </optgroup>
+                        <option value="ALL">Sin Curso / General</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="new-lang"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+                    <select id="new-lang" required
+                        style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+                        <option value="es" selected>Español</option>
+                        <option value="val">Valencià</option>
+                        <option value="en">Inglés</option>
+                        <option value="fr">Francés</option>
+                        <option value="cat">Català</option>
+                        <option value="gal">Gallego</option>
+                        <option value="eus">Euskera</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ROW 2: FILES -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
+                        (.txt)</label>
+                    <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                        <input type="file" id="text-file" accept=".txt" required style="display: none;"
+                            onchange="document.getElementById('text-file-name').textContent = this.files[0]?.name || ''">
+                        <button type="button" onclick="document.getElementById('text-file').click()"
+                            style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
+                            Seleccionar Archivo
+                        </button>
+                        <span id="text-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
+                        (Opcional)</label>
+                    <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                        <input type="file" id="audio-file" accept=".mp3" style="display: none;"
+                            onchange="document.getElementById('audio-file-name').textContent = this.files[0]?.name || ''">
+                        <button type="button" onclick="document.getElementById('audio-file').click()"
+                            style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
+                            Seleccionar Audio
+                        </button>
+                        <span id="audio-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Subir y Analizar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- UPLOAD REVIEW EDITOR (Hidden by default) -->
+    <div id="upload-review-editor"
+        style="display: none; margin-bottom: 3rem; background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
+
+        <h3 style="margin-bottom: 1rem; color: #1e40af;">Revisión</h3>
+        <p style="color: #64748b; margin-bottom: 1.5rem;">Por favor, revisa el texto y las preguntas generadas antes de
+            guardar.</p>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="font-weight: bold;">Título</label>
+            <input type="text" id="review-title"
+                style="width: 100%; padding: 0.5rem; font-weight: bold; font-size: 1.1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
+                <select id="review-course" class="form-control"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                    <option value="" disabled>Seleccionar...</option>
+                    <optgroup label="Primaria">
+                        <option value="1P">1º Primaria</option>
+                        <option value="2P">2º Primaria</option>
+                        <option value="3P">3º Primaria</option>
+                        <option value="4P">4º Primaria</option>
+                        <option value="5P">5º Primaria</option>
+                        <option value="6P">6º Primaria</option>
+                    </optgroup>
+                    <optgroup label="ESO">
+                        <option value="1ESO">1º ESO</option>
+                        <option value="2ESO">2º ESO</option>
+                        <option value="3ESO">3º ESO</option>
+                        <option value="4ESO">4º ESO</option>
+                    </optgroup>
+                    <optgroup label="Bachillerato">
+                        <option value="1BAT">1º Bachillerato</option>
+                        <option value="2BAT">2º Bachillerato</option>
+                    </optgroup>
+                    <option value="ALL">Sin Curso / General</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
+                <select id="review-lang" class="form-control"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                    <option value="es">Español</option>
+                    <option value="en">Inglés</option>
+                    <option value="val">Valencià</option>
+                    <option value="cat">Català</option>
+                    <option value="gal">Gallego</option>
+                    <option value="eus">Euskera</option>
+                    <option value="fr">Francés</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label style="font-weight: bold;">Contenido del Texto</label>
+            <textarea id="review-content"
+                style="width: 100%; height: 300px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: sans-serif; line-height: 1.6; font-size: 14px;"></textarea>
+        </div>
+
+        <h4
+            style="margin-bottom: 1rem; color: #1e40af; display: flex; justify-content: space-between; align-items: center;">
+            <span>Editar Preguntas</span>
+            <button onclick="regenerateQuestions()" id="btn-regen-questions" class="btn btn-outline"
+                style="font-size: 0.9rem; border-color: #3b82f6; color: #3b82f6;">
+                🔄 Regenerar Preguntas
+            </button>
+        </h4>
+
+        <div id="questions-container" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+            <!-- Questions rendered via JS -->
+        </div>
+
+        <button onclick="addQuestion()" class="btn btn-outline"
+            style="width: 100%; margin-bottom: 2rem; border-color: #22c55e; color: #16a34a; border-style: dashed;">
+            + Añadir Pregunta Manual
+        </button>
+
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="saveFinalUpload()" id="btn-final-save" class="btn btn-primary"
+                style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar Definitivamente</button>
+            <button onclick="cancelUploadReview()" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUploadData = null;
+
+    async function checkAuth() {
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+
+        if (!token || username !== 'admin') {
+            window.location.href = '/dashboard';
+            return;
+        }
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+    }
+    checkAuth();
+
+    // --- UPLOAD & ANALYZE LOGIC ---
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Analizando...";
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('new-title').value);
+        formData.append('course_level', document.getElementById('new-course').value);
+        formData.append('language', document.getElementById('new-lang').value);
+        formData.append('text_file', document.getElementById('text-file').files[0]);
+
+        const audioFile = document.getElementById('audio-file').files[0];
+        if (audioFile) {
+            formData.append('audio_file', audioFile);
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post('/reading/admin/upload/analyze', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            currentUploadData = response.data;
+            showReviewUI(currentUploadData);
+
+            document.getElementById('upload-form-container').style.display = 'none';
+            document.getElementById('upload-review-editor').style.display = 'block';
+            document.getElementById('upload-review-editor').scrollIntoView({ behavior: 'smooth' });
+
+        } catch (error) {
+            console.error(error);
+            alert('Error analizando lectura: ' + (error.response?.data?.detail || error.message));
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    function showReviewUI(data) {
+        document.getElementById('review-title').value = data.title;
+        document.getElementById('review-course').value = data.course_level;
+        document.getElementById('review-lang').value = data.language;
+        document.getElementById('review-content').value = data.content;
+        renderQuestions(data.questions);
+    }
+
+    function renderQuestions(questions) {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
+
+        questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.style.background = '#f8fafc';
+            card.style.padding = '1rem';
+            card.style.border = '1px solid #e2e8f0';
+            card.style.borderRadius = '0.5rem';
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div style="font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
+                    <button onclick="deleteQuestion(${index})" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; background: transparent;">Eliminar</button>
+                </div>
+                <input type="text" class="q-input" value="${q.question.replace(/"/g, '&quot;')}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
+                
+                <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
+                    ${q.options.map((opt, optIndex) => `
+                        <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+                            <input type="text" class="q-opt-input" data-opt="${optIndex}" value="${opt.replace(/"/g, '&quot;')}" 
+                            placeholder="Opción..." style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
+                            <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;">
+                        </div>
+                    `).join('')}
+                </div>
+                <!-- Hidden Category Field -->
+                <input type="hidden" class="q-category" value="${q.category || 'LITERAL'}">
+                <div style="font-size: 0.8rem; color: #94a3b8; text-align: right; margin-top: 0.5rem;">
+                    Tipo: ${q.category || 'LITERAL'}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function deleteQuestion(index) {
+        if (!confirm("¿Eliminar pregunta?")) return;
+        syncCurrentState();
+        currentUploadData.questions.splice(index, 1);
+        renderQuestions(currentUploadData.questions);
+    }
+
+    function addQuestion() {
+        syncCurrentState();
+        currentUploadData.questions.push({
+            question: "Nueva pregunta...",
+            options: ["Opción A", "Opción B"],
+            correct_index: 0,
+            category: "LITERAL"
+        });
+        renderQuestions(currentUploadData.questions);
+    }
+
+    function syncCurrentState() {
+        currentUploadData.title = document.getElementById('review-title').value;
+        currentUploadData.course_level = document.getElementById('review-course').value;
+        currentUploadData.language = document.getElementById('review-lang').value;
+        currentUploadData.content = document.getElementById('review-content').value;
+
+        const container = document.getElementById('questions-container');
+        const newQuestions = [];
+
+        for (let i = 0; i < container.children.length; i++) {
+            const card = container.children[i];
+            const qText = card.querySelector('.q-input').value;
+            const optInputs = card.querySelectorAll('.q-opt-input');
+            const opts = Array.from(optInputs).map(inp => inp.value);
+            const checked = card.querySelector(`input[name="q-correct-${i}"]:checked`);
+            const correctIdx = checked ? parseInt(checked.value) : 0;
+            const category = card.querySelector('.q-category').value; // Retrieve category
+
+            newQuestions.push({
+                question: qText,
+                options: opts,
+                correct_index: correctIdx,
+                category: category
+            });
+        }
+        currentUploadData.questions = newQuestions;
+    }
+
+    async function saveFinalUpload() {
+        syncCurrentState();
+        const btn = document.getElementById('btn-final-save');
+        btn.innerText = "Guardando...";
+        btn.disabled = true;
+
+        try {
+            const payload = {
+                title: currentUploadData.title,
+                content: currentUploadData.content,
+                course_level: currentUploadData.course_level,
+                language: currentUploadData.language,
+                questions: currentUploadData.questions,
+                audio_path: currentUploadData.audio_path
+            };
+
+            const token = localStorage.getItem('token');
+            await axios.post('/reading/admin/magic/save', payload, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            alert("¡Lectura guardada y publicada! 🎉");
+            window.location.href = '/reading/admin/readings'; // Redirect to list
+
+        } catch (error) {
+            console.error(error);
+            alert("Error guardando: " + (error.response?.data?.detail || error.message));
+            btn.innerText = "💾 Guardar Definitivamente";
+            btn.disabled = false;
+        }
+    }
+
+    async function regenerateQuestions() {
+        syncCurrentState();
+        const content = currentUploadData.content;
+        if (!content || content.length < 50) return alert("Texto muy corto");
+
+        const btn = document.getElementById('btn-regen-questions');
+        btn.innerText = "Pensando...";
+        btn.disabled = true;
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post('/reading/admin/magic/questions', { content: content }, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            currentUploadData.questions = res.data.questions;
+            renderQuestions(currentUploadData.questions);
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            btn.innerText = "🔄 Regenerar Preguntas";
+            btn.disabled = false;
+        }
+    }
+
+    function cancelUploadReview() {
+        document.getElementById('upload-review-editor').style.display = 'none';
+        document.getElementById('upload-form-container').style.display = 'block';
+        document.getElementById('upload-form').reset();
+        currentUploadData = null;
+    }
+</script>
+{% endblock %}

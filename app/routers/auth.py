@@ -397,3 +397,64 @@ def debug_openai_config():
             report["api_call"] = f"Failed: {str(e)}"
             
     return report
+
+# --- ADMIN: LICENSE GENERATION (For Students) ---
+@router.post("/admin/licenses", response_model=List[str])
+def generate_licenses(count: int = 1, duration_days: int = 365, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    import secrets
+    import string
+    
+    new_keys = []
+    for _ in range(count):
+        # Generate random 9-char key (Uppercase + Digits + Hyphens maybe? Keeping simple 8 chars for now or 9)
+        # Format: XXXX-XXXX ? Or just 8 chars like before. User example: CLXXXXXXABC is the LOGIN code.
+        # The license key can be anything. Let's make it distinct. "LIC-" + 8 chars.
+        
+        rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+        key = f"LIC-{rand_part}"
+        
+        # Check uniqueness
+        while db.query(models.License).filter(models.License.key == key).first():
+             rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+             key = f"LIC-{rand_part}"
+             
+        db_license = models.License(key=key, duration_days=duration_days)
+        db.add(db_license)
+        new_keys.append(key)
+    
+    db.commit()
+    return new_keys
+
+@router.get("/admin/licenses")
+def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    licenses = db.query(models.License).all()
+    
+    # Enrich with subuser info if used
+    result = []
+    for lic in licenses:
+        used_by_name = None
+        parent_email = None
+        if lic.used_by_subuser_id:
+            sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
+            if sub:
+                used_by_name = sub.name
+                if sub.parent_user:
+                    parent_email = sub.parent_user.email
+
+        result.append({
+            "key": lic.key,
+            "status": lic.status,
+            "duration_days": lic.duration_days,
+            "created_at": lic.created_at,
+            "activated_at": lic.activated_at,
+            "used_by": used_by_name,
+            "parent_email": parent_email
+        })
+        
+    return result

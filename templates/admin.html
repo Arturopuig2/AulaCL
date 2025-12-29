@@ -1,441 +1,84 @@
 {% extends "layout.html" %}
 
 {% block navbar_actions %}
-<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al panel</a>
+<!-- No "Back" button needed as this is now the Home for Admin -->
 {% endblock %}
 
 {% block content %}
-<h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Administración</h1>
+<h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Panel de Administración</h1>
 
-<div style="max-width: 1000px; margin: 0 auto;">
-    <!-- Actions if any -->
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 2rem;">
+<div style="max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
 
-    </div>
-
-    <div
-        style="margin-bottom: 3rem; background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
-        <div>
-            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">Escritor Mágico IA</h2>
-            <p style="color: #64748b; margin: 0;">Genera cuentos personalizados y preguntas de comprensión
-                automáticamente.</p>
+    <!-- MAGIC WRITER CARD -->
+    <a href="/admin/magic" style="text-decoration: none; color: inherit;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">✨ Escritor Mágico</h2>
+            <p style="color: #64748b; margin-top: 0.5rem;">Genera cuentos y preguntas automáticamente con IA.</p>
         </div>
-        <a href="/admin/magic" class="btn btn-primary"
-            style="padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; text-decoration: none;">
-            ✨ Ir al Escritor Mágico
-        </a>
-    </div>
+    </a>
 
-    <!-- MAIN CONTAINER END (Old Magic Writer removed) -->
-</div>
-
-<div
-    style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; max-width: 1000px; margin-left: auto; margin-right: auto;">
-    <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Subir Lectura</h2>
-    <form id="upload-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
-
-        <!-- ROW 1: METADATA -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
-                <input type="text" id="new-title" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-course" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
-                <select id="new-course" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                    <option value="" disabled selected>Seleccionar...</option>
-                    <optgroup label="Primaria">
-                        <option value="1P">1º Primaria</option>
-                        <option value="2P">2º Primaria</option>
-                        <option value="3P">3º Primaria</option>
-                        <option value="4P">4º Primaria</option>
-                        <option value="5P">5º Primaria</option>
-                        <option value="6P">6º Primaria</option>
-                    </optgroup>
-                    <optgroup label="ESO">
-                        <option value="1ESO">1º ESO</option>
-                        <option value="2ESO">2º ESO</option>
-                        <option value="3ESO">3º ESO</option>
-                        <option value="4ESO">4º ESO</option>
-                    </optgroup>
-                    <optgroup label="Bachillerato">
-                        <option value="1BAT">1º Bachillerato</option>
-                        <option value="2BAT">2º Bachillerato</option>
-                    </optgroup>
-                    <option value="ALL">Sin Curso / General</option>
-                </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-lang" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Idioma</label>
-                <select id="new-lang" required
-                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
-                    <option value="es" selected>Español</option>
-                    <option value="val">Valencià</option>
-                    <option value="en">Inglés</option>
-                    <option value="fr">Francés</option>
-                    <option value="cat">Català</option>
-                    <option value="gal">Gallego</option>
-                    <option value="eus">Euskera</option>
-                </select>
-            </div>
+    <!-- UPLOAD CARD -->
+    <a href="/reading/admin/upload" style="text-decoration: none; color: inherit;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">📤 Subir Lectura</h2>
+            <p style="color: #64748b; margin-top: 0.5rem;">Sube textos propios, añade audio y genera preguntas.</p>
         </div>
+    </a>
 
-        <!-- ROW 2: FILES -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Archivo de Texto
-                    (.txt)</label>
-                <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
-                    <input type="file" id="text-file" accept=".txt" required style="display: none;"
-                        onchange="document.getElementById('text-file-name').textContent = this.files[0]?.name || ''">
-                    <button type="button" onclick="document.getElementById('text-file').click()"
-                        style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
-                        Seleccionar Archivo
-                    </button>
-                    <span id="text-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Audio (.mp3)
-                    (Opcional)</label>
-                <div style="position: relative; display: flex; align-items: center; gap: 1rem;">
-                    <input type="file" id="audio-file" accept=".mp3" style="display: none;"
-                        onchange="document.getElementById('audio-file-name').textContent = this.files[0]?.name || ''">
-                    <button type="button" onclick="document.getElementById('audio-file').click()"
-                        style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; color: #475569; font-weight: 500;">
-                        Seleccionar Audio
-                    </button>
-                    <span id="audio-file-name" style="color: #64748b; font-size: 0.9rem;"></span>
-                </div>
-            </div>
+    <!-- CODE GEN CARD -->
+    <a href="/reading/admin/codes" style="text-decoration: none; color: inherit;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">🔑 Códigos de Acceso</h2>
+            <p style="color: #64748b; margin-top: 0.5rem;">Genera y gestiona los códigos de invitación para alumnos.</p>
         </div>
+    </a>
 
-        <div style="grid-column: 1 / -1;">
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Subir Lectura</button>
+    <!-- MANAGEMENT CARD -->
+    <a href="/reading/admin/readings" style="text-decoration: none; color: inherit;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">📚 Gestión de Lecturas</h2>
+            <p style="color: #64748b; margin-top: 0.5rem;">Administra las lecturas existentes, ocultas o activas.</p>
         </div>
-    </form>
-</div>
+    </a>
 
-<!-- ACCESS CODES SECTION -->
-<div
-    style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; max-width: 1000px; margin-left: auto; margin-right: auto;">
-    <h2 style="margin-bottom: 1.5rem; color: #1e40af; font-size: 1.5rem;">Generar Códigos de Acceso
-    </h2>
-    <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
-        <div style="flex: 1;">
-            <label for="code-count" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Cantidad</label>
-            <input type="number" id="code-count" value="1" min="1" max="50"
-                style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+    <!-- SYNC TOOL CARD -->
+    <a href="/reading/admin/sync" style="text-decoration: none; color: inherit;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">🎙️ Sincronizador</h2>
+            <p style="color: #64748b; margin-top: 0.5rem;">Herramienta avanzada para sincronizar texto y audio.</p>
         </div>
-        <button onclick="generateCodes()" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">Generar</button>
-    </div>
+    </a>
 
-    <h3 style="margin-bottom: 1rem; font-size: 1rem;">Códigos Existentes</h3>
-    <div style="max-height: 200px; overflow-y: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-            <thead style="position: sticky; top: 0; background: white;">
-                <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
-                    <th style="padding: 0.5rem;">Código</th>
-                    <th style="padding: 0.5rem;">Estado</th>
-                    <th style="padding: 0.5rem;">Usado por</th>
-                    <th style="padding: 0.5rem;">Email</th>
-                    <th style="padding: 0.5rem;">Fecha Uso</th>
-                    <th style="padding: 0.5rem;">Caducidad</th>
-                </tr>
-            </thead>
-            <tbody id="codes-table-body">
-                <!-- Codes loaded via JS -->
-            </tbody>
-        </table>
-    </div>
-</div>
+    <!-- DASHBOARD CARD -->
+    <a href="/dashboard" style="text-decoration: none; color: inherit;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <h2 style="margin-bottom: 0.5rem; color: #1e40af; font-size: 1.5rem;">👨‍🎓 Vista Alumno</h2>
+            <p style="color: #64748b; margin-top: 0.5rem;">Accede al Dashboard de estudiante para probar lecturas.</p>
+        </div>
+    </a>
 
-<div class="table-container"
-    style="overflow-x: auto; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; max-width: 1000px; margin-left: auto; margin-right: auto;">
-    <h2 style="margin-bottom: 1rem; color: #1e40af; font-size: 1.5rem;">Gestión de Lecturas</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
-                <th style="padding: 1rem;">ID</th>
-                <th style="padding: 1rem;">Título</th>
-                <th style="padding: 1rem;">Curso</th>
-                <th style="padding: 1rem;">Idioma</th>
-                <th style="padding: 1rem;">Estado</th>
-                <th style="padding: 1rem;">Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="texts-table-body">
-            <!-- Rows loaded via JS -->
-        </tbody>
-    </table>
-</div>
 </div>
 
 <script>
-    const courseOptions = [
-        { value: 'ALL', label: 'Sin Curso' },
-        { value: '1P', label: '1º Primaria' }, { value: '2P', label: '2º Primaria' },
-        { value: '3P', label: '3º Primaria' }, { value: '4P', label: '4º Primaria' },
-        { value: '5P', label: '5º Primaria' }, { value: '6P', label: '6º Primaria' },
-        { value: '1ESO', label: '1º ESO' }, { value: '2ESO', label: '2º ESO' },
-        { value: '3ESO', label: '3º ESO' }, { value: '4ESO', label: '4º ESO' },
-        { value: '1BAT', label: '1º Bachillerato' }, { value: '2BAT', label: '2º Bachillerato' }
-    ];
+    // Simple Auth Check
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
 
-
-
-    const langOptions = [
-        { value: 'es', label: 'Español' }, { value: 'en', label: 'Inglés' },
-        { value: 'val', label: 'Valencià' }, { value: 'cat', label: 'Català' },
-        { value: 'gal', label: 'Gallego' }, { value: 'eus', label: 'Euskera' },
-        { value: 'fr', label: 'Francés' }
-    ];
-
-    async function loadAdmin() {
-        const token = localStorage.getItem('token');
-        const username = localStorage.getItem('username');
-
-        if (!token || username !== 'admin') {
-            window.location.href = '/dashboard';
-            return;
-        }
-
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-
-        try {
-            const response = await axios.get('/reading/admin/texts');
-            renderTable(response.data);
-
-            // Load Codes
-            loadCodes();
-        } catch (error) {
-            console.error(error);
-            alert('Error cargando datos. Verifica si eres admin.');
-        }
+    if (!token || username !== 'admin') {
+        window.location.href = '/dashboard';
     }
-
-    async function loadCodes() {
-        try {
-            const response = await axios.get('/auth/admin/codes');
-            const tbody = document.getElementById('codes-table-body');
-            tbody.innerHTML = '';
-
-            // Sort: Unused first, then by creation date
-            const codes = response.data.sort((a, b) => {
-                if (a.is_used === b.is_used) return 0;
-                return a.is_used ? 1 : -1;
-            });
-
-            codes.forEach(c => {
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid #f1f5f9';
-                tr.innerHTML = `
-                    <td style="padding: 0.5rem; font-family: monospace; font-weight: bold;">${c.code}</td>
-                    <td style="padding: 0.5rem;">
-                        ${c.is_used
-                        ? '<span style="color: #ef4444; font-size: 0.8rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Usado</span>'
-                        : '<span style="color: #22c55e; font-size: 0.8rem; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Disponible</span>'}
-                    </td>
-                    <td style="padding: 0.5rem; color: var(--text-primary); font-weight: 500;">
-                        ${c.used_by || '-'}
-                    </td>
-                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
-                        ${c.user_email || '-'}
-                    </td>
-                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
-                        ${c.used_at ? new Date(c.used_at).toLocaleDateString() : '-'}
-                    </td>
-                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
-                        ${c.expires_at ? new Date(c.expires_at).toLocaleDateString() : '-'}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        } catch (error) {
-            console.error("Error loading codes", error);
-        }
-    }
-
-    async function generateCodes() {
-        const count = document.getElementById('code-count').value;
-        try {
-            const response = await axios.post(`/auth/admin/codes?count=${count}`);
-            loadCodes();
-
-            // Auto-Download Text File
-            const codes = response.data;
-            let fileContent = "CÓDIGOS DE ACCESO - AULA CL\n===========================\n\n";
-            fileContent += codes.join("\n");
-            fileContent += "\n\n===========================\nGenerado el: " + new Date().toLocaleString();
-
-            const blob = new Blob([fileContent], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `codigos_aulacl_${new Date().getTime()}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            alert(`¡${count} códigos generados y descargados!`);
-        } catch (error) {
-            console.error(error);
-            alert('Error generando códigos');
-        }
-    }
-
-    function renderTable(texts) {
-        const tbody = document.getElementById('texts-table-body');
-        tbody.innerHTML = '';
-
-        texts.forEach(text => {
-            const tr = document.createElement('tr');
-            tr.style.borderBottom = '1px solid #f1f5f9';
-            tr.innerHTML = `
-                <td style="padding: 1rem;">${text.id}</td>
-                <td style="padding: 1rem; font-weight: 500;">${text.title}</td>
-                <td style="padding: 1rem;">
-                    <select id="course-${text.id}" style="padding: 0.3rem; border-radius: 0.3rem; border: 1px solid #cbd5e1;">
-                        ${courseOptions.map(opt => `<option value="${opt.value}" ${opt.value === text.course_level ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                    </select>
-                </td>
-                <td style="padding: 1rem;">
-                    <select id="lang-${text.id}" style="padding: 0.3rem; border-radius: 0.3rem; border: 1px solid #cbd5e1;">
-                        ${langOptions.map(opt => `<option value="${opt.value}" ${opt.value === text.language ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                    </select>
-                </td>
-                <td style="padding: 1rem;">
-                    <button 
-                        onclick="toggleTextActive(${text.id}, this)"
-                        class="btn"
-                        style="padding: 0.3rem 0.8rem; font-size: 0.85rem; background: ${text.is_active ? '#eff6ff' : '#fef2f2'}; color: ${text.is_active ? '#3b82f6' : '#ef4444'}; border: 1px solid ${text.is_active ? '#bfdbfe' : '#fecaca'};"
-                    >
-                        ${text.is_active ? 'Activo' : 'Inactivo'}
-                    </button>
-                </td>
-                <td style="padding: 1rem; display: flex; gap: 0.5rem;">
-                    <button class="btn btn-primary" onclick="updateText(${text.id}, this)" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Guardar</button>
-                    <button class="btn" onclick="deleteText(${text.id})" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca;">Eliminar</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    async function toggleTextActive(id, btn) {
-        try {
-            const response = await axios.patch(`/reading/admin/texts/${id}/toggle`);
-            const isActive = response.data.is_active;
-
-            // Update button styles
-            btn.innerText = isActive ? 'Activo' : 'Inactivo';
-            btn.style.background = isActive ? '#eff6ff' : '#fef2f2';
-            btn.style.color = isActive ? '#3b82f6' : '#ef4444';
-            btn.style.borderColor = isActive ? '#bfdbfe' : '#fecaca';
-
-        } catch (error) {
-            console.error(error);
-            alert('Error cambiando estado: ' + (error.response?.data?.detail || error.message));
-        }
-    }
-
-    async function deleteText(id) {
-        if (!confirm('¿Estás seguro de que quieres eliminar esta lectura? Esta acción no se puede deshacer.')) {
-            return;
-        }
-
-        try {
-            await axios.delete(`/reading/admin/texts/${id}`);
-            // Remove from UI immediately or reload
-            loadAdmin();
-        } catch (error) {
-            console.error(error);
-            alert('Error eliminando lectura: ' + (error.response?.data?.detail || error.message));
-        }
-    }
-
-    async function updateText(id, btn) {
-        const course = document.getElementById(`course-${id}`).value;
-        const lang = document.getElementById(`lang-${id}`).value;
-
-        // Visual feedback - Loading
-        const originalText = btn.innerText;
-        const originalColor = btn.style.backgroundColor;
-        btn.innerText = "Guardando...";
-        btn.disabled = true;
-
-        try {
-            await axios.put(`/reading/admin/texts/${id}`, {
-                course_level: course,
-                language: lang
-            });
-
-            // Visual feedback - Success
-            btn.innerText = "¡Guardado!";
-            btn.style.backgroundColor = "#22c55e";
-
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.backgroundColor = originalColor || "var(--primary-color)";
-                btn.disabled = false;
-            }, 2000);
-
-        } catch (error) {
-            console.error(error);
-            alert('Error guardando: ' + (error.response?.data?.detail || error.message));
-            btn.innerText = "Error";
-            btn.style.backgroundColor = "#ef4444";
-            btn.disabled = false;
-        }
-    }
-
-    document.getElementById('upload-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]');
-        const originalText = btn.innerText;
-        btn.innerText = "Subiendo...";
-        btn.disabled = true;
-
-        const formData = new FormData();
-        formData.append('title', document.getElementById('new-title').value);
-        formData.append('course_level', document.getElementById('new-course').value);
-        formData.append('language', document.getElementById('new-lang').value);
-        formData.append('text_file', document.getElementById('text-file').files[0]);
-
-        const audioFile = document.getElementById('audio-file').files[0];
-        if (audioFile) {
-            formData.append('audio_file', audioFile);
-        }
-
-        try {
-            await axios.post('/reading/admin/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
-            alert('¡Lectura subida correctamente!');
-            e.target.reset();
-            loadAdmin(); // Reload table
-
-        } catch (error) {
-            console.error(error);
-            alert('Error subiendo lectura: ' + (error.response?.data?.detail || error.message));
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-    });
-
-
-
-
-    loadAdmin();
 </script>
+
 {% endblock %}

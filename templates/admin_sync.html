@@ -1,0 +1,273 @@
+{% extends "layout.html" %}
+
+{% block navbar_actions %}
+<a href="/reading/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al
+    Panel</a>
+{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center; margin-bottom: 2rem;">Sincronizador de Audio (Karaoke)</h1>
+
+<div class="glass-panel" style="padding: 2rem; max-width: 900px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <label>Selecciona un texto:</label>
+        <select id="text-select" class="form-control" onchange="loadTextData()">
+            <option value="" disabled selected>Cargando textos...</option>
+        </select>
+    </div>
+
+    <div id="sync-editor" style="display: none;">
+        <h2 id="text-title" style="margin-bottom: 1rem;"></h2>
+
+        <div style="margin-bottom: 2rem; background: #f8fafc; padding: 1rem; border-radius: 8px;">
+            <audio id="audio-player" controls style="width: 100%; margin-bottom: 1rem;"></audio>
+
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="markCurrentLine()" class="btn btn-primary"
+                    style="padding: 1rem 2rem; font-size: 1.2rem;">
+                    📍 Marcar Línea (Espacio)
+                </button>
+                <button onclick="resetTimestamps()" class="btn btn-outline">🔄 Reiniciar</button>
+            </div>
+            <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;">
+                Escucha el audio y pulsa ESPACIO o el botón al inicio de cada frase.
+            </p>
+        </div>
+
+        <div id="sentences-list"
+            style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px;">
+            <!-- JS Populated -->
+        </div>
+
+        <div style="margin-top: 2rem; text-align: right; display: flex; justify-content: flex-end; gap: 1rem;">
+            <button onclick="previewSync()" class="btn btn-outline" id="btn-preview">▶️ Previsualizar</button>
+            <button onclick="saveTimestamps()" class="btn btn-primary">💾 Guardar Sincronización</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentText = null;
+    let sentences = [];
+    let timestamps = [];
+    let activeIndex = 0;
+    let isPreviewing = false;
+    let previewInterval = null;
+
+    // Load Texts
+    async function loadTexts() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+
+        const res = await axios.get('/reading/admin/texts');
+        const select = document.getElementById('text-select');
+        select.innerHTML = '<option value="" disabled selected>Selecciona un texto...</option>';
+
+        res.data.forEach(t => {
+            if (t.audio_path) { // Only texts with audio
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.innerText = t.title;
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    async function loadTextData() {
+        const id = document.getElementById('text-select').value;
+        const res = await axios.get(`/reading/texts/${id}`);
+        currentText = res.data;
+
+        document.getElementById('text-title').innerText = currentText.title;
+        document.getElementById('audio-player').src = "/static/" + currentText.audio_path;
+
+        // Split sentences (same logic as reading.html)
+        const rawLines = currentText.content.split(/\r?\n/).filter(line => line.trim() !== '');
+        sentences = rawLines;
+
+        // Load existing timestamps if any (or init with first line active)
+        if (currentText.timestamps && currentText.timestamps.length > 0) {
+            timestamps = currentText.timestamps;
+            // Find first null to set activeIndex
+            const firstEmpty = timestamps.findIndex(t => t === null || t.end === null);
+            activeIndex = firstEmpty !== -1 ? firstEmpty : timestamps.length;
+        } else {
+            resetTimestamps(false); // Init fresh
+        }
+
+        renderSentences();
+        document.getElementById('sync-editor').style.display = 'block';
+    }
+
+    function renderSentences() {
+        const container = document.getElementById('sentences-list');
+        container.innerHTML = '';
+
+        sentences.forEach((sent, idx) => {
+            const div = document.createElement('div');
+            const ts = timestamps[idx];
+
+            let timeDisplay = '--:--';
+            if (ts) {
+                const s = ts.start !== null ? ts.start.toFixed(2) : '?';
+                const e = ts.end !== null ? ts.end.toFixed(2) : '...';
+                timeDisplay = `${s}s - ${e}s`;
+            }
+
+            div.className = `sentence-row ${idx === activeIndex ? 'active-row' : ''}`;
+            div.style.padding = '0.5rem';
+            div.style.borderBottom = '1px solid #f1f5f9';
+            if (idx === activeIndex) div.style.backgroundColor = '#e0f2fe';
+
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="flex:1;">${sent}</span>
+                    <strong style="margin-left:1rem; min-width:100px; text-align:right; font-family:monospace;">${timeDisplay}</strong>
+                    <button onclick="rewindTo(${idx})" style="margin-left:0.5rem; font-size:0.8rem;">✏️</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        const activeEl = container.children[activeIndex];
+        if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function markCurrentLine() {
+        const player = document.getElementById('audio-player');
+        const time = player.currentTime;
+
+        if (activeIndex >= sentences.length) return;
+
+        // Current line is active (started at prev end or 0). 
+        // We are closing it now.
+        if (timestamps[activeIndex]) {
+            timestamps[activeIndex].end = time;
+        }
+
+        // Move to next
+        activeIndex++;
+
+        // If there is a next line, start it immediately at same time
+        if (activeIndex < sentences.length) {
+            timestamps[activeIndex] = { start: time, end: null };
+        } else {
+            // End of narration
+            player.pause();
+        }
+
+        renderSentences();
+    }
+
+    function resetTimestamps(confirmReset = true) {
+        if (confirmReset && !confirm("¿Borrar todos los tiempos y empezar de cero?")) return;
+
+        timestamps = new Array(sentences.length).fill(null);
+        // Start first line automatically at 0
+        timestamps[0] = { start: 0, end: null };
+        activeIndex = 0;
+
+        if (confirmReset) renderSentences();
+    }
+
+    function rewindTo(idx) {
+        activeIndex = idx;
+        // Optional: Seek audio to start of this line if exists?
+        const ts = timestamps[idx];
+        if (ts) document.getElementById('audio-player').currentTime = ts.start;
+        renderSentences();
+    }
+
+    async function saveTimestamps() {
+        // If last line is active (end is null), close it with current duration or time
+        // Actually, if we are in activeIndex, that line is 'open'.
+        // If activeIndex is valid, close it.
+        const player = document.getElementById('audio-player');
+        if (activeIndex < sentences.length && timestamps[activeIndex] && timestamps[activeIndex].end === null) {
+            timestamps[activeIndex].end = player.currentTime || player.duration;
+        }
+
+        try {
+            await axios.put(`/reading/admin/texts/${currentText.id}/timestamps`, {
+                timestamps: timestamps
+            });
+            alert("Sincronización guardada correctamente.");
+        } catch (e) {
+            alert("Error guardando: " + e.message);
+        }
+    }
+
+    function previewSync() {
+        const player = document.getElementById('audio-player');
+
+        if (isPreviewing) {
+            // Stop Preview
+            stopPreview();
+            return;
+        }
+
+        // Start Preview
+        isPreviewing = true;
+        document.getElementById('btn-preview').innerHTML = "⏹ Detener Previsualización";
+
+        // Reset highlights
+        document.querySelectorAll('.sentence-row').forEach(div => div.style.backgroundColor = 'transparent');
+
+        player.currentTime = 0;
+        player.play();
+
+        player.ontimeupdate = () => {
+            if (!isPreviewing) return;
+            const t = player.currentTime;
+
+            // Find active sentence based on timestamps
+            let foundIdx = -1;
+            for (let i = 0; i < timestamps.length; i++) {
+                const ts = timestamps[i];
+                if (ts && ts.start !== null && t >= ts.start && (ts.end === null || t < ts.end)) {
+                    foundIdx = i;
+                    break;
+                }
+            }
+
+            // Update UI
+            document.querySelectorAll('.sentence-row').forEach((div, idx) => {
+                if (idx === foundIdx) {
+                    div.style.backgroundColor = '#dcfce7'; // Greenish for preview
+                    div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    div.style.backgroundColor = 'transparent';
+                }
+            });
+        };
+
+        player.onended = stopPreview;
+    }
+
+    function stopPreview() {
+        const player = document.getElementById('audio-player');
+        isPreviewing = false;
+        document.getElementById('btn-preview').innerHTML = "▶️ Previsualizar";
+        player.pause();
+        player.ontimeupdate = null;
+        player.onended = null;
+
+        // Restore editor state (highlight active line for editing)
+        renderSentences();
+    }
+
+    // Hotkey
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && document.getElementById('sync-editor').style.display !== 'none') {
+            e.preventDefault(); // Stop scroll
+            if (!isPreviewing) markCurrentLine();
+        }
+    });
+
+    loadTexts();
+</script>
+{% endblock %}

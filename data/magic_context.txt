@@ -1,44 +1,43 @@
-Cuenta el cuento como si fueras una niña o un niño.
+# GUÍA DE ESTILO Y PEDAGOGÍA (MAGIC WRITER)
 
-En general:
-El texto puede ser una historia, una descripción, una noticia, una receta o una poesía.
-Empieza a lo grande: Acción, suspense y final satisfactorio.
-El texto debe ser, ante todo, educativo.
-Alineado con el currículo escolar.
-Curiosidad.
-Mejor hablar en primera persona, pero no siempre.
-Refleja la diversidad.
-El héroe o la heroína debe ser, más o menos, de la edad del lector o lectora.
+## 1. VOZ Y TONO
+- **Narrador:** Empático, cercano y adaptado a la edad.
+- **Diversidad:** Incluye personajes de distintos orígenes, capacidades y estructuras familiares de forma natural.
+- **Objetivo:** El texto debe ser un "juguete" literario: divertido, sorprendente y educativo.
 
+## 2. ESTRUCTURA NARRATIVA (Cuentos)
+- **Inicio:** ¡Empieza 'in media res' o con un gancho potente! Evita "Érase una vez" a menos que sea irónico.
+- **Conflicto:** Debe haber un problema claro o un misterio que motive al protagonista.
+- **Desenlace:** Satisfactorio y coherente, pero evita moralejas explícitas y pesadas ("y aprendieron que..."). Deja que el lector infiera el mensaje.
 
-El texto necesita una causa que haga avanzar la acción.
+## 3. ADAPTACIÓN CURRICULAR (Niveles)
 
-En particular:
-
-Si el relato es para 1º o 2º de primaria:
-Se busca enseñar a leer.
-Alfabetización: letras y sonidos.
-El relato como un juguete.
-Conciencia fonológica
-literalidad
-El texto debe apelar a las emociones.
+### A) 1º de Primaria (Iniciación)
+- **Foco:** Decodificación y fonética para una alfabetización básica.
+- **Estilo:** Frases muy cortas, vocabulario muy sencillo pero sonoro (rimas, aliteraciones).
+- **Contenido:** Juegos de fonética y situaciones cotidianas con un toque mágico.
+- **Emoción:** Alegría, sorpresa, seguridad.
 
 
-Si el relato es para 3º o 4º de primaria:
-Se busca enriquecer el vocabulario del lector.
-Se puede empezar con preguntas.
-Diálogos para las partes más intensas y muy cortos.
-Inferencias
-comprensión global
-El texto debe apelar a las emociones.
+### A) 2º de Primaria (Iniciación)
+- **Foco:** Decodificación y fonética.
+- **Estilo:** Frases cortas, vocabulario sencillo pero sonoro (rimas, aliteraciones).
+- **Contenido:** Situaciones cotidianas con un toque mágico.
+- **Emoción:** Alegría, sorpresa, seguridad.
 
+### B) 3º y 4º de Primaria (Desarrollo)
+- **Foco:** Vocabulario y fluidez.
+- **Estilo:** Oraciones compuestas, introducción de metáforas simples.
+- **Contenido:** Aventuras, humor, resolución de problemas prácticos.
+- **Estructura:** Diálogos ágiles.
 
-Si el relato es para 5º o 6º de primaria:
-Diálogos para las partes más intensas y muy cortos.
-Se puede empezar con preguntas.
-Se busca inferencia. Que haya partes no dichas que se tengan que interpretar.
-Se busca el análisis, la reflexión y la lectura crítica.
+### C) 5º y 6º de Primaria (Consolidación)
+- **Foco:** Inferencia y pensamiento crítico.
+- **Estilo:** Vocabulario rico, ironía, doble sentido.
+- **Contenido:** Dilemas éticos, ciencia ficción, misterio complejo.
+- **Narrativa:** Finales abiertos o que inviten a la reflexión.
 
-
-
-
+## 4. SI ES NOTICIA, RECETA O POESÍA
+- **Noticia:** Estructura de pirámide invertida (Qué, Quién, Cuándo, Dónde). Tono objetivo pero interesante para niños.
+- **Receta:** Pasos numerados claros. Advertencias de seguridad amables.
+- **Poesía:** Ritmo y rima asonante o consonante clara. Temas evocadores.

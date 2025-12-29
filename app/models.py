@@ -39,7 +39,8 @@ class Text(Base):
     audio_path = Column(String, nullable=True) # Path to the .mp3 file
     language = Column(String, default="es") # "es", "en", "val", "cat", "gal", "eus", "fr"
     is_active = Column(Boolean, default=True)
-    
+    timestamps = Column(JSON, nullable=True)
+
     questions = relationship("Question", back_populates="text")
     attempts = relationship("ReadingAttempt", back_populates="text")
 
@@ -52,6 +53,10 @@ class Question(Base):
     options = Column(JSON) # Store as JSON list ["Option A", "Option B", ...]
     correct_answer = Column(Integer) # Index of correct option (0-3)
 
+    # Analytics Category: LITERAL, INFERENTIAL, VOCABULARY
+    category = Column(String, default="LITERAL") 
+
+
     text = relationship("Text", back_populates="questions")
 
 class ReadingAttempt(Base):
@@ -62,6 +67,7 @@ class ReadingAttempt(Base):
     text_id = Column(Integer, ForeignKey("texts.id"))
     time_spent_seconds = Column(Float)
     score = Column(Float) # Percentage or raw score
+    details = Column(JSON, nullable=True) # Granular results e.g. {"q_id": true/false}
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="attempts")

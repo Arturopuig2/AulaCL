@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block navbar_actions %}
-<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Home</a>
+<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver</a>
 {% endblock %}
 
 {% block content %}
@@ -215,6 +215,83 @@
         return htmlContent;
     }
 
+    // --- TTS LOGIC ---
+    let ttsActive = false;
+    let ttsUtterance = null;
+    let currentSentenceIndex = 0;
+    let sentencesElements = [];
+
+    function stopTTS() {
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            window.speechSynthesis.cancel();
+        }
+        ttsActive = false;
+        // Reset highlights
+        document.querySelectorAll('.audio-sentence').forEach(span => span.classList.remove('active-highlight'));
+        const btn = document.getElementById('btn-tts');
+        if (btn) btn.innerHTML = "🔊 Leer (IA)";
+    }
+
+    function playTTS() {
+        if (ttsActive) {
+            stopTTS();
+            return;
+        }
+
+        const btn = document.getElementById('btn-tts');
+        if (btn) btn.innerHTML = "⏹ Detener";
+        ttsActive = true;
+
+        sentencesElements = Array.from(document.querySelectorAll('.audio-sentence'));
+        currentSentenceIndex = 0;
+        speakNextSentence();
+    }
+
+    function speakNextSentence() {
+        if (!ttsActive) return;
+        if (currentSentenceIndex >= sentencesElements.length) {
+            stopTTS();
+            return;
+        }
+
+        const span = sentencesElements[currentSentenceIndex];
+        const text = span.innerText;
+
+        // Highlight
+        document.querySelectorAll('.audio-sentence').forEach(s => s.classList.remove('active-highlight'));
+        span.classList.add('active-highlight');
+        span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Speak
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        // Language Map
+        const langMap = {
+            'es': 'es-ES',
+            'en': 'en-GB', // or en-US
+            'fr': 'fr-FR',
+            'val': 'ca-ES' // Valencian/Catalan
+        };
+        // Global textData should be accessible or passed. 
+        // We need to store textData globally in loadText
+        const langCode = window.currentTextData ? window.currentTextData.language : 'es';
+        utterance.lang = langMap[langCode] || 'es-ES';
+
+        utterance.rate = 0.9; // Slightly slower for kids
+
+        utterance.onend = () => {
+            currentSentenceIndex++;
+            speakNextSentence();
+        };
+
+        utterance.onerror = (e) => {
+            console.error("TTS Error", e);
+            stopTTS();
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
     async function loadText() {
         const token = localStorage.getItem('token');
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
@@ -222,20 +299,23 @@
         try {
             const response = await axios.get(`/reading/texts/${textId}`);
             const textData = response.data;
+            window.currentTextData = textData; // Store globally for TTS
 
             document.getElementById('text-title').innerText = textData.title;
 
             if (textData.content) {
-                // Loosen check: ID 2 OR Title contains Liebre
-                if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
-                    console.log("Enabling Karaoke Mode formatting...");
-                    document.getElementById('text-content').innerHTML = processTextContent(textData.content);
-                } else {
-                    document.getElementById('text-content').innerText = textData.content;
-                }
+                // ENABLE KARAOKE FORMATTING FOR ALL TEXTS
+                // This wraps lines in spans so we can highlight them via Audio or TTS
+                console.log("Enabling Karaoke Mode formatting...");
+                document.getElementById('text-content').innerHTML = processTextContent(textData.content);
             } else {
                 document.getElementById('text-content').innerText = "No se pudo cargar el contenido.";
             }
+
+            // Button Container
+            const controlsDiv = document.querySelector('.glass-panel > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)');
+
+            // TTS Button Removed as per user request
 
             if (textData.audio_path) {
                 const audioPlayer = document.getElementById('audio-player');
@@ -251,6 +331,7 @@
 
                 audioPlayer.onplay = () => {
                     bgMusic.play().catch(e => console.log("Background music blocked"));
+                    stopTTS(); // Stop TTS if Audio plays
                 };
 
                 audioPlayer.onpause = () => {
@@ -263,17 +344,35 @@
                 };
 
                 // Karaoke Sync Listener
-                // Enforce calibration: Only runs on valid text
-                if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
+                // Priority: DB Timestamps > Demo Hardcoded > None
+                let activeTimestamps = null;
+                if (textData.timestamps && textData.timestamps.length > 0) {
+                    activeTimestamps = textData.timestamps;
+                    console.log("Using DB Timestamps for Karaoke", activeTimestamps);
+                } else if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
+                    activeTimestamps = demoTimestamps;
+                    console.log("Using Demo Timestamps for Karaoke");
+                }
+
+                if (activeTimestamps) {
                     audioPlayer.ontimeupdate = () => {
                         const t = audioPlayer.currentTime;
 
                         // Find active sentence
                         let activeIdx = -1;
-                        for (let i = 0; i < demoTimestamps.length; i++) {
-                            if (t >= demoTimestamps[i].start && t < demoTimestamps[i].end) {
-                                activeIdx = i;
-                                break;
+                        for (let i = 0; i < activeTimestamps.length; i++) {
+                            const ts = activeTimestamps[i];
+                            // Check if valid range (start exists)
+                            if (ts && ts.start !== null && ts.start !== undefined) {
+                                // If end is null, assume it goes until next start or +5s? 
+                                // Better: if end is null, ignore? Or assume until start of next?
+                                // Let's rely on robust data. If end is null, treat as open-ended segment?
+                                // Our tool saves End, so let's stick to start <= t < end
+                                const endTime = ts.end || 999999;
+                                if (t >= ts.start && t < endTime) {
+                                    activeIdx = i;
+                                    break;
+                                }
                             }
                         }
 
@@ -285,8 +384,8 @@
                             const activeSpan = document.getElementById(`sent-${activeIdx}`);
                             if (activeSpan) {
                                 activeSpan.classList.add('active-highlight');
-                                // Auto-scroll
-                                activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                // Only auto-scroll if NOT tts (tts handles its own scroll)
+                                if (!ttsActive) activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
                         }
                     };

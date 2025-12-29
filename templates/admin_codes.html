@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block navbar_actions %}
+<a href="/reading/admin" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al
+    Panel</a>
+{% endblock %}
+
+{% block content %}
+<h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Gestión de Licencias de Alumnos</h1>
+
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div
+        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
+
+        <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
+            <div style="flex: 1;">
+                <label for="code-count" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Cantidad a
+                    generar</label>
+                <input type="number" id="code-count" value="1" min="1" max="50"
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+            </div>
+            <button onclick="generateCodes()" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">Generar
+                Licencias</button>
+        </div>
+
+        <h3 style="margin-bottom: 1rem; font-size: 1rem;">Licencias Existentes</h3>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead style="position: sticky; top: 0; background: white;">
+                    <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 0.5rem;">Clave de Licencia</th>
+                        <th style="padding: 0.5rem;">Estado</th>
+                        <th style="padding: 0.5rem;">Usado Por (Alumno)</th>
+                        <th style="padding: 0.5rem;">Email Tutor</th>
+                        <th style="padding: 0.5rem;">Activada</th>
+                        <th style="padding: 0.5rem;">Duración</th>
+                    </tr>
+                </thead>
+                <tbody id="codes-table-body">
+                    <!-- Codes loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function checkAuth() {
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+
+        if (!token || username !== 'admin') {
+            window.location.href = '/dashboard';
+            return;
+        }
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+        loadCodes();
+    }
+
+    async function loadCodes() {
+        try {
+            const response = await axios.get('/auth/admin/licenses');
+            const tbody = document.getElementById('codes-table-body');
+            tbody.innerHTML = '';
+
+            // Sort: ACTIVE first, then by creation date
+            const codes = response.data.sort((a, b) => {
+                if (a.status === b.status) return 0;
+                return a.status === 'ACTIVE' ? -1 : 1;
+            });
+
+            codes.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f1f5f9';
+                tr.innerHTML = `
+                    <td style="padding: 0.5rem; font-family: monospace; font-weight: bold; color: #1e40af;">${c.key}</td>
+                    <td style="padding: 0.5rem;">
+                        ${c.status === 'USED'
+                        ? '<span style="color: #ef4444; font-size: 0.8rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Usada</span>'
+                        : '<span style="color: #22c55e; font-size: 0.8rem; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Activa/Libre</span>'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-primary); font-weight: 500;">
+                        ${c.used_by || '-'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${c.parent_email || '-'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${c.activated_at ? new Date(c.activated_at).toLocaleDateString() : '-'}
+                    </td>
+                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${c.duration_days} días
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Error loading licenses", error);
+        }
+    }
+
+    async function generateCodes() {
+        const count = document.getElementById('code-count').value;
+        try {
+            const response = await axios.post(`/auth/admin/licenses?count=${count}`);
+            loadCodes();
+
+            // Auto-Download Text File
+            const keys = response.data;
+            let fileContent = "LICENCIAS DE ALUMNOS - AULA CL\n==============================\n\n";
+            fileContent += "Instrucciones: Entrega una clave a cada alumno. Deben ir a 'Mis Alumnos' -> 'Activar Licencia' para usarla.\n\n";
+            fileContent += keys.join("\n");
+            fileContent += "\n\n==============================\nGenerado el: " + new Date().toLocaleString();
+
+            const blob = new Blob([fileContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `licencias_alumnos_${new Date().getTime()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            alert(`¡${count} licencias generadas!`);
+        } catch (error) {
+            console.error(error);
+            alert('Error generando licencias');
+        }
+    }
+
+    checkAuth();
+</script>
+{% endblock %}

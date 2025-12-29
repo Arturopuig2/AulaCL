@@ -10,6 +10,30 @@ router = APIRouter(
     tags=["reading"]
 )
 
+from fastapi.templating import Jinja2Templates
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/admin/sync", response_class=HTMLResponse)
+def get_sync_tool(request: Request):
+    # We allow access to the HTML shell; JS handles the token check/redirect
+    return templates.TemplateResponse("admin_sync.html", {"request": request})
+
+@router.get("/admin", response_class=HTMLResponse)
+def get_admin_hub(request: Request):
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@router.get("/admin/upload", response_class=HTMLResponse)
+def get_admin_upload(request: Request):
+    return templates.TemplateResponse("admin_upload.html", {"request": request})
+
+@router.get("/admin/codes", response_class=HTMLResponse)
+def get_admin_codes(request: Request):
+    return templates.TemplateResponse("admin_codes.html", {"request": request})
+
+@router.get("/admin/readings", response_class=HTMLResponse)
+def get_admin_readings(request: Request):
+    return templates.TemplateResponse("admin_readings.html", {"request": request})
+
 @router.get("/texts", response_model=List[schemas.TextResponse])
 def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     # Return all texts so frontend can filter by course
@@ -21,6 +45,8 @@ def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: S
         texts = db.query(models.Text).all()
     else:
         texts = db.query(models.Text).filter(models.Text.is_active == True).all()
+
+
     
     user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
     attempts_map = {a.text_id: a.score for a in user_attempts}
@@ -104,7 +130,8 @@ def submit_attempt(attempt: schemas.AttemptCreate, current_user: schemas.User = 
         user_id=current_user.id,
         text_id=attempt.text_id,
         time_spent_seconds=attempt.time_spent_seconds,
-        score=attempt.score
+        score=attempt.score,
+        details=attempt.details
     )
     db.add(db_attempt)
     db.commit()
@@ -165,6 +192,26 @@ def upload_text(
     
     with open(content_path, "wb") as buffer:
         shutil.copyfileobj(text_file.file, buffer)
+        
+    # FORCE UTF-8 NORMALIZATION
+    # Attempts to read as UTF-8, falls back to Latin-1, then saves as UTF-8.
+    try:
+        with open(content_path, "rb") as f:
+            raw_bytes = f.read()
+        
+        try:
+            content_str = raw_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            # Fallback to latin-1 (covers Windows-1252 mostly)
+            content_str = raw_bytes.decode("latin-1")
+            
+        # Rewrite as pure UTF-8
+        with open(content_path, "w", encoding="utf-8") as f:
+            f.write(content_str)
+            
+    except Exception as e:
+        print(f"Error normalizing text encoding: {e}")
+        # Proceeding, might fail later but we tried.
         
     # 2. Save Audio File (if present)
     audio_path = None
@@ -290,8 +337,36 @@ def upload_text(
     if existing_questions == 0:
         print("No manual questions found. Triggering AI Generation...")
         try:
-            generate_questions_openai(new_text.id, main_text, db)
-            print("AI Generation Success")
+            import openai
+            import os
+            from dotenv import load_dotenv
+            load_dotenv()
+            api_key = os.getenv("OPENAI_API_KEY")
+            client = openai.OpenAI(api_key=api_key)
+            
+            # Load context if exists (shared logic)
+            context_instruction = ""
+            try:
+                if os.path.exists("data/magic_context.txt"):
+                    with open("data/magic_context.txt", "r", encoding="utf-8") as f:
+                        c = f.read().strip()
+                        if c: context_instruction = f"\n    CONTEXTO ADICIONAL: {c}\n"
+            except: pass
+
+            questions_data = generate_lomloe_questions_logic(main_text, client, context_instruction)
+            
+            for q in questions_data:
+                db_q = models.Question(
+                    text_id=new_text.id,
+                    question_content=q["question"],
+                    options=q["options"],
+                    correct_answer=q["correct_index"],
+                    category=q.get("category", "LITERAL")
+                )
+                db.add(db_q)
+            db.commit()
+            
+            print("AI Generation Success (LOMLOE)")
         except Exception as e:
             print(f"AI Generation Failed: {e}")
             # Don't fail the upload, but log it
@@ -299,81 +374,7 @@ def upload_text(
         
     return new_text
 
-def generate_questions_openai(text_id: int, content: str, db: Session):
-    import openai
-    import os
-    import json
-    from dotenv import load_dotenv
-    
-    load_dotenv()
-    
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        print("OPENAI_API_KEY missing")
-        return
 
-    client = openai.OpenAI(api_key=api_key)
-    
-    # Truncate content if too long (approx 4000 chars to be safe)
-    safe_content = content[:4000]
-    
-    prompt = f"""
-    Genera un examen de comprensión lectora basándote en el siguiente texto.
-    
-    REQUISITOS OBLIGATORIOS:
-    1. Genera EXACTAMENTE 10 preguntas.
-    2. Las primeras 5 deben ser de Selección Múltiple con 3 opciones (a, b, c).
-    3. Las últimas 5 deben ser de Verdadero o Falso (2 opciones).
-    4. Indica claramente la respuesta correcta (índice 0, 1, 2).
-    5. Devuelve SOLO un JSON válido con esta estructura:
-    
-    [
-      {{
-        "question": "¿Pregunta?",
-        "options": ["Opción A", "Opción B", "Opción C"],
-        "correct_index": 0
-      }},
-      ...
-    ]
-    
-    TEXTO:
-    {safe_content}
-    """
-    
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un asistente educativo experto en crear evaluaciones de lectura."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7
-        )
-        
-        json_content = response.choices[0].message.content
-        # Sanitize code blocks if present
-        json_content = json_content.replace("```json", "").replace("```", "").strip()
-        
-        questions_data = json.loads(json_content)
-        
-        for q in questions_data:
-            # Validate format strictly
-            if "options" not in q or "question" not in q or "correct_index" not in q:
-                continue
-                
-            db_q = models.Question(
-                text_id=text_id,
-                question_content=q["question"],
-                options=q["options"],
-                correct_answer=q["correct_index"]
-            )
-            db.add(db_q)
-            
-        db.commit()
-        
-    except Exception as e:
-        print(f"OpenAI Error: {e}")
-        raise e
 
 @router.patch("/admin/texts/{text_id}/toggle", response_model=schemas.TextResponse)
 def toggle_text_active(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
@@ -389,18 +390,83 @@ def toggle_text_active(text_id: int, current_user: schemas.User = Depends(auth.g
     db.refresh(text)
     return text
 
-@router.delete("/admin/texts/{text_id}")
-def delete_text(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+@router.post("/admin/upload/analyze")
+def analyze_upload_text(
+    title: str = Form(...),
+    course_level: str = Form("ALL"),
+    language: str = Form("es"),
+    text_file: UploadFile = File(...),
+    audio_file: Optional[UploadFile] = File(None),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
+
+    import shutil
+    import os
+    import openai
+    from dotenv import load_dotenv
     
-    text = db.query(models.Text).filter(models.Text.id == text_id).first()
-    if not text:
-        raise HTTPException(status_code=404, detail="Text not found")
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI(api_key=api_key)
+
+    # 1. Process Text File
+    content = ""
+    try:
+        raw_bytes = text_file.file.read()
+        try:
+            content = raw_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            content = raw_bytes.decode("latin-1")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
+
+    # 2. Process Audio File (Save Temporarily/Permanently)
+    audio_path = None
+    if audio_file:
+        audio_filename = audio_file.filename
+        audio_save_dir = "static/audio"
+        os.makedirs(audio_save_dir, exist_ok=True)
+        audio_path_full = f"{audio_save_dir}/{audio_filename}"
         
-    db.delete(text)
-    db.commit()
-    return {"message": "Text deleted successfully"}
+        # Reset file pointer if needed? UploadFile usually stream
+        with open(audio_path_full, "wb") as buffer:
+            shutil.copyfileobj(audio_file.file, buffer)
+        
+        audio_path = f"audio/{audio_filename}"
+
+    # 3. Generate Questions using Helper
+    context_instruction = ""
+    try:
+        if os.path.exists("data/magic_context.txt"):
+            with open("data/magic_context.txt", "r", encoding="utf-8") as f:
+                c = f.read().strip()
+                if c: context_instruction = f"\n    CONTEXTO ADICIONAL: {c}\n"
+    except: pass
+
+    # If the text file already contains questions (manual format), we should probably parse them instead of generating?
+    # For now, per user request "igual que el generador del Escritor Mágico", we assume we generate new ones 
+    # OR we could try to parse first.
+    # User said: "Crear un generador de preguntas para las Lecturas Subidas que sea igual que..."
+    # This implies they want the AI generation.
+    # But if they upload manual questions, we should probably respect that?
+    # Let's simple try to generate. The user can overwrite in the Review screen.
+    
+    try:
+        questions = generate_lomloe_questions_logic(content, client, context_instruction)
+    except Exception as e:
+        print(f"Generation error: {e}")
+        questions = [] # Return empty if fails, allow manual entry
+
+    return {
+        "title": title,
+        "content": content,
+        "course_level": course_level,
+        "language": language,
+        "audio_path": audio_path,
+        "questions": questions
+    }
 
 @router.get("/texts/{text_id}/pdf")
 def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str = "L", current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
@@ -715,10 +781,10 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Eres un asistente experto que SOLO responde en JSON válido."},
+                {"role": "system", "content": "Eres un premiado autor de literatura infantil y juvenil, pedagogo experto y creativo. Tu misión es crear textos fascinantes, educativos y perfectamente adaptados al nivel del lector. SOLO respondes en formato JSON válido."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7,
+            temperature=0.8,
             response_format={"type": "json_object"}
         )
         
@@ -749,37 +815,18 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
         raise HTTPException(status_code=500, detail=f"Error generando cuento: {str(e)}")
 
 
-@router.post("/admin/magic/questions", response_model=schemas.MagicQuestionsResponse)
-def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current_user: schemas.User = Depends(auth.get_current_user)):
-    if current_user.username != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized")
 
-    import openai
-    import os
+# --- HELPERS ---
+
+def generate_lomloe_questions_logic(content: str, client, context_instruction: str = ""):
     import json
-    from dotenv import load_dotenv
     import traceback
     
-    load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-    client = openai.OpenAI(api_key=api_key)
-
-    # Context Loading
-    context_instruction = ""
-    try:
-        if os.path.exists("data/magic_context.txt"):
-            with open("data/magic_context.txt", "r", encoding="utf-8") as f:
-                context_content = f.read().strip()
-                if context_content:
-                    context_instruction = f"\n    CONTEXTO ADICIONAL PARA GENERACIÓN: {context_content}\n"
-    except Exception as e:
-        print(f"Warning: Could not read magic_context.txt: {e}")
-
     prompt = f"""
-    Genera 13 preguntas de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
+    Genera 14 preguntas/actividades de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
     
     TEXTO:
-    {request.content}
+    {content}
 
     {context_instruction}
     
@@ -810,7 +857,7 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
     G) ACTIVIDAD REFLEXIVA (Valores/Crítico):
        - Relación con valores, emociones o pensamiento crítico (ODS).
 
-    REQUISITOS (Total 13 preguntas/actividades):
+    REQUISITOS (Total 14 preguntas/actividades):
 
     1. 2 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
        - Respuesta explícita en el texto.
@@ -829,7 +876,7 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
        - Enunciado: "Completa la frase: ... ______ ...".
        - REGLA DE ORO: Si es cita exacta -> LITERAL. Si es conclusión -> INFERENCIAL.
 
-    5. 1 PREGUNTA DE VOCABULARIO.
+    5. 2 PREGUNTAS DE VOCABULARIO.
        - Ej: Buscar antónimo, sinónimo o significado. (Tipo Test u Abierta).
        
     6. 1 ACTIVIDAD DE EXPRESIÓN ORAL.
@@ -878,11 +925,7 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
         json_content = response.choices[0].message.content
         json_content = json_content.replace("```json", "").replace("```", "").strip()
 
-        try:
-            data = json.loads(json_content)
-        except json.JSONDecodeError as je:
-            print(f"❌ JSON Decode Error: {je}")
-            raise HTTPException(status_code=500, detail="Error de IA: Respuesta inválida")
+        data = json.loads(json_content)
 
         if isinstance(data, list):
              if len(data) > 0 and isinstance(data[0], dict):
@@ -899,27 +942,8 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
             q_text = str(q.get("question") or f"Pregunta {i+1}")
             q_type = str(q.get("type", "")).upper().strip()
             
-            # Map types to nice labels
-            type_label = ""
-            if "INFERENCIA" in q_type or "INFERENCIAL" in q_type:
-                type_label = "[INFERENCIA]"
-            elif "LITERAL" in q_type:
-                type_label = "[LITERAL]"
-            elif "VOCABULARIO" in q_type:
-                type_label = "[VOCABULARIO]"
-            elif "ORAL" in q_type:
-                type_label = "[EXPRESIÓN ORAL]"
-            elif "ESCRITA" in q_type:
-                type_label = "[EXPRESIÓN ESCRITA]"
-            elif "LUDICA" in q_type or "LÚDICA" in q_type:
-                type_label = "[LÚDICA]"
-            elif "REFLEXIVA" in q_type:
-                type_label = "[REFLEXIVA]"
-            
-            if type_label:
-                q["question"] = f"{type_label} {q_text}"
-            else:
-                q["question"] = q_text
+            # CLEAN QUESTION TEXT (No visual tags)
+            q["question"] = q_text
             
             if "options" not in q or not isinstance(q["options"], list):
                 q["options"] = []
@@ -941,14 +965,43 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
             except:
                 q["correct_index"] = 0
                 
+            q["category"] = q_type # ADDED: Valid category for DB
             valid_questions.append(q)
 
-        return schemas.MagicQuestionsResponse(questions=valid_questions)
+        return valid_questions
 
     except Exception as e:
-        print("❌ CRITICAL EXCEPTION IN GENERATE_QUESTIONS")
+        print("❌ CRITICAL EXCEPTION IN generate_lomloe_questions_logic")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generando preguntas: {str(e)}")
+        raise e
+
+@router.post("/admin/magic/questions", response_model=schemas.MagicQuestionsResponse)
+def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current_user: schemas.User = Depends(auth.get_current_user)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    import openai
+    import os
+    from dotenv import load_dotenv
+    
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI(api_key=api_key)
+
+    # Context Loading
+    context_instruction = ""
+    try:
+        if os.path.exists("data/magic_context.txt"):
+            with open("data/magic_context.txt", "r", encoding="utf-8") as f:
+                context_content = f.read().strip()
+                if context_content:
+                    context_instruction = f"\n    CONTEXTO ADICIONAL PARA GENERACIÓN: {context_content}\n"
+    except Exception as e:
+        print(f"Warning: Could not read magic_context.txt: {e}")
+
+    questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction)
+    return schemas.MagicQuestionsResponse(questions=questions_data)
+
 
 @router.post("/admin/magic/save", response_model=schemas.TextResponse)
 def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
@@ -984,7 +1037,7 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
         course_level=request.course_level,
         language=request.language,
         content_path=content_path,
-        audio_path=None
+        audio_path=request.audio_path
     )
     
     db.add(new_text)
@@ -997,10 +1050,43 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
             text_id=new_text.id,
             question_content=q.question,
             options=q.options,
-            correct_answer=q.correct_index
+            correct_answer=q.correct_index,
+            category=q.category or "LITERAL" # ADDED: Save category
         )
         db.add(db_q)
     
     db.commit()
     
     return new_text
+
+@router.delete("/admin/texts/{text_id}")
+def delete_text(text_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
+    db.delete(text)
+    db.commit()
+    return {"message": "Text deleted successfully"}
+
+@router.get("/admin/texts", response_model=List[schemas.TextResponse])
+def get_admin_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return db.query(models.Text).all()
+
+@router.put("/admin/texts/{text_id}/timestamps")
+def update_timestamps(text_id: int, request: dict, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
+    text.timestamps = request.get('timestamps')
+    db.commit()
+    return {"status": "success"}

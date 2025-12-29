@@ -4,7 +4,7 @@
 <a href="/reading-room/{{ text_id }}" class="btn btn-outline"
     style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-right: 0.5rem;">←
     Lectura</a>
-<a href="/dashboard" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Home</a>
+
 {% endblock %}
 
 {% block content %}
@@ -66,10 +66,12 @@
                 qDiv.style.borderRadius = '12px';
 
                 // Check for special types
-                const isWritten = q.question_content.includes("[EXPRESIÓN ESCRITA]");
-                const isReflexive = q.question_content.includes("[REFLEXIVA]");
-                const isOral = q.question_content.includes("[EXPRESIÓN ORAL]");
-                const isLudica = q.question_content.includes("[LÚDICA]") || q.question_content.includes("[LUDICA]");
+                // Check for special types via Category (Fallback to content if category missing)
+                const cat = (q.category || "").toUpperCase();
+                const isWritten = cat.includes("ESCRITA");
+                const isReflexive = cat.includes("REFLEXIVA");
+                const isOral = cat.includes("ORAL");
+                const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
 
                 // Show input for Written/Reflexive
                 // Show only instruction for Oral/Ludica
@@ -126,10 +128,11 @@
         let scorableQuestions = 0;
 
         questionsData.forEach(q => {
-            const isWritten = q.question_content.includes("[EXPRESIÓN ESCRITA]");
-            const isReflexive = q.question_content.includes("[REFLEXIVA]");
-            const isOral = q.question_content.includes("[EXPRESIÓN ORAL]");
-            const isLudica = q.question_content.includes("[LÚDICA]") || q.question_content.includes("[LUDICA]");
+            const cat = (q.category || "").toUpperCase();
+            const isWritten = cat.includes("ESCRITA");
+            const isReflexive = cat.includes("REFLEXIVA");
+            const isOral = cat.includes("ORAL");
+            const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
 
             // If it is one of the excluded types, skip scoring logic
             if (isWritten || isReflexive || isOral || isLudica) {
@@ -192,11 +195,35 @@
         // Scroll to bottom
         resultPanel.scrollIntoView({ behavior: 'smooth' });
 
+        // Collect Details (Q_ID -> isCorrect)
+        let details = {};
+        questionsData.forEach(q => {
+            // Only for scorable questions
+            // Only for scorable questions
+            const cat = (q.category || "").toUpperCase();
+            const isScorable = !(cat.includes("ESCRITA") ||
+                cat.includes("REFLEXIVA") ||
+                cat.includes("ORAL") ||
+                cat.includes("LÚDICA") ||
+                cat.includes("LUDICA"));
+
+            if (isScorable) {
+                const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                const correctIndex = q.correct_answer;
+                let isCorrect = false;
+                if (selected && parseInt(selected.value) === correctIndex) {
+                    isCorrect = true;
+                }
+                details[q.id] = isCorrect;
+            }
+        });
+
         try {
             await axios.post('/reading/attempt', {
                 text_id: textId,
                 time_spent_seconds: timeSpent,
-                score: finalScore
+                score: finalScore,
+                details: details
             });
         } catch (e) {
             console.error('Error enviando resultados', e);

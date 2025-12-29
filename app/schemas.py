@@ -33,6 +33,7 @@ class QuestionBase(BaseModel):
 class QuestionResponse(QuestionBase):
     id: int
     correct_answer: int
+    category: Optional[str] = "LITERAL"
     
     class Config:
         from_attributes = True
@@ -51,6 +52,7 @@ class TextResponse(TextBase):
     language: Optional[str] = "es"
     is_active: Optional[bool] = True
     is_locked: Optional[bool] = False
+    timestamps: Optional[List[Optional[dict]]] = None
     
     class Config:
         from_attributes = True
@@ -63,6 +65,7 @@ class AttemptCreate(BaseModel):
     text_id: int
     time_spent_seconds: float
     score: float
+    details: Optional[dict] = None
 
 class AttemptResponse(AttemptCreate):
     id: int
@@ -110,6 +113,7 @@ class QuestionDraft(BaseModel):
     question: str
     options: List[str]
     correct_index: int
+    category: Optional[str] = "LITERAL"
 
 class MagicRequest(BaseModel):
     topic: str
@@ -129,6 +133,7 @@ class MagicSaveRequest(BaseModel):
     questions: List[QuestionDraft]
     course_level: str
     language: str
+    audio_path: Optional[str] = None
 
 class MagicStoryResponse(BaseModel):
     title: str
