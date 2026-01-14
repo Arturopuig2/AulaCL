@@ -247,8 +247,7 @@
             document.getElementById('upload-review-editor').scrollIntoView({ behavior: 'smooth' });
 
         } catch (error) {
-            console.error(error);
-            alert('Error analizando lectura: ' + (error.response?.data?.detail || error.message));
+            handleError(error, 'Error analizando lectura');
         } finally {
             btn.innerText = originalText;
             btn.disabled = false;
@@ -371,8 +370,7 @@
             window.location.href = '/reading/admin/readings'; // Redirect to list
 
         } catch (error) {
-            console.error(error);
-            alert("Error guardando: " + (error.response?.data?.detail || error.message));
+            handleError(error, "Error guardando");
             btn.innerText = "💾 Guardar Definitivamente";
             btn.disabled = false;
         }
@@ -407,6 +405,16 @@
         document.getElementById('upload-form-container').style.display = 'block';
         document.getElementById('upload-form').reset();
         currentUploadData = null;
+    }
+
+    function handleError(error, contextMsg) {
+        console.error(error);
+        if (error.response && error.response.status === 401) {
+            alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+            window.location.href = '/login';
+            return;
+        }
+        alert(contextMsg + ": " + (error.response?.data?.detail || error.message));
     }
 </script>
 {% endblock %}

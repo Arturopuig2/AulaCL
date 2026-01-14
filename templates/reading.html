@@ -64,7 +64,13 @@
 
     <div id="text-content"
         style="background: white; padding: 2rem; border-radius: var(--radius); line-height: 1.8; font-size: 1.2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); max-height: 60vh; overflow-y: auto;">
-        Cargando texto...
+
+        <div id="illustration-container" style="text-align: center; margin-bottom: 2rem; display: none;">
+            <img id="text-illustration" src="" alt="Ilustración"
+                style="max-height: 300px; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        </div>
+
+        <div id="text-body">Cargando texto...</div>
     </div>
 
 </div>
@@ -303,13 +309,19 @@
 
             document.getElementById('text-title').innerText = textData.title;
 
+            if (textData.image_path) {
+                const img = document.getElementById('text-illustration');
+                img.src = textData.image_path;
+                document.getElementById('illustration-container').style.display = 'block';
+            }
+
             if (textData.content) {
                 // ENABLE KARAOKE FORMATTING FOR ALL TEXTS
                 // This wraps lines in spans so we can highlight them via Audio or TTS
                 console.log("Enabling Karaoke Mode formatting...");
-                document.getElementById('text-content').innerHTML = processTextContent(textData.content);
+                document.getElementById('text-body').innerHTML = processTextContent(textData.content);
             } else {
-                document.getElementById('text-content').innerText = "No se pudo cargar el contenido.";
+                document.getElementById('text-body').innerText = "No se pudo cargar el contenido.";
             }
 
             // Button Container

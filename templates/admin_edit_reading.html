@@ -1,0 +1,348 @@
+{% extends "layout.html" %}
+
+{% block navbar_actions %}
+<a href="/reading/admin/readings" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">← Volver al
+    Gestor</a>
+{% endblock %}
+
+{% block content %}
+<h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Editar Lectura</h1>
+
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div
+        style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+
+        <div id="edit-loading" style="text-align: center; padding: 2rem;">
+            <p>Cargando lectura...</p>
+        </div>
+
+        <div id="editor-interface" style="display: none;">
+
+            <!-- Metadata Fields -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label style="font-weight: bold;">Título</label>
+                    <input type="text" id="edit-title" class="form-control"
+                        style="font-size: 1.1rem; font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold;">Nivel</label>
+                    <select id="edit-course" class="form-control">
+                        <option value="ALL">Sin Curso / General</option>
+                        <optgroup label="Primaria">
+                            <option value="1P">1º Primaria</option>
+                            <option value="2P">2º Primaria</option>
+                            <option value="3P">3º Primaria</option>
+                            <option value="4P">4º Primaria</option>
+                            <option value="5P">5º Primaria</option>
+                            <option value="6P">6º Primaria</option>
+                        </optgroup>
+                        <optgroup label="ESO">
+                            <option value="1ESO">1º ESO</option>
+                            <option value="2ESO">2º ESO</option>
+                            <option value="3ESO">3º ESO</option>
+                            <option value="4ESO">4º ESO</option>
+                        </optgroup>
+                        <optgroup label="Bachillerato">
+                            <option value="1BAT">1º Bachillerato</option>
+                            <option value="2BAT">2º Bachillerato</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold;">Idioma</label>
+                    <select id="edit-lang" class="form-control">
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="val">Valencià</option>
+                        <option value="fr">Francés</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="font-weight: bold;">Historia / Contenido</label>
+                <textarea id="edit-content"
+                    style="width: 100%; height: 300px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: sans-serif; line-height: 1.6; font-size: 14px;"></textarea>
+            </div>
+
+            <!-- VALIDATION / REGENERATE ACTION -->
+            <div id="step-1-actions" style="margin-bottom: 2rem;">
+                <button onclick="validateAndGenerateQuestions()" id="btn-validate" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem; font-size: 1.1rem; background: #16a34a; border-color: #16a34a;">
+                    ✅ Validar Cambios y Regenerar Preguntas
+                </button>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem; text-align: center;">
+                    * Pulsa esto solo si has cambiado mucho el texto y quieres preguntas nuevas. Si solo quieres editar
+                    las preguntas existentes, puedes hacerlo abajo directamente.
+                </p>
+            </div>
+
+            <!-- QUESTIONS SECTION -->
+            <div id="questions-section" style="border-top: 1px solid #e2e8f0; padding-top: 2rem;">
+                <h4
+                    style="margin-bottom: 1rem; color: #1e40af; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Editar Preguntas</span>
+                    <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">(Se guardarán al
+                        finalizar)</span>
+                </h4>
+
+                <div id="questions-container" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                    <!-- JS will popualte this -->
+                </div>
+
+                <button onclick="addQuestion()" class="btn btn-outline"
+                    style="width: 100%; margin-bottom: 2rem; border-color: #22c55e; color: #16a34a; border-style: dashed;">
+                    + Añadir Pregunta Manual
+                </button>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="saveChanges()" id="btn-save-all" class="btn btn-primary"
+                        style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar Cambios (Todo)</button>
+                    <!-- No cancel logic really needed as back button exists, maybe reset? -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Extract ID from URL path: /reading/admin/edit/{id}
+    const pathParts = window.location.pathname.split('/');
+    const textId = pathParts[pathParts.length - 1]; // Assuming correct routing
+
+    let currentDraft = {
+        title: "",
+        content: "",
+        course: "ALL",
+        language: "es",
+        questions: []
+    };
+
+    // Check Auth on Load
+    (async function init() {
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        if (!token || username !== 'admin') {
+            window.location.href = '/dashboard';
+            return;
+        }
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+
+        await loadReadingData();
+    })();
+
+    async function loadReadingData() {
+        try {
+            // Parallel fetch text and questions
+            const [textResp, questionsResp] = await Promise.all([
+                axios.get(`/reading/texts/${textId}`),
+                axios.get(`/reading/texts/${textId}/questions`)
+            ]);
+
+            const text = textResp.data;
+            const qList = questionsResp.data;
+
+            // Map data to draft
+            currentDraft.title = text.title;
+            currentDraft.content = text.content;
+            currentDraft.course = text.course_level;
+            currentDraft.language = text.language;
+
+            // Map questions to draft format
+            currentDraft.questions = qList.map(q => ({
+                question: q.question_content,
+                options: q.options,
+                correct_index: q.correct_answer,
+                category: q.category || "LITERAL"
+            }));
+
+            renderEditor();
+            document.getElementById('edit-loading').style.display = 'none';
+            document.getElementById('editor-interface').style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            alert("Error cargando la lectura. ¿Existe el ID?");
+            document.getElementById('edit-loading').innerHTML = "<p style='color:red'>Error al cargar.</p>";
+        }
+    }
+
+    function renderEditor() {
+        // Metadata
+        document.getElementById('edit-title').value = currentDraft.title;
+        document.getElementById('edit-content').value = currentDraft.content;
+        document.getElementById('edit-course').value = currentDraft.course;
+        document.getElementById('edit-lang').value = currentDraft.language;
+
+        // Questions
+        const qContainer = document.getElementById('questions-container');
+        qContainer.innerHTML = '';
+        currentDraft.questions.forEach((q, index) => {
+            renderQuestionCard(q, index);
+        });
+    }
+
+    function renderQuestionCard(q, index) {
+        const qContainer = document.getElementById('questions-container');
+        const card = document.createElement('div');
+        card.style.background = '#f8fafc';
+        card.style.padding = '1rem';
+        card.style.border = '1px solid #e2e8f0';
+        card.style.borderRadius = '0.5rem';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
+                <button onclick="deleteQuestion(${index})" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; background: transparent;">
+                    Eliminar
+                </button>
+            </div>
+            <input type="text" class="q-input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
+            
+            <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
+                ${q.options.map((_, optIndex) => `
+                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+                        <input type="text" class="q-opt-input" data-q="${index}" data-opt="${optIndex}" placeholder="Escribe una opción..." 
+                            style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
+                        <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;">
+                    </div>
+                `).join('')}
+            </div>
+             <!-- Category Select -->
+            <div style="margin-top: 0.5rem; text-align: right;">
+                <label style="font-size: 0.8rem; color: #64748b; margin-right: 0.5rem;">Tipo:</label>
+                <select class="q-category" style="padding: 0.2rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; background: white;">
+                    <option value="LITERAL" ${q.category === 'LITERAL' ? 'selected' : ''}>LITERAL (Comprensión)</option>
+                    <option value="INFERENCIAL" ${q.category === 'INFERENCIAL' ? 'selected' : ''}>INFERENCIAL (Deducción)</option>
+                    <option value="VOCABULARIO" ${q.category === 'VOCABULARIO' ? 'selected' : ''}>VOCABULARIO (Léxico)</option>
+                    <option value="REFLEXIVA" ${q.category === 'REFLEXIVA' ? 'selected' : ''}>REFLEXIVA (Valores)</option>
+                    <option value="LUDICA" ${q.category === 'LUDICA' || q.category === 'LÚDICA' ? 'selected' : ''}>LÚDICA (Juego/Creatividad)</option>
+                    <option value="ESCRITA" ${q.category === 'ESCRITA' ? 'selected' : ''}>EXPRESIÓN ESCRITA</option>
+                    <option value="ORAL" ${q.category === 'ORAL' ? 'selected' : ''}>EXPRESIÓN ORAL</option>
+                </select>
+            </div>
+        `;
+
+        // Safe rendering
+        card.querySelector('.q-input').value = q.question;
+        const optInputs = card.querySelectorAll('.q-opt-input');
+        q.options.forEach((opt, i) => {
+            if (optInputs[i]) optInputs[i].value = opt || "";
+        });
+
+        qContainer.appendChild(card);
+    }
+
+    function addQuestion() {
+        saveCurrentState();
+        currentDraft.questions.push({
+            question: "Nueva pregunta...",
+            options: ["Opción A", "Opción B", "Opción C"],
+            correct_index: 0,
+            category: "LITERAL"
+        });
+        renderEditor();
+    }
+
+    function deleteQuestion(index) {
+        if (!confirm("¿Seguro que quieres eliminar esta pregunta?")) return;
+        saveCurrentState();
+        currentDraft.questions.splice(index, 1);
+        renderEditor();
+    }
+
+    function saveCurrentState() {
+        // Collect Metadata
+        currentDraft.title = document.getElementById('edit-title').value;
+        currentDraft.content = document.getElementById('edit-content').value;
+        currentDraft.course = document.getElementById('edit-course').value;
+        currentDraft.language = document.getElementById('edit-lang').value;
+
+        // Collect Questions
+        const qContainer = document.getElementById('questions-container');
+        const updatedQuestions = [];
+
+        for (let i = 0; i < qContainer.children.length; i++) {
+            const card = qContainer.children[i];
+            const qText = card.querySelector('.q-input').value;
+            const optInputs = card.querySelectorAll('.q-opt-input');
+            const options = Array.from(optInputs).map(input => input.value);
+            const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
+            const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+            const category = card.querySelector('.q-category').value;
+
+            updatedQuestions.push({
+                question: qText,
+                options: options,
+                correct_index: correctIndex,
+                category: category
+            });
+        }
+        currentDraft.questions = updatedQuestions;
+    }
+
+    async function validateAndGenerateQuestions() {
+        saveCurrentState(); // Sync first
+
+        if (!currentDraft.content || currentDraft.content.length < 50) {
+            alert("El texto es muy corto para generar preguntas.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-validate');
+        const originalText = btn.innerText;
+        btn.innerText = "🧠 Generando nuevas preguntas...";
+        btn.disabled = true;
+
+        try {
+            const response = await axios.post('/reading/admin/magic/questions', {
+                content: currentDraft.content,
+                topic: currentDraft.title
+            });
+
+            // Replace questions but keep text
+            currentDraft.questions = response.data.questions;
+            renderEditor();
+            alert("¡Preguntas regeneradas! Revisa los resultados abajo.");
+
+        } catch (error) {
+            console.error(error);
+            alert("Error generando preguntas: " + (error.response?.data?.detail || error.message));
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    async function saveChanges() {
+        saveCurrentState(); // Sync final state
+
+        const btn = document.getElementById('btn-save-all');
+        btn.innerText = "Guardando...";
+        btn.disabled = true;
+
+        try {
+            await axios.put(`/reading/admin/texts/${textId}/full`, {
+                title: currentDraft.title,
+                content: currentDraft.content,
+                course_level: currentDraft.course,
+                language: currentDraft.language,
+                questions: currentDraft.questions,
+                audio_path: null // Not updating audio for now in this screen
+            });
+
+            alert("¡Cambios guardados correctamente!");
+            window.location.href = '/reading/admin/readings'; // Go back
+
+        } catch (error) {
+            console.error(error);
+            alert("Error guardando los cambios: " + (error.response?.data?.detail || error.message));
+            btn.innerText = "Error (Intentar de nuevo)";
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

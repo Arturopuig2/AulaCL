@@ -14,6 +14,17 @@
 
         <!-- MAGIC CONFIG -->
         <div id="magic-config">
+            <style>
+                .image-preview {
+                    width: 100%;
+                    max-height: 200px;
+                    object-fit: cover;
+                    border-radius: 0.5rem;
+                    margin-bottom: 1rem;
+                    display: none;
+                    border: 2px solid #e2e8f0;
+                }
+            </style>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <input type="text" id="magic-topic"
                     placeholder="Tema / Sinopsis (ej: Dos astronautas descubren una flor)" class="form-control">
@@ -82,27 +93,59 @@
                     style="width: 100%; height: 300px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: sans-serif; line-height: 1.6; font-size: 14px;"></textarea>
             </div>
 
-            <h4
-                style="margin-bottom: 1rem; color: #1e40af; display: flex; justify-content: space-between; align-items: center;">
-                <span>Editar Preguntas</span>
-                <button onclick="generateMagicQuestions()" id="btn-magic-questions" class="btn btn-outline"
-                    style="font-size: 0.9rem; border-color: #3b82f6; color: #3b82f6;">
-                    🚀 Generar Preguntas (IA)
-                </button>
-            </h4>
-            <div id="questions-container" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-                <!-- JS will popualte this -->
+
+            <!-- ILLUSTRATION UPLOAD (MANUAL) -->
+            <div class="form-group"
+                style="margin-bottom: 2rem; background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px dashed #cbd5e1;">
+                <label style="font-weight: bold; color: #475569; display: block; margin-bottom: 0.5rem;">🖼️ Ilustración
+                    (Opcional)</label>
+
+                <img id="draft-image-preview" class="image-preview" src="" alt="Vista previa">
+
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(this)">
+                    <button onclick="document.getElementById('image-upload-input').click()" class="btn btn-outline"
+                        style="font-size: 0.9rem;">
+                        📤 Subir Imagen
+                    </button>
+                    <span id="upload-status" style="font-size: 0.85rem; color: #64748b;">Ningún archivo
+                        seleccionado</span>
+                </div>
             </div>
 
-            <button onclick="addQuestion()" class="btn btn-outline"
-                style="width: 100%; margin-bottom: 2rem; border-color: #22c55e; color: #16a34a; border-style: dashed;">
-                + Añadir Pregunta Manual
-            </button>
+            <!-- STEP 1 VALIDATION ACTION -->
+            <div id="step-1-actions" style="margin-bottom: 2rem;">
+                <button onclick="validateAndGenerateQuestions()" id="btn-validate" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem; font-size: 1.1rem; background: #16a34a; border-color: #16a34a;">
+                    ✅ Validar Historia y Generar Preguntas
+                </button>
+            </div>
 
-            <div style="display: flex; gap: 1rem;">
-                <button onclick="saveMagicStory()" id="btn-magic-save" class="btn btn-primary"
-                    style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar en Librería</button>
-                <button onclick="cancelMagic()" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+            <!-- STEP 2: QUESTIONS (Initially Hidden) -->
+            <div id="magic-step-2" style="display: none; border-top: 1px solid #e2e8f0; padding-top: 2rem;">
+                <h4
+                    style="margin-bottom: 1rem; color: #1e40af; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Editar Preguntas</span>
+                    <button onclick="generateMagicQuestions()" id="btn-regen-questions" class="btn btn-outline"
+                        style="font-size: 0.9rem; border-color: #3b82f6; color: #3b82f6;">
+                        🔄 Regenerar Preguntas
+                    </button>
+                </h4>
+                <div id="questions-container" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                    <!-- JS will popualte this -->
+                </div>
+
+                <button onclick="addQuestion()" class="btn btn-outline"
+                    style="width: 100%; margin-bottom: 2rem; border-color: #22c55e; color: #16a34a; border-style: dashed;">
+                    + Añadir Pregunta Manual
+                </button>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="saveMagicStory()" id="btn-magic-save" class="btn btn-primary"
+                        style="flex: 2; padding: 1rem; font-size: 1.1rem;">💾 Guardar en Librería</button>
+                    <button onclick="cancelMagic()" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -161,12 +204,12 @@
             document.getElementById('magic-editor').style.display = 'block';
 
         } catch (error) {
-            console.error(error);
-            alert("Error generando cuento: " + (error.response?.data?.detail || error.message));
+            handleError(error, "Error generando cuento");
         } finally {
             btn.innerText = originalText;
             btn.disabled = false;
         }
+
     }
 
     function renderMagicEditor(draft) {
@@ -211,10 +254,18 @@
                     </div>
                 `).join('')}
             </div>
-            <!-- Hidden Category Field -->
-            <input type="hidden" class="q-category" value="${q.category || 'LITERAL'}">
-            <div style="font-size: 0.8rem; color: #94a3b8; text-align: right; margin-top: 0.5rem;">
-                Tipo: ${q.category || 'LITERAL'}
+            <!-- Category Select -->
+            <div style="margin-top: 0.5rem; text-align: right;">
+                <label style="font-size: 0.8rem; color: #64748b; margin-right: 0.5rem;">Tipo:</label>
+                <select class="q-category" style="padding: 0.2rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; background: white;">
+                    <option value="LITERAL" ${q.category === 'LITERAL' ? 'selected' : ''}>LITERAL (Comprensión)</option>
+                    <option value="INFERENCIAL" ${q.category === 'INFERENCIAL' ? 'selected' : ''}>INFERENCIAL (Deducción)</option>
+                    <option value="VOCABULARIO" ${q.category === 'VOCABULARIO' ? 'selected' : ''}>VOCABULARIO (Léxico)</option>
+                    <option value="REFLEXIVA" ${q.category === 'REFLEXIVA' ? 'selected' : ''}>REFLEXIVA (Valores)</option>
+                    <option value="LUDICA" ${q.category === 'LUDICA' || q.category === 'LÚDICA' ? 'selected' : ''}>LÚDICA (Juego/Creatividad)</option>
+                    <option value="ESCRITA" ${q.category === 'ESCRITA' ? 'selected' : ''}>EXPRESIÓN ESCRITA</option>
+                    <option value="ORAL" ${q.category === 'ORAL' ? 'selected' : ''}>EXPRESIÓN ORAL</option>
+                </select>
             </div>
         `;
 
@@ -287,9 +338,9 @@
             return;
         }
 
-        const btn = document.getElementById('btn-magic-questions');
+        const btn = document.getElementById('btn-regen-questions') || document.getElementById('btn-validate');
         const originalText = btn.innerText;
-        btn.innerText = "🧠 Pensando preguntas...";
+        btn.innerText = "🧠 Generando preguntas...";
         btn.disabled = true;
 
         try {
@@ -298,17 +349,27 @@
                 topic: topic
             });
 
-            // Replace questions but keep text
+            // Replace questions but keep text (updated with user edits)
             currentMagicDraft.questions = response.data.questions;
+            currentMagicDraft.title = topic;
+            currentMagicDraft.content = content;
+
             renderMagicEditor(currentMagicDraft);
 
+            // Show Step 2
+            document.getElementById('magic-step-2').style.display = 'block';
+            document.getElementById('step-1-actions').style.display = 'none';
+
         } catch (error) {
-            console.error(error);
-            alert("Error generando preguntas: " + (error.response?.data?.detail || error.message));
+            handleError(error, "Error generando preguntas");
         } finally {
             btn.innerText = originalText;
             btn.disabled = false;
         }
+    }
+
+    async function validateAndGenerateQuestions() {
+        await generateMagicQuestions();
     }
 
     async function saveMagicStory() {
@@ -357,7 +418,8 @@
                 content: content,
                 questions: questions,
                 course_level: course,
-                language: lang
+                language: lang,
+                image_path: currentMagicDraft.image_path || null // Send image path
             });
 
             alert("¡Cuento guardado correctamente! 📚");
@@ -366,22 +428,71 @@
             // Staying here is fine for generating another one.
 
         } catch (error) {
-            console.error(error);
-            alert("Error guardando: " + (error.response?.data?.detail || error.message));
+            handleError(error, "Error guardando");
         } finally {
             btn.innerText = "💾 Guardar en Librería";
             btn.disabled = false;
         }
     }
 
+    async function handleImageUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('upload-status').innerText = "Subiendo...";
+
+            try {
+                const response = await axios.post('/reading/admin/upload-image', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                const imagePath = "/" + response.data.path; // Ensure relative web path
+
+                // Update State
+                currentMagicDraft.image_path = imagePath;
+
+                // Update UI
+                const preview = document.getElementById('draft-image-preview');
+                preview.src = imagePath;
+                preview.style.display = 'block';
+                document.getElementById('upload-status').innerText = "Imagen subida ✅";
+
+            } catch (error) {
+                console.error(error);
+                alert("Error subiendo imagen");
+                document.getElementById('upload-status').innerText = "Error ❌";
+            }
+        }
+    }
+
     function cancelMagic() {
         document.getElementById('magic-config').style.display = 'block';
         document.getElementById('magic-editor').style.display = 'none';
+        document.getElementById('magic-step-2').style.display = 'none'; // Hide step 2
+        document.getElementById('step-1-actions').style.display = 'block'; // Show step 1
+
         currentMagicDraft = null;
         document.getElementById('edit-title').value = '';
         document.getElementById('edit-content').value = '';
         document.getElementById('questions-container').innerHTML = '';
         document.getElementById('magic-topic').value = ''; // Clean topic too
+
+        // Reset Image UI
+        document.getElementById('draft-image-preview').style.display = 'none';
+        document.getElementById('draft-image-preview').src = '';
+        document.getElementById('upload-status').innerText = "Ningún archivo seleccionado";
+        document.getElementById('image-upload-input').value = '';
+    }
+    function handleError(error, contextMsg) {
+        console.error(error);
+        if (error.response && error.response.status === 401) {
+            alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+            window.location.href = '/login';
+            return;
+        }
+        alert(contextMsg + ": " + (error.response?.data?.detail || error.message));
     }
 </script>
 {% endblock %}

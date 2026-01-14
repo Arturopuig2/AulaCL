@@ -46,6 +46,7 @@ class TextResponse(TextBase):
     id: int
     filename: str
     audio_path: Optional[str] = None
+    image_path: Optional[str] = None
     content: Optional[str] = None
     is_completed: Optional[bool] = False
     score: Optional[float] = None
@@ -131,9 +132,11 @@ class MagicSaveRequest(BaseModel):
     title: str
     content: str
     questions: List[QuestionDraft]
+    questions: List[QuestionDraft]
     course_level: str
     language: str
     audio_path: Optional[str] = None
+    image_path: Optional[str] = None
 
 class MagicStoryResponse(BaseModel):
     title: str

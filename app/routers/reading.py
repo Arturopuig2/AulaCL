@@ -34,6 +34,11 @@ def get_admin_codes(request: Request):
 def get_admin_readings(request: Request):
     return templates.TemplateResponse("admin_readings.html", {"request": request})
 
+@router.get("/admin/edit/{text_id}", response_class=HTMLResponse)
+def get_admin_edit_reading(request: Request, text_id: int):
+    # Just serve the template, JS handles data loading
+    return templates.TemplateResponse("admin_edit_reading.html", {"request": request})
+
 @router.get("/texts", response_model=List[schemas.TextResponse])
 def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     # Return all texts so frontend can filter by course
@@ -162,6 +167,55 @@ def update_text(text_id: int, text_update: schemas.TextUpdate, current_user: sch
         
     db.commit()
     db.refresh(text)
+    return text
+
+@router.put("/admin/texts/{text_id}/full", response_model=schemas.TextResponse)
+def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    text = db.query(models.Text).filter(models.Text.id == text_id).first()
+    if not text:
+        raise HTTPException(status_code=404, detail="Text not found")
+        
+    import os
+    
+    # 1. Update Metadata
+    text.title = request.title
+    text.course_level = request.course_level
+    text.language = request.language
+    if request.audio_path:
+        text.audio_path = request.audio_path
+        
+    # 2. Update File Content
+    try:
+        # Check if dir changed (e.g. course changed), move file?
+        # For simplicity, we keep same path or just write to existing path if course logic isn't strict on folder structure
+        # User might want organization though. Let's stick to simple overwrite for now unless we want to implement move.
+        # IF we change course, we might want to move it, but complicates things. Let's just overwrite defined path.
+        
+        with open(text.content_path, "w", encoding="utf-8") as f:
+            f.write(request.content)
+            
+    except Exception as e:
+        print(f"Error updating file content: {e}")
+        raise HTTPException(status_code=500, detail="Error updating text file on disk")
+
+    # 3. Update Questions (Full Replace)
+    # Delete old
+    db.query(models.Question).filter(models.Question.text_id == text_id).delete()
+    
+    # Add new
+    for q in request.questions:
+        db_q = models.Question(
+            text_id=text.id,
+            question_content=q.question,
+            options=q.options,
+            correct_answer=q.correct_index,
+            category=q.category or "LITERAL"
+        )
+        db.add(db_q)
+        
     db.commit()
     db.refresh(text)
     return text
@@ -1037,7 +1091,9 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
         course_level=request.course_level,
         language=request.language,
         content_path=content_path,
-        audio_path=request.audio_path
+        content_path=content_path,
+        audio_path=request.audio_path,
+        image_path=request.image_path
     )
     
     db.add(new_text)
@@ -1090,3 +1146,30 @@ def update_timestamps(text_id: int, request: dict, current_user: schemas.User = 
     text.timestamps = request.get('timestamps')
     db.commit()
     return {"status": "success"}
+
+@router.post("/admin/upload-image")
+def upload_image(
+    file: UploadFile = File(...),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    import shutil
+    import os
+    import uuid
+
+    # 1. Setup Directory
+    save_dir = "static/images/uploads"
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # 2. Save File
+    # Generate unique name to avoid conflicts
+    ext = os.path.splitext(file.filename)[1]
+    unique_filename = f"{uuid.uuid4()}{ext}"
+    file_path = f"{save_dir}/{unique_filename}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    return {"path": file_path}

@@ -37,6 +37,7 @@ class Text(Base):
     course_level = Column(String)
     content_path = Column(String) # Path to the .txt file
     audio_path = Column(String, nullable=True) # Path to the .mp3 file
+    image_path = Column(String, nullable=True) # Path to the image file
     language = Column(String, default="es") # "es", "en", "val", "cat", "gal", "eus", "fr"
     is_active = Column(Boolean, default=True)
     timestamps = Column(JSON, nullable=True)
