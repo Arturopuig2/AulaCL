@@ -186,6 +186,8 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
     text.language = request.language
     if request.audio_path:
         text.audio_path = request.audio_path
+    if request.image_path:
+        text.image_path = request.image_path
         
     # 2. Update File Content
     try:
@@ -640,6 +642,27 @@ def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str
     pdf.multi_cell(0, 10, safe_text(text.title), align='C')
     pdf.ln(10)
 
+    # Illustration
+    if text.image_path:
+        # Check relative or absolute
+        import os
+        img_path = text.image_path
+        # If it starts with /, it might be relative to web root, but for file system it might be relative to cwd
+        # Our app runs from root, so if path is "static/...", it works.
+        # If path is "/static/...", we need to strip leading slash
+        if img_path.startswith("/"):
+            img_path = img_path[1:]
+            
+        if os.path.exists(img_path):
+            try:
+                # Center image. Page width ~210mm.
+                # Let's target width 100mm.
+                # x = (210 - 100) / 2 = 55
+                pdf.image(img_path, x=55, w=100)
+                pdf.ln(10)
+            except Exception as e:
+                print(f"Error adding PDF image: {e}")
+
     # Text Content
     pdf.set_font(main_font, "", s_text)
     # Adjust line height based on size (approx size * 0.5)
@@ -1090,7 +1113,6 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
         filename=filename,
         course_level=request.course_level,
         language=request.language,
-        content_path=content_path,
         content_path=content_path,
         audio_path=request.audio_path,
         image_path=request.image_path

@@ -114,6 +114,18 @@
         <p style="color: #64748b; margin-bottom: 1.5rem;">Por favor, revisa el texto y las preguntas generadas antes de
             guardar.</p>
 
+        <style>
+            .image-preview {
+                width: 100%;
+                max-height: 200px;
+                object-fit: cover;
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+                display: none;
+                border: 2px solid #e2e8f0;
+            }
+        </style>
+
         <div class="form-group" style="margin-bottom: 1rem;">
             <label style="font-weight: bold;">Título</label>
             <input type="text" id="review-title"
@@ -167,6 +179,25 @@
             <label style="font-weight: bold;">Contenido del Texto</label>
             <textarea id="review-content"
                 style="width: 100%; height: 300px; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: sans-serif; line-height: 1.6; font-size: 14px;"></textarea>
+        </div>
+
+        <!-- ILLUSTRATION UPLOAD (MANUAL) -->
+        <div class="form-group"
+            style="margin-bottom: 2rem; background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px dashed #cbd5e1;">
+            <label style="font-weight: bold; color: #475569; display: block; margin-bottom: 0.5rem;">🖼️ Ilustración
+                (Opcional)</label>
+
+            <img id="upload-image-preview" class="image-preview" src="" alt="Vista previa">
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="file" id="image-upload-input" accept="image/*" style="display: none;"
+                    onchange="handleImageUpload(this)">
+                <button onclick="document.getElementById('image-upload-input').click()" class="btn btn-outline"
+                    style="font-size: 0.9rem;">
+                    📤 Subir Imagen
+                </button>
+                <span id="upload-status" style="font-size: 0.85rem; color: #64748b;">Ningún archivo seleccionado</span>
+            </div>
         </div>
 
         <h4
@@ -240,6 +271,7 @@
             });
 
             currentUploadData = response.data;
+            currentUploadData.image_path = null; // Initialize image path
             showReviewUI(currentUploadData);
 
             document.getElementById('upload-form-container').style.display = 'none';
@@ -358,7 +390,8 @@
                 course_level: currentUploadData.course_level,
                 language: currentUploadData.language,
                 questions: currentUploadData.questions,
-                audio_path: currentUploadData.audio_path
+                audio_path: currentUploadData.audio_path,
+                image_path: currentUploadData.image_path
             };
 
             const token = localStorage.getItem('token');
@@ -415,6 +448,42 @@
             return;
         }
         alert(contextMsg + ": " + (error.response?.data?.detail || error.message));
+    }
+
+    async function handleImageUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('upload-status').innerText = "Subiendo...";
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.post('/reading/admin/upload-image', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const imagePath = "/" + response.data.path; // Ensure relative web path
+
+                // Update State
+                currentUploadData.image_path = imagePath;
+
+                // Update UI
+                const preview = document.getElementById('upload-image-preview');
+                preview.src = imagePath;
+                preview.style.display = 'block';
+                document.getElementById('upload-status').innerText = "Imagen subida ✅";
+
+            } catch (error) {
+                console.error(error);
+                alert("Error subiendo imagen");
+                document.getElementById('upload-status').innerText = "Error ❌";
+            }
+        }
     }
 </script>
 {% endblock %}

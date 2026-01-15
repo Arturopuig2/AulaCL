@@ -32,30 +32,45 @@
             <h1 id="text-title" style="margin: 0;">Cargando...</h1>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="display: flex; gap: 0.5rem;">
-                <button onclick="openPdfModal()" class="btn btn-outline"
-                    style="padding: 0.2rem 0.6rem; font-size: 1rem;" title="Descargar Ficha PDF">
-                    🖨️ Ficha
-                </button>
-                <button onclick="toggleFontStyle()" class="btn btn-outline"
-                    style="padding: 0.2rem 0.6rem; font-size: 1.5rem;" title="Cambiar tipo de letra (Imprenta/Ligada)">
-                    <span style="font-family: 'AulaCNova', cursive;">a</span>
-                </button>
-                <div style="width: 1px; background: #cbd5e1; margin: 0 0.5rem;"></div>
-                <button onclick="adjustFontSize(-0.1)" class="btn btn-outline"
-                    style="padding: 0.2rem 0.6rem; font-size: 1rem;">A-</button>
-                <button onclick="adjustFontSize(0.1)" class="btn btn-outline"
-                    style="padding: 0.2rem 0.6rem; font-size: 1rem;">A+</button>
-            </div>
             <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color); cursor: pointer; display: flex; align-items: center;"
                 onclick="toggleTimer()" title="Clic para ocultar/mostrar tiempo">
-                <span>⏱</span> <span id="timer"
-                    style="display: inline-block; min-width: 80px; text-align: left; opacity: 0;">00:00</span>
+                <span id="timer"
+                    style="display: inline-block; min-width: 80px; text-align: right; opacity: 0;">00:00</span>
+                <span style="margin-left: 0.5rem;">⏱</span>
+            </div>
+            <div
+                style="display: flex; gap: 0.5rem; align-items: center; background: #f1f5f9; padding: 0.2rem 0.6rem; border-radius: 2rem;">
+                <button onclick="openPdfModal()" class="btn btn-sm btn-ghost"
+                    style="font-size: 1.2rem; padding: 0 0.4rem; color: #64748b;" title="Descargar Ficha PDF">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+
+                <div style="width: 1px; height: 1.2rem; background: #cbd5e1;"></div>
+
+                <button onclick="toggleFontStyle()" class="btn btn-sm btn-ghost"
+                    style="font-size: 1.4rem; padding: 0 0.4rem; color: #64748b;" title="Cambiar tipo de letra">
+                    <span style="font-family: 'AulaCNova', cursive; line-height: 1;">a</span>
+                </button>
+
+                <div style="width: 1px; height: 1.2rem; background: #cbd5e1;"></div>
+
+                <div style="display: flex; align-items: center;">
+                    <button onclick="adjustFontSize(-0.1)" class="btn btn-sm btn-ghost"
+                        style="font-size: 0.9rem; padding: 0 0.4rem; color: #64748b;" title="Reducir tamaño">A</button>
+                    <button onclick="adjustFontSize(0.1)" class="btn btn-sm btn-ghost"
+                        style="font-size: 1.2rem; padding: 0 0.4rem; color: #64748b;" title="Aumentar tamaño">A</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div style="margin-bottom: 1rem;">
+    <div id="illustration-container" style="text-align: center; margin-bottom: 1.5rem; display: none;">
+        <img id="text-illustration" src="" alt="Ilustración" style="max-height: 250px;">
         <audio id="audio-player" controls style="width: 100%; display: none;">
             <source id="audio-source" src="" type="audio/mpeg">
             Tu navegador no soporta audio.
@@ -64,11 +79,6 @@
 
     <div id="text-content"
         style="background: white; padding: 2rem; border-radius: var(--radius); line-height: 1.8; font-size: 1.2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); max-height: 60vh; overflow-y: auto;">
-
-        <div id="illustration-container" style="text-align: center; margin-bottom: 2rem; display: none;">
-            <img id="text-illustration" src="" alt="Ilustración"
-                style="max-height: 300px; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-        </div>
 
         <div id="text-body">Cargando texto...</div>
     </div>
@@ -309,10 +319,35 @@
 
             document.getElementById('text-title').innerText = textData.title;
 
+            // Handle Illustration and Audio Container
+            const container = document.getElementById('illustration-container');
+            const img = document.getElementById('text-illustration');
+            const audioPlayer = document.getElementById('audio-player');
+
+            let showContainer = false;
+
             if (textData.image_path) {
-                const img = document.getElementById('text-illustration');
                 img.src = textData.image_path;
-                document.getElementById('illustration-container').style.display = 'block';
+                img.style.display = 'inline-block';
+                showContainer = true;
+            } else {
+                img.style.display = 'none';
+            }
+
+            if (textData.audio_path) {
+                // Use /static/ because DB stores 'audio/filename.mp3'
+                document.getElementById('audio-source').src = "/static/" + textData.audio_path;
+                audioPlayer.load();
+                audioPlayer.style.display = 'block';
+                showContainer = true;
+            } else {
+                audioPlayer.style.display = 'none';
+            }
+
+            if (showContainer) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
             }
 
             if (textData.content) {
@@ -330,12 +365,6 @@
             // TTS Button Removed as per user request
 
             if (textData.audio_path) {
-                const audioPlayer = document.getElementById('audio-player');
-                // Use /static/ because DB stores 'audio/filename.mp3'
-                document.getElementById('audio-source').src = "/static/" + textData.audio_path;
-                audioPlayer.load();
-                audioPlayer.style.display = 'block';
-
                 // Background Music Logic
                 const bgMusic = new Audio('/static/audio/background_music.mp3');
                 bgMusic.loop = true;
