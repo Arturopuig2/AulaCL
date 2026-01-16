@@ -244,14 +244,11 @@
                 <p style="color: var(--text-secondary); display: none;">Curso: ${text.course_level}</p>
                 <div style="flex-grow: 1;"></div> 
 
-                <div style="margin-bottom: 1rem; opacity: ${opacity};">
+                <div style="opacity: ${opacity};">
                     ${getCourseBadge(text.course_level)}
                     <span style="background: #f1f5f9; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; color: var(--text-primary); border: 1px solid #e2e8f0;">${getLangLabel(text.language)}</span>
                 </div>
 
-                <div class="btn btn-primary" style="width: 100%; text-align: center; opacity: ${opacity}; border-radius: 50px; font-size: 1.1rem; padding: 0.6rem; transform: none !important; transition: none;">
-                    ${text.is_locked ? 'Bloqueado' : 'Leer cuento'}
-                </div>
             `;
             grid.appendChild(card);
         });
