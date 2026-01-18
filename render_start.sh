@@ -20,6 +20,10 @@ if [ -z "$(ls -A /var/lib/aulacl_data/audio)" ]; then
    cp -r static/audio/* /var/lib/aulacl_data/audio/ 2>/dev/null || :
 fi
 
-# Run Gunicorn
+# Run Schema Update (Migration)
+echo "Running database schema update..."
+python update_db_schema.py
+
+# Start Gunicorn
 echo "Starting Application..."
-exec gunicorn -k uvicorn.workers.UvicornWorker app.main:app
+exec gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
