@@ -158,8 +158,14 @@
 
             // ADMIN TOOLS LINK (For Arturo etc)
             // ADMIN TOOLS LINK (REMOVED as per request)
+            console.log("Checking admin...", user.username);
             if (user.username === 'admin') {
-                document.getElementById('admin-back-btn').style.display = 'block';
+                console.log("User IS admin. Showing button.");
+                const btn = document.getElementById('admin-back-btn');
+                if (btn) btn.style.display = 'block';
+                else console.error("Button not found!");
+            } else {
+                console.log("User is NOT admin:", user.username);
             }
 
             // Sub User
