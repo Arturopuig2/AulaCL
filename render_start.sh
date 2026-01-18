@@ -8,6 +8,9 @@ mkdir -p /var/lib/aulacl_data/texts
 mkdir -p /var/lib/aulacl_data/audio
 mkdir -p /var/lib/aulacl_data/images
 
+# Fix permissions for persistent disk (critical for uploads)
+chmod -R 777 /var/lib/aulacl_data || echo "Warning: Could not chmod /var/lib/aulacl_data"
+
 # Optional: Sync initial data if disk is empty
 # This handles the case where we want the default repo files to be available on the persistent disk
 if [ -z "$(ls -A /var/lib/aulacl_data/texts)" ]; then
