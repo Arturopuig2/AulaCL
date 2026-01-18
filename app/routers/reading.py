@@ -14,6 +14,29 @@ router = APIRouter(
 from fastapi.templating import Jinja2Templates
 templates = Jinja2Templates(directory="templates")
 
+@router.get("/debug/files")
+def debug_files(current_user: schemas.User = Depends(auth.get_current_user)):
+    if current_user.username != "admin":
+        return {"error": "admin only"}
+    import os
+    try:
+        files = os.listdir(config.IMAGES_DIR)
+        stats = []
+        for f in files:
+            full = os.path.join(config.IMAGES_DIR, f)
+            stats.append({
+                "name": f, 
+                "size": os.path.getsize(full),
+                "perm": oct(os.stat(full).st_mode)[-3:]
+            })
+        return {
+            "dir": config.IMAGES_DIR,
+            "exists": os.path.exists(config.IMAGES_DIR),
+            "files": stats
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @router.get("/admin/sync", response_class=HTMLResponse)
 def get_sync_tool(request: Request):
     # We allow access to the HTML shell; JS handles the token check/redirect

@@ -502,7 +502,7 @@
                     }
                 });
 
-                const imagePath = "/" + response.data.path; // Ensure relative web path
+                const imagePath = response.data.path; // Already has leading slash from backend
 
                 // Update State
                 currentUploadData.image_path = imagePath;

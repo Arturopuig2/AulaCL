@@ -431,7 +431,7 @@
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
 
-                const imagePath = "/" + response.data.path; // Ensure relative web path
+                const imagePath = response.data.path; // Already has leading slash from backend
 
                 // Update State
                 currentDraft.image_path = imagePath;
