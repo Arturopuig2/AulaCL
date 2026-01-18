@@ -505,7 +505,7 @@ def analyze_upload_text(
         with open(image_path_full, "wb") as buffer:
             shutil.copyfileobj(image_file.file, buffer)
             
-        image_path = f"/{image_path_full}" # Web path
+        image_path = f"/static/images/uploads/{unique_filename}" # Web path
 
     # 3. Generate Questions using Helper
     context_instruction = ""
@@ -1236,4 +1236,4 @@ def upload_image(
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    return {"path": file_path}
+    return {"path": f"/static/images/uploads/{unique_filename}"}

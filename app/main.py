@@ -14,6 +14,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Aula CL")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static/images/uploads", StaticFiles(directory=config.IMAGES_DIR), name="uploads") # Persistent images
 app.mount("/texts", StaticFiles(directory=config.TEXTS_DIR), name="texts_files") # Serve text files
 app.mount("/audio", StaticFiles(directory=config.AUDIO_DIR), name="audio_files") # Serve audio
 
