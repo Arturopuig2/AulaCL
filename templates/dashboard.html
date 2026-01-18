@@ -156,14 +156,10 @@
                 showSubUsersButton();
             }
 
-            // DEBUG: Alert to show status visibly
-            console.log("Checking admin...", user.username);
+            // Verify admin status
             if (user.username === 'admin') {
-                alert("Debug: ERES ADMIN. El botón debería salir.");
                 const btn = document.getElementById('admin-back-btn');
                 if (btn) btn.style.display = 'block';
-            } else {
-                alert("Debug: NO eres admin. Tu usuario es: " + user.username);
             }
 
             // Sub User
