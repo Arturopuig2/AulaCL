@@ -156,16 +156,14 @@
                 showSubUsersButton();
             }
 
-            // ADMIN TOOLS LINK (For Arturo etc)
-            // ADMIN TOOLS LINK (REMOVED as per request)
+            // DEBUG: Alert to show status visibly
             console.log("Checking admin...", user.username);
             if (user.username === 'admin') {
-                console.log("User IS admin. Showing button.");
+                alert("Debug: ERES ADMIN. El botón debería salir.");
                 const btn = document.getElementById('admin-back-btn');
                 if (btn) btn.style.display = 'block';
-                else console.error("Button not found!");
             } else {
-                console.log("User is NOT admin:", user.username);
+                alert("Debug: NO eres admin. Tu usuario es: " + user.username);
             }
 
             // Sub User
