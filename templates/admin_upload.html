@@ -515,7 +515,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Error subiendo imagen");
+                alert("Error subiendo imagen: " + (error.response?.data?.detail || error.message));
                 document.getElementById('upload-status').innerText = "Error ❌";
             }
         }
