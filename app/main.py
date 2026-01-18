@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from .database import engine, Base
 from .database import engine, Base
 from .routers import auth, reading, subusers, analytics
-from . import schemas # Import schemas
+from . import schemas, config # Import config
 from fastapi import Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -14,8 +14,8 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Aula CL")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/texts", StaticFiles(directory="data/texts"), name="texts_files") # Serve text files
-app.mount("/audio", StaticFiles(directory="static/audio"), name="audio_files") # Serve audio
+app.mount("/texts", StaticFiles(directory=config.TEXTS_DIR), name="texts_files") # Serve text files
+app.mount("/audio", StaticFiles(directory=config.AUDIO_DIR), name="audio_files") # Serve audio
 
 # Include Routers
 app.include_router(auth.router)

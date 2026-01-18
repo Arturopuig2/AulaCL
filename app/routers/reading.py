@@ -3,7 +3,8 @@ from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-from .. import database, models, schemas, auth
+from .. import database, models, schemas, auth, config
+import os
 
 router = APIRouter(
     prefix="/reading",
@@ -237,7 +238,7 @@ def upload_text(
     
     # 1. Save Text File
     # Ensure directory exists
-    save_dir = f"data/texts/{course_level}"
+    save_dir = os.path.join(config.TEXTS_DIR, course_level)
     os.makedirs(save_dir, exist_ok=True)
     
     filename = text_file.filename
@@ -270,7 +271,7 @@ def upload_text(
     audio_path = None
     if audio_file:
         audio_filename = audio_file.filename
-        audio_save_dir = "static/audio"
+        audio_save_dir = config.AUDIO_DIR
         os.makedirs(audio_save_dir, exist_ok=True)
         audio_path_full = f"{audio_save_dir}/{audio_filename}"
         
@@ -481,7 +482,7 @@ def analyze_upload_text(
     audio_path = None
     if audio_file:
         audio_filename = audio_file.filename
-        audio_save_dir = "static/audio"
+        audio_save_dir = config.AUDIO_DIR
         os.makedirs(audio_save_dir, exist_ok=True)
         audio_path_full = f"{audio_save_dir}/{audio_filename}"
         
@@ -494,7 +495,7 @@ def analyze_upload_text(
     image_path = None
     if image_file:
         # Save to static/images/uploads (same logic as upload_image endpoint)
-        save_dir = "static/images/uploads"
+        save_dir = config.IMAGES_DIR
         os.makedirs(save_dir, exist_ok=True)
         
         ext = os.path.splitext(image_file.filename)[1]
@@ -1135,7 +1136,7 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
     filename = f"{safe_title}.txt"
     
     # 2. Save File
-    save_dir = f"data/texts/{request.course_level}"
+    save_dir = os.path.join(config.TEXTS_DIR, request.course_level)
     os.makedirs(save_dir, exist_ok=True)
     content_path = f"{save_dir}/{filename}"
     
@@ -1223,7 +1224,7 @@ def upload_image(
     import uuid
 
     # 1. Setup Directory
-    save_dir = "static/images/uploads"
+    save_dir = config.IMAGES_DIR
     os.makedirs(save_dir, exist_ok=True)
     
     # 2. Save File
