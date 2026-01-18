@@ -31,8 +31,17 @@ def reset_users():
         return
 
     try:
+        # Delete dependencies first to satisfy Foreign Keys
+        print("Deleting dependent records...")
+        db.execute(text("DELETE FROM reading_attempts"))
+        db.execute(text("DELETE FROM licenses"))
+        db.execute(text("DELETE FROM subusers"))
+        db.execute(text("DELETE FROM invitation_codes"))
+        db.commit()
+
         # Delete all users
         num_deleted = db.query(User).delete()
+        db.commit()
         print(f"Deleted {num_deleted} users.")
         
         # Create default Admin
