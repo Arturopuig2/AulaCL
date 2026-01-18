@@ -46,10 +46,7 @@ def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: S
     if hasattr(current_user, "username") and current_user.username == "admin":
         is_admin = True
         
-    if is_admin:
-        texts = db.query(models.Text).all()
-    else:
-        texts = db.query(models.Text).filter(models.Text.is_active == True).all()
+    texts = db.query(models.Text).filter(models.Text.is_active == True).all()
 
 
     
@@ -453,6 +450,7 @@ def analyze_upload_text(
     language: str = Form("es"),
     text_file: UploadFile = File(...),
     audio_file: Optional[UploadFile] = File(None),
+    image_file: Optional[UploadFile] = File(None),
     current_user: schemas.User = Depends(auth.get_current_user)
 ):
     if current_user.username != "admin":
@@ -462,6 +460,7 @@ def analyze_upload_text(
     import os
     import openai
     from dotenv import load_dotenv
+    import uuid
     
     load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
@@ -486,11 +485,26 @@ def analyze_upload_text(
         os.makedirs(audio_save_dir, exist_ok=True)
         audio_path_full = f"{audio_save_dir}/{audio_filename}"
         
-        # Reset file pointer if needed? UploadFile usually stream
         with open(audio_path_full, "wb") as buffer:
             shutil.copyfileobj(audio_file.file, buffer)
         
         audio_path = f"audio/{audio_filename}"
+
+    # 2b. Process Image File
+    image_path = None
+    if image_file:
+        # Save to static/images/uploads (same logic as upload_image endpoint)
+        save_dir = "static/images/uploads"
+        os.makedirs(save_dir, exist_ok=True)
+        
+        ext = os.path.splitext(image_file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{ext}"
+        image_path_full = f"{save_dir}/{unique_filename}"
+        
+        with open(image_path_full, "wb") as buffer:
+            shutil.copyfileobj(image_file.file, buffer)
+            
+        image_path = f"/{image_path_full}" # Web path
 
     # 3. Generate Questions using Helper
     context_instruction = ""
@@ -521,6 +535,7 @@ def analyze_upload_text(
         "course_level": course_level,
         "language": language,
         "audio_path": audio_path,
+        "image_path": image_path,
         "questions": questions
     }
 
@@ -840,17 +855,43 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
     
     text_type_desc = prompt_type_map.get(request.text_type, "un texto")
 
+    # Level Constraints
+    level_constraints = {
+        "1P": "Usa frases muy cortas. Vocabulario de alta frecuencia. Mucha repetición y rimas. Evita subordinadas. Tono alegre y seguro.",
+        "2P": "Frases sencillas. Vocabulario cotidiano. Estructura lineal (Inicio-Nudo-Desenlace claro). Diálogos simples.",
+        "3P": "Oraciones coordinadas. Introducción de adjetivos descriptivos. Aventuras ligeras y humor.",
+        "4P": "Párrafos más desarrollados. Vocabulario variado. Tramas con pequeños giros. Diálogos más naturales.",
+        "5P": "Oraciones subordinadas simples. Temas de amistad y superación. Uso de ironía sencilla.",
+        "6P": "Estructuras gramaticales completas. Vocabulario rico. Conflictos éticos o emocionales moderados.",
+        "1ESO": "Narrativa más compleja. Temas de identidad y pertenencia. Finales abiertos o reflexivos.",
+        "2ESO": "Estilo ágil pero sofisticado. Suspenso, misterio o realista. Personajes con profundidad psicológica.",
+        "3ESO": "Literatura juvenil. Temas sociales o distópicos. Metáforas y simbolismo.",
+        "4ESO": "Preparación para bachillerato. Análisis crítico implícito. Ambigüedad moral.",
+        "1BAT": "Literatura casi adulta. Estilo depurado. Temas filosóficos o existenciales.",
+        "2BAT": "Alta complejidad sintáctica y semántica. Referencias culturales. Reto intelectual."
+    }
+    
+    selected_constraint = level_constraints.get(request.course_level, "Adapta el lenguaje al nivel escolar indicado.")
+
     prompt = f"""
-    Escribe {text_type_desc} con los siguientes parámetros:
+    Escribe {text_type_desc} siguiendo ESTRICTAMENTE estas pautas:
+    
+    1. PARÁMETROS:
     - TEMA: {request.topic}
-    - NIVEL ESCOLAR: {request.course_level}
+    - NIVEL: {request.course_level} -> {selected_constraint}
     - LONGITUD: Aprox {request.word_count} palabras.
-    - IDIOMA: {request.language}{context_instruction}
+    - IDIOMA: {request.language}
+    
+    2. ESTILO Y PEDAGOGÍA:
+    - Aplica "Show, Don't Tell" (Muestra, no cuentes).
+    - Evita clichés y frases hechas (a menos que sea 1P/2P donde la repetición ayuda).
+    - Crea una voz narrativa coherente.
+    {context_instruction}
 
     FORMATO JSON OBLIGATORIO:
     {{
-        "title": "Un título creativo",
-        "content": "El contenido del texto..."
+        "title": "Un título creativo y atractivo",
+        "content": "El contenido del texto formateado con saltos de línea \\n..."
     }}
     """
 
@@ -858,10 +899,10 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Eres un premiado autor de literatura infantil y juvenil, pedagogo experto y creativo. Tu misión es crear textos fascinantes, educativos y perfectamente adaptados al nivel del lector. SOLO respondes en formato JSON válido."},
+                {"role": "system", "content": "Eres un premiado autor de literatura infantil y juvenil, además de pedagogo experto. Tu misión es crear textos fascinantes, literariamente ricos y perfectamente ajustados a las capacidades cognitivas del nivel solicitado. No escribas como un robot, escribe con alma."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.8,
+            temperature=0.85, # Slightly higher for creativity
             response_format={"type": "json_object"}
         )
         

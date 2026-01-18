@@ -100,7 +100,7 @@ h2 {
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: none !important;
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.23);
 }
 
@@ -124,7 +124,7 @@ h2 {
 .btn-premium:hover {
     background: #15803d !important;
     color: white !important;
-    transform: translateY(-2px);
+    transform: none !important;
     box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
 }
 

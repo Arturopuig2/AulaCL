@@ -340,7 +340,17 @@
             alert("El texto está vacío o es muy corto.");
             return;
         }
-        alert("✅ Historia validada y actualizada en borrador. \n\nAhora puedes bajar a 'Editar Preguntas' para modificarlas manualmente, o pulsar 'Guardar Cambios' al final de la página.");
+
+        const btn = document.getElementById('btn-validate-only');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validando...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            alert("✅ Historia validada y actualizada en borrador. \n\nAhora puedes bajar a 'Editar Preguntas' para modificarlas manualmente, o pulsar 'Guardar Cambios' al final de la página.");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 500);
     }
 
     async function validateAndGenerateQuestions() {
