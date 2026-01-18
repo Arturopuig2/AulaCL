@@ -1262,12 +1262,16 @@ def upload_image(
     os.makedirs(save_dir, exist_ok=True)
     
     # 2. Save File
-    # Generate unique name to avoid conflicts
-    ext = os.path.splitext(file.filename)[1]
-    unique_filename = f"{uuid.uuid4()}{ext}"
-    file_path = f"{save_dir}/{unique_filename}"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        # Generate unique name to avoid conflicts
+        ext = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{ext}"
+        file_path = f"{save_dir}/{unique_filename}"
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        print(f"Error saving uploaded image: {e}")
+        raise HTTPException(status_code=500, detail=f"Error saving image: {str(e)}")
         
     return {"path": f"/static/images/uploads/{unique_filename}"}
