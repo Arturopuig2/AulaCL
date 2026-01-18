@@ -494,41 +494,75 @@ def analyze_upload_text(
     # 2b. Process Image File
     image_path = None
     if image_file:
-        # Save to static/images/uploads (same logic as upload_image endpoint)
-        save_dir = config.IMAGES_DIR
-        os.makedirs(save_dir, exist_ok=True)
-        
-        ext = os.path.splitext(image_file.filename)[1]
-        unique_filename = f"{uuid.uuid4()}{ext}"
-        image_path_full = f"{save_dir}/{unique_filename}"
-        
-        with open(image_path_full, "wb") as buffer:
-            shutil.copyfileobj(image_file.file, buffer)
+        try:
+            # Save to static/images/uploads (same logic as upload_image endpoint)
+            save_dir = config.IMAGES_DIR
+            os.makedirs(save_dir, exist_ok=True)
             
-        image_path = f"/static/images/uploads/{unique_filename}" # Web path
+            ext = os.path.splitext(image_file.filename)[1]
+            unique_filename = f"{uuid.uuid4()}{ext}"
+            image_path_full = f"{save_dir}/{unique_filename}"
+            
+            with open(image_path_full, "wb") as buffer:
+                shutil.copyfileobj(image_file.file, buffer)
+                
+            image_path = f"/static/images/uploads/{unique_filename}" # Web path
+        except Exception as e:
+            print(f"ERROR SAVING IMAGE: {e}")
+            raise HTTPException(status_code=500, detail=f"Error saving image: {str(e)}")
 
     # 3. Generate Questions using Helper
-    context_instruction = ""
     try:
+        # Context loading
+        context_instruction = ""
         if os.path.exists("data/magic_context.txt"):
             with open("data/magic_context.txt", "r", encoding="utf-8") as f:
                 c = f.read().strip()
                 if c: context_instruction = f"\n    CONTEXTO ADICIONAL: {c}\n"
-    except: pass
 
-    # If the text file already contains questions (manual format), we should probably parse them instead of generating?
-    # For now, per user request "igual que el generador del Escritor Mágico", we assume we generate new ones 
-    # OR we could try to parse first.
-    # User said: "Crear un generador de preguntas para las Lecturas Subidas que sea igual que..."
-    # This implies they want the AI generation.
-    # But if they upload manual questions, we should probably respect that?
-    # Let's simple try to generate. The user can overwrite in the Review screen.
-    
-    try:
-        questions = generate_lomloe_questions_logic(content, client, context_instruction)
+        prompt = f"""
+        Analiza el siguiente texto y genera:
+        1. 3 preguntas de tipo LITERAL con 4 opciones.
+        2. 3 preguntas de tipo INFERENTIAL con 4 opciones.
+        3. 3 preguntas de tipo VOCABULARY con 4 opciones.
+        
+        TEXTO:
+        {content[:3000]}
+        
+        {context_instruction}
+        
+        FORMATO JSON:
+        [
+          {{
+            "question_content": "...",
+            "options": ["A", "B", "C", "D"],
+            "correct_answer": 0,
+            "category": "LITERAL"
+          }}
+        ]
+        """
+        
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Eres un experto creador de cuestionarios educativos. Devuelve SOLO JSON válido."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        response_content = completion.choices[0].message.content.strip()
+        # Clean markdown code blocks if present
+        if response_content.startswith("```json"):
+            response_content = response_content.split("```json")[1].split("```")[0].strip()
+        elif response_content.startswith("```"):
+            response_content = response_content.split("```")[1].split("```")[0].strip()
+
+        import json
+        questions = json.loads(response_content)
+
     except Exception as e:
-        print(f"Generation error: {e}")
-        questions = [] # Return empty if fails, allow manual entry
+        print(f"ERROR OPENAI/PARSING: {e}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing text (OpenAI): {str(e)}")
 
     return {
         "title": title,
