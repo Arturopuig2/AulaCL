@@ -421,8 +421,8 @@ def generate_licenses(count: int = 1, duration_days: int = 365, current_user: sc
         # Create InvitationCode (compatible with /unlock endpoint)
         db_invitation = models.InvitationCode(
             code=key,
-            is_used=False,
-            created_by_user_id=current_user.id
+            is_used=False
+            # created_by_user_id not in model
         )
         db.add(db_invitation)
         new_keys.append(key)
