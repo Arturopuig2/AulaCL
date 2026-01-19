@@ -37,6 +37,10 @@ from starlette.middleware.sessions import SessionMiddleware
 import os
 # Secret key for session signing. defaulting to a random string if not set, 
 # but in prod it should be fixed to keep sessions valid across restarts.
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+# Trust X-Forwarded-Proto headers from Render's Load Balancer
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 SESSION_SECRET = os.getenv("SESSION_SECRET", "super-secret-session-key-change-me")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
