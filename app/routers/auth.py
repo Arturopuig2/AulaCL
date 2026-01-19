@@ -409,20 +409,22 @@ def generate_licenses(count: int = 1, duration_days: int = 365, current_user: sc
     
     new_keys = []
     for _ in range(count):
-        # Generate random 9-char key (Uppercase + Digits + Hyphens maybe? Keeping simple 8 chars for now or 9)
-        # Format: XXXX-XXXX ? Or just 8 chars like before. User example: CLXXXXXXABC is the LOGIN code.
-        # The license key can be anything. Let's make it distinct. "LIC-" + 8 chars.
-        
+        # Generate random uppercase code
         rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
         key = f"LIC-{rand_part}"
         
-        # Check uniqueness
-        while db.query(models.License).filter(models.License.key == key).first():
+        # Check uniqueness in InvitationCode table
+        while db.query(models.InvitationCode).filter(models.InvitationCode.code == key).first():
              rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
              key = f"LIC-{rand_part}"
              
-        db_license = models.License(key=key, duration_days=duration_days)
-        db.add(db_license)
+        # Create InvitationCode (compatible with /unlock endpoint)
+        db_invitation = models.InvitationCode(
+            code=key,
+            is_used=False,
+            created_by_user_id=current_user.id
+        )
+        db.add(db_invitation)
         new_keys.append(key)
     
     db.commit()
