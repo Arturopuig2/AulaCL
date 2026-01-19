@@ -435,17 +435,19 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # 1. Fetch Subuser Licenses (Old Model)
     licenses = db.query(models.License).all()
     
-    # Enrich with subuser info if used
     result = []
+    
+    # Process Subuser Licenses
     for lic in licenses:
         used_by_name = None
         parent_email = None
         if lic.used_by_subuser_id:
             sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
             if sub:
-                used_by_name = sub.name
+                used_by_name = f"SubUser: {sub.name}"
                 if sub.parent_user:
                     parent_email = sub.parent_user.email
 
@@ -456,7 +458,32 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
             "created_at": lic.created_at,
             "activated_at": lic.activated_at,
             "used_by": used_by_name,
-            "parent_email": parent_email
+            "parent_email": parent_email,
+            "type": "Student"
+        })
+
+    # 2. Fetch Main Invitation Codes (New Model)
+    invitations = db.query(models.InvitationCode).all()
+    for inv in invitations:
+        used_by_name = None
+        parent_email = None
+        status = "USED" if inv.is_used else "ACTIVE"
+        
+        if inv.used_by_user_id:
+            u = db.query(models.User).filter(models.User.id == inv.used_by_user_id).first()
+            if u:
+                used_by_name = f"User: {u.name or u.username}"
+                parent_email = u.email
+        
+        result.append({
+            "key": inv.code,
+            "status": status,
+            "duration_days": 365,
+            "created_at": inv.created_at,
+            "activated_at": inv.used_at,
+            "used_by": used_by_name,
+            "parent_email": parent_email,
+            "type": "Premium"
         })
         
     return result
