@@ -187,7 +187,109 @@ select:focus {
     transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
+
 .question-card:hover {
     box-shadow: var(--shadow-lg) !important;
     /* No transform to avoid movement */
+}
+
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+#user-menu-btn {
+    border-radius: 0.75rem !important;
+    /* Pill shape */
+    padding: 0.5rem 1rem !important;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid #e2e8f0 !important;
+    color: var(--text-main) !important;
+    box-shadow: none !important;
+    font-weight: 400 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#user-menu-btn:hover,
+.dropdown.active #user-menu-btn {
+    background-color: white !important;
+    box-shadow: none !important;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    min-width: 240px;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    z-index: 1000;
+    transform-origin: top right;
+}
+
+.dropdown.active .dropdown-menu {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 0.6rem 1rem;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f5f9;
+    color: var(--primary-color);
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: 0.5rem 0.5rem;
+    /* Add horizontal margin so it doesn't touch edges */
+    overflow: hidden;
+    background-color: #e2e8f0;
+}
+
+.dropdown-header {
+    padding: 0.75rem 1rem 0.25rem 1rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* License Badges inside Dropdown */
+.license-info-active {
+    color: var(--success);
+    font-weight: 600;
+    background: #f0fdf4;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    display: inline-block;
+    font-size: 0.75rem;
+    margin-bottom: 0.2rem;
+}
+
+.license-info-inactive {
+    color: var(--text-secondary);
+    background: #f1f5f9;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    display: inline-block;
+    font-size: 0.75rem;
 }

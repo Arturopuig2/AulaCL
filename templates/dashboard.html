@@ -15,34 +15,14 @@
 
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
-            <button id="unlock-btn" onclick="openUnlockModal()" class="btn btn-outline"
-                style="display: none; border-color: var(--primary-color); color: var(--text-primary); background: rgba(255,255,255,0.8);">
-                🔑 Activar Código Premium
-            </button>
+            <!-- Unlock Button Removed (moved to dropdown) -->
             <div id="subscription-status" style="font-size: 0.85rem; font-weight: 500; text-align: right;">
                 <!-- Status will be loaded here -->
             </div>
         </div>
     </div>
 
-    <div id="unlock-modal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
-        <div class="glass-panel" onclick="event.stopPropagation()"
-            style="background: white; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-            <h2 style="margin-bottom: 1rem; text-align: center;">🔓 Desbloquear Todo</h2>
-            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Introduce tu licencia
-                para acceder a todas las lecturas durante 1 año.</p>
-            <form id="unlock-form">
-                <input type="text" id="unlock-code" placeholder="XXXXXXXXX" onfocus="this.placeholder=''"
-                    onblur="this.placeholder='XXXXXXXXX'" required
-                    style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase;">
-                <button type="submit" class="btn btn-primary"
-                    style="width: 100%; margin-bottom: 0.5rem;">Activar</button>
-                <button type="button" onclick="closeUnlockModal()" class="btn btn-outline"
-                    style="width: 100%;">Cancelar</button>
-            </form>
-        </div>
-    </div>
+    <!-- Unlock Modal removed (now global in layout.html) -->
 
 
 
@@ -165,8 +145,7 @@
             // Wait, /auth/me returns 'current_user' which is either User or SubUser object.
 
             if (user.username && user.username !== 'admin') {
-                // Main User
-                showSubUsersButton();
+                // Main User - Button moved to Navbar Dropdown
             }
 
             // Verify admin status
@@ -266,35 +245,7 @@
             grid.appendChild(card);
         });
 
-        // Always show unlock button (to allow extension), but change text if needed
-        const unlockBtn = document.getElementById('unlock-btn');
-
-        if (unlockBtn) {
-            if (currentUser && currentUser.username === 'admin') {
-                unlockBtn.style.display = 'none';
-            } else {
-                unlockBtn.style.display = 'block';
-                if (!hasLockedContent) {
-                    unlockBtn.innerHTML = '+ Licencia';
-                    unlockBtn.classList.remove('btn-outline');
-                    unlockBtn.classList.add('btn-premium');
-
-                    // Clear inline overrides so CSS class works
-                    unlockBtn.style.background = '';
-                    unlockBtn.style.color = '';
-                    unlockBtn.style.borderColor = '';
-                } else {
-                    unlockBtn.innerHTML = '🔑 Activar Código Premium';
-                    unlockBtn.classList.add('btn-outline');
-                    unlockBtn.classList.remove('btn-premium');
-
-                    // Restore default inline looks
-                    unlockBtn.style.background = 'rgba(255,255,255,0.8)';
-                    unlockBtn.style.color = 'var(--text-primary)';
-                    unlockBtn.style.borderColor = 'var(--primary-color)';
-                }
-            }
-        }
+        // Unlock Button logic removed
 
         // If ALL content is unlocked (premium), maybe show a "Premium Active" badge?
         if (!hasLockedContent && texts.length > 0) {
@@ -302,41 +253,9 @@
         }
     }
 
-    // Modal Logic
-    const modal = document.getElementById('unlock-modal');
+    // Modal Logic moved to app.js (Global)
 
-    function openUnlockModal() {
-        modal.style.display = 'flex';
-    }
 
-    function closeUnlockModal() {
-        modal.style.display = 'none';
-    }
-
-    // Close on click outside
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) {
-            closeUnlockModal();
-        }
-    });
-
-    document.getElementById('unlock-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const code = document.getElementById('unlock-code').value.toUpperCase().trim();
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.innerText = "Verificando...";
-
-        try {
-            const response = await axios.post('/auth/unlock', { access_code: code });
-            alert(response.data.message);
-            closeUnlockModal();
-            loadDashboard(); // Reload to see unlocked content
-        } catch (error) {
-            alert('Error: ' + (error.response?.data?.detail || "Código incorrecto"));
-        } finally {
-            btn.innerText = "Activar";
-        }
-    });
 
     // Existing Filters...
     function applyFilters() {
@@ -368,28 +287,8 @@
         return `<span style="background: ${color}; color: white; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; margin-right: 0.5rem;">${label}</span>`;
     }
 
-    // --- Navigation Logic ---
-    function showSubUsersButton() {
-        const navLinks = document.getElementById('nav-links');
+    // --- Navigation Logic removed (moved to Global app.js)
 
-        // Create button
-        const btn = document.createElement('a');
-        btn.href = '/my-subusers';
-        btn.className = 'btn btn-outline';
-        // Match style with Logout button (small padding)
-        btn.style.padding = '0.4rem 0.8rem';
-        btn.style.fontSize = '0.8rem';
-        btn.style.marginRight = '0.5rem'; // Spacing to the right (before Logout)
-        btn.innerHTML = 'Mis Alumnos/as';
-
-        // Add to nav-links (insert CAREFULLY before Logout)
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            navLinks.insertBefore(btn, logoutBtn);
-        } else {
-            navLinks.appendChild(btn); // Fallback
-        }
-    }
 
 
 

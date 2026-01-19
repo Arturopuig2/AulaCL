@@ -80,6 +80,10 @@ class AttemptResponse(AttemptCreate):
 class PasswordResetRequest(BaseModel):
     email: str
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str

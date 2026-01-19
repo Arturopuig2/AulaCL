@@ -14,8 +14,8 @@ router = APIRouter(
     tags=["auth"]
 )
 
-@router.get("/me")
-def read_users_me(current_user = Depends(get_current_active_user)):
+@router.get("/me", response_model=schemas.User)
+def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 @router.post("/login-code", response_model=schemas.Token)
@@ -292,6 +292,19 @@ def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(
     except JWTError:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
+@router.post("/change-password")
+def change_password(request: schemas.ChangePasswordRequest, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # 1. Verify Current Password
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    if not verify_password(request.current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
+    
+    # 2. Update Password
+    user.hashed_password = get_password_hash(request.new_password)
+    db.commit()
+    
+    return {"message": "Contraseña actualizada correctamente"}
+
 @router.post("/unlock")
 def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Validate Code (Force Uppercase)
@@ -326,9 +339,7 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
     
     return {"message": message, "expires_at": current_user.access_expires_at}
 
-@router.get("/me", response_model=schemas.User)
-def read_users_me_deprecated(current_user: schemas.User = Depends(get_current_user)):
-    return current_user
+
 
 # --- ADMIN: CODE GENERATION ---
 @router.post("/admin/codes", response_model=List[str])
