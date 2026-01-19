@@ -345,12 +345,12 @@
                     <div style="font-weight: bold; color: #475569;">Pregunta ${index + 1}</div>
                     <button onclick="deleteQuestion(${index})" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; background: transparent;">Eliminar</button>
                 </div>
-                <input type="text" class="q-input" value="${q.question.replace(/"/g, '&quot;')}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
+                <input type="text" class="q-input" value="${(q.question || "").replace(/"/g, '&quot;')}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
                 
                 <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
                     ${q.options.map((opt, optIndex) => `
                         <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
-                            <input type="text" class="q-opt-input" data-opt="${optIndex}" value="${opt.replace(/"/g, '&quot;')}" 
+                            <input type="text" class="q-opt-input" data-opt="${optIndex}" value="${(opt || "").replace(/"/g, '&quot;')}" 
                             placeholder="Opción..." style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
                             <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;">
                         </div>

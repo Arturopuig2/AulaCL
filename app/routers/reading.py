@@ -534,7 +534,7 @@ def analyze_upload_text(
         FORMATO JSON:
         [
           {{
-            "question_content": "...",
+            "question": "...",
             "options": ["A", "B", "C", "D"],
             "correct_answer": 0,
             "category": "LITERAL"
