@@ -172,22 +172,7 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return HTMLResponse(content=f"<h1>Error Logging In</h1><p>{str(e)}</p>", status_code=500)            course_level="NONE" # Default
-        )
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        user = new_user
-
-    # Create JWT
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=access_token_expires
-    )
-    
-    # Redirect to Dashboard with token (Frontend needs to handle this)
-    # Since we can't easily set localStorage from here without a splash page,
+        return HTMLResponse(content=f"<h1>Error Logging In</h1><p>{str(e)}</p>", status_code=500)
     # we will redirect to a special frontend route `/google-success?token=...`
     # or `/login?token=...` that parses it and sets localStorage.
     
