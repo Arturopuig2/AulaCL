@@ -105,60 +105,74 @@ async def login_google(request: Request):
 @router.get("/google/callback")
 async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
     try:
-        token = await oauth.google.authorize_access_token(request)
-    except Exception as e:
-         print(f"OAuth Error: {e}")
-         raise HTTPException(status_code=400, detail="Google Auth Failed")
+        try:
+            token = await oauth.google.authorize_access_token(request)
+        except Exception as e:
+             print(f"OAuth Error: {e}")
+             raise HTTPException(status_code=400, detail=f"Google Auth Failed: {str(e)}")
 
-    user_info = token.get('userinfo')
-    if not user_info:
-         # Sometimes userinfo is in the token 'id_token' claims, lets try to parse or fetch if missing
-         # With 'openid email profile' scope and server_metadata_url, authlib usually parses it.
-         # If not, we might need explicitly userinfo_endpoint.
-         # For now assume it works or we fetch from userinfo endpoint if needed.
-         # Let's fallback to id_token claims if userinfo is empty
-         user_info = token.get('id_token') # Authlib parses this automatically usually?
-    
-    # Authlib + Starlette: token is a dict. 'userinfo' might be present if we requested openid.
-    # If using 'server_metadata_url', userinfo parsing from id_token is automatic in some versions.
-    # Let's ensure we have email.
-    
-    email = user_info.get('email')
-    name = user_info.get('name')
-    
-    if not email:
-         raise HTTPException(status_code=400, detail="Email not found in Google Account")
+        user_info = token.get('userinfo')
+        if not user_info:
+             # Sometimes userinfo is in the token 'id_token' claims
+             user_info = token.get('id_token') 
+        
+        email = user_info.get('email')
+        name = user_info.get('name')
+        
+        if not email:
+             raise HTTPException(status_code=400, detail="Email not found in Google Account")
 
-    # LOGIN / REGISTER LOGIC
-    user = db.query(models.User).filter(models.User.email == email).first()
-    
-    if not user:
-        # Create new user
-        # Generate random username and password
-        import secrets
-        import string
+        # LOGIN / REGISTER LOGIC
+        user = db.query(models.User).filter(models.User.email == email).first()
         
-        # Username logic: email prefix + random suffix to ensure uniqueness
-        base_username = email.split("@")[0]
-        # Clean username
-        base_username = "".join(c for c in base_username if c.isalnum())
-        
-        # Check if username exists
-        # Loop mainly just in case
-        clean_username = base_username
-        while db.query(models.User).filter(models.User.username == clean_username).first():
-            suffix = ''.join(secrets.choice(string.digits) for _ in range(4))
-            clean_username = f"{base_username}{suffix}"
+        if not user:
+            # Create new user
+            import secrets
+            import string
             
-        random_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
-        hashed_pwd = get_password_hash(random_password)
+            base_username = email.split("@")[0]
+            base_username = "".join(c for c in base_username if c.isalnum())
+            
+            clean_username = base_username
+            while db.query(models.User).filter(models.User.username == clean_username).first():
+                suffix = ''.join(secrets.choice(string.digits) for _ in range(4))
+                clean_username = f"{base_username}{suffix}"
+                
+            random_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
+            hashed_pwd = get_password_hash(random_password)
+            
+            new_user = models.User(
+                username=clean_username,
+                email=email,
+                name=name,
+                hashed_password=hashed_pwd,
+                course_level="ALL" # Default
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            user = new_user
+            
+        # Create Access Token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.username},
+            expires_delta=access_token_expires
+        )
         
-        new_user = models.User(
-            username=clean_username,
-            email=email,
-            name=name,
-            hashed_password=hashed_pwd,
-            course_level="NONE" # Default
+        # Redirect to dashboard with token in URL (frag or query) 
+        # Better: Redirect to a processing page that saves token to localStorage
+        # return {"access_token": access_token, "token_type": "bearer"} -> This returns JSON, user sees JSON.
+        
+        # We need to redirect to frontend.
+        # Let's redirect to /dashboard?token=... and let dashboard.html handle it?
+        # A bit insecure for query params, but standard for this simple logic without cookies.
+        return RedirectResponse(url=f"/dashboard?token={access_token}&username={user.username}")
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return HTMLResponse(content=f"<h1>Error Logging In</h1><p>{str(e)}</p>", status_code=500)            course_level="NONE" # Default
         )
         db.add(new_user)
         db.commit()
