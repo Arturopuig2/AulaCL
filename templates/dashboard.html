@@ -102,6 +102,21 @@
     let allTexts = [];
     let currentUser = null;
 
+    // --- GOOGLE OAUTH HANDLING ---
+    // Check if we came back from Google with a token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    const usernameFromUrl = urlParams.get('username');
+
+    if (tokenFromUrl) {
+        localStorage.setItem('token', tokenFromUrl);
+        if (usernameFromUrl) localStorage.setItem('username', usernameFromUrl);
+
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // --- MAIN DASHBOARD LOGIC ---
     async function loadDashboard() {
         const token = localStorage.getItem('token');
         if (!token) {
