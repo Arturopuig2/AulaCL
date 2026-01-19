@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Dropdown HTML
+            let addLicenseHTML = '';
+            if (user.username !== 'admin') {
+                addLicenseHTML = `<a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>`;
+            }
+
             // Dropdown HTML
             const dropdownHTML = `
                 <div class="dropdown" id="user-dropdown">
@@ -50,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="font-size: 0.7rem;">▼</span>
                     </button>
                     <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>
+                        ${addLicenseHTML}
                         ${extraLinksHTML}
                         <a href="#" class="dropdown-item" id="change-password-action">Cambiar Contraseña</a>
                         <div class="dropdown-divider"></div>
