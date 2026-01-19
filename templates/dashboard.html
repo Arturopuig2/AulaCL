@@ -11,7 +11,7 @@
 <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <h1 id="dashboard-title">Lecturas - <span id="user-display"></span></h1>
+            <h1 id="dashboard-title">Lecturas</h1>
 
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
@@ -50,7 +50,6 @@
 
     <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 200px;">
-            <label for="course-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Curso:</label>
             <select id="course-select" onchange="applyFilters()"
                 style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
                 <option value="all">Todos los cursos</option>
@@ -77,7 +76,6 @@
         </div>
 
         <div style="flex: 1; min-width: 200px;">
-            <label for="lang-select" style="margin-bottom: 0.5rem; display: block; font-weight: 500;">Idioma:</label>
             <select id="lang-select" onchange="applyFilters()"
                 style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; font-size: 1rem; width: 100%;">
                 <option value="all">Todos los idiomas</option>
@@ -124,7 +122,7 @@
             return;
         }
 
-        document.getElementById('user-display').innerText = ''; // Clear initial
+        // document.getElementById('user-display').innerText = ''; // Element removed
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 
         try {
@@ -135,7 +133,7 @@
 
             // Set Name Display
             const displayName = user.name || user.username || "Usuario";
-            document.getElementById('user-display').innerText = displayName;
+            // document.getElementById('user-display').innerText = displayName;
 
             if (user.username === 'admin') {
                 document.getElementById('dashboard-title').innerText = "Lecturas";
