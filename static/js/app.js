@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dropdown" id="user-dropdown">
                     <button class="btn btn-outline" id="user-menu-btn" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
                         <span>${username}</span>
-                        <span style="font-size: 0.7rem;">▼</span>
+                        <span style="font-size: 1.1rem; line-height: 1;">≡</span>
                     </button>
                     <div class="dropdown-menu">
                         ${addLicenseHTML}
