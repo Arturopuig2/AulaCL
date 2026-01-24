@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aula CL - Comprensión Lectora</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Grand+Hotel&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Grand+Hotel&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/static/css/styles.css?v=17">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -17,9 +18,11 @@
     <nav
         style="background: white; padding: 1rem; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;">
         <div style="display: flex; align-items: center;">
+            {% block navbar_logo %}
             <div style="margin-right: 1.5rem;">
                 <img src="/static/images/logo_aula_abcd.png" alt="Aula CL" style="height: 40px;">
             </div>
+            {% endblock %}
             {% block navbar_actions %}{% endblock %}
         </div>
 

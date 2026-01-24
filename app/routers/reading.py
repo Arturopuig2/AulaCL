@@ -59,9 +59,14 @@ def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: S
     if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
         is_premium = True
         
-    # Free Text Logic: First text created (lowest ID) is free.
-    # Assuming IDs are 1, 2, 3...
-    min_id = min([t.id for t in texts]) if texts else 0
+    # First reading per course level is free
+    course_min_ids = {}
+    for t in texts:
+        level = t.course_level or "ALL"
+        if level not in course_min_ids or t.id < course_min_ids[level]:
+            course_min_ids[level] = t.id
+    
+    free_ids = set(course_min_ids.values())
     
     response = []
     for t in texts:
@@ -73,7 +78,7 @@ def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: S
         if is_premium:
             t_resp.is_locked = False
         else:
-            if t.id == min_id: # First one is free
+            if t.id in free_ids: # First per course is free
                 t_resp.is_locked = False
             else:
                 t_resp.is_locked = True
@@ -93,9 +98,13 @@ def get_text(text_id: int, current_user: schemas.User = Depends(auth.get_current
     if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
         is_premium = True
         
-    # Recalculate if it's the free one (needs logic or DB query optimization, for MVP simple query)
-    first_text = db.query(models.Text).order_by(models.Text.id.asc()).first()
-    is_free = (first_text and text.id == first_text.id)
+    # First reading of its course level is free
+    first_in_course = db.query(models.Text).filter(
+        models.Text.course_level == text.course_level,
+        models.Text.is_active == True
+    ).order_by(models.Text.id.asc()).first()
+    
+    is_free = (first_in_course and text.id == first_in_course.id)
     
     if not is_premium and not is_free:
         raise HTTPException(status_code=403, detail="Contenido bloqueado. Introduce un código para desbloquear.")
@@ -586,8 +595,13 @@ def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str
     if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
         is_premium = True
         
-    first_text = db.query(models.Text).order_by(models.Text.id.asc()).first()
-    is_free = (first_text and text.id == first_text.id)
+    # First reading in its course level is free
+    first_in_course = db.query(models.Text).filter(
+        models.Text.course_level == text.course_level,
+        models.Text.is_active == True
+    ).order_by(models.Text.id.asc()).first()
+    
+    is_free = (first_in_course and text.id == first_in_course.id)
     
     if not is_premium and not is_free:
         raise HTTPException(status_code=403, detail="Contenido bloqueado.")
