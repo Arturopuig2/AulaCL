@@ -41,6 +41,7 @@
             const token = response.data.access_token;
 
             localStorage.setItem('token', token);
+            localStorage.setItem('is_subuser', 'true');
             localStorage.removeItem('username'); // Subusers don't use this, clears stale data
 
             window.location.href = '/dashboard';

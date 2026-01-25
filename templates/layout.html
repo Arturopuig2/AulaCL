@@ -27,6 +27,11 @@
         </div>
 
         <!-- Header Text Removed -->
+        <div id="dynamic-nav-title"
+            style="position: absolute; left: 50%; transform: translateX(-50%); font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 500; color: #1e293b; pointer-events: none;">
+            <!-- JS will populate this -->
+        </div>
+
         <div id="nav-links">
             <!-- JS will populate this based on auth status -->
         </div>
@@ -97,6 +102,15 @@
         </div>
     </div>
 
+    <script>
+        // Token storage handling if needed (e.g. from Google Auth callback)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            localStorage.setItem('token', tokenFromUrl);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
     <script src="/static/js/app.js?v=14"></script>
 </body>
 

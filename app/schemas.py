@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
-    username: str
+    username: Optional[str] = None
     email: Optional[str] = None
     name: Optional[str] = None
     course_level: Optional[str] = "NONE"
@@ -11,10 +11,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     access_code: Optional[str] = None
+    is_teacher: Optional[bool] = False
 
 class User(UserBase):
     id: int
     access_expires_at: Optional[datetime] = None
+    is_teacher: Optional[bool] = False
     
     class Config:
         from_attributes = True
@@ -66,6 +68,8 @@ class AttemptCreate(BaseModel):
     text_id: int
     time_spent_seconds: float
     score: float
+    user_id: Optional[int] = None
+    subuser_id: Optional[int] = None
     details: Optional[dict] = None
 
 class AttemptResponse(AttemptCreate):

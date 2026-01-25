@@ -427,6 +427,9 @@
                 document.getElementById('edit-subuser-name').value = subuser.name;
 
                 // Status Logic
+                const isActive = subuser.access_expires_at && new Date(subuser.access_expires_at) > new Date();
+                const statusDiv = document.getElementById('edit-license-status');
+
                 if (isActive) {
                     statusDiv.innerHTML = `<span style="color: #22c55e;">✅ Licencia Activa hasta ${new Date(subuser.access_expires_at).toLocaleDateString()}</span>`;
                     document.getElementById('edit-license-btn').innerText = "Extender Licencia";

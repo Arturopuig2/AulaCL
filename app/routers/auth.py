@@ -216,7 +216,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         course_level=user.course_level,
         email=user.email,
         name=user.name,
-        access_expires_at=expires_at
+        access_expires_at=expires_at,
+        is_teacher=user.is_teacher
     )
     db.add(db_user)
     db.commit()

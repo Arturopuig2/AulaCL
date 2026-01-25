@@ -13,6 +13,7 @@ class User(Base):
     course_level = Column(String, default="ALL")
     name = Column(String, nullable=True)
     access_expires_at = Column(DateTime, nullable=True)
+    is_teacher = Column(Boolean, default=False)
     
     attempts = relationship("ReadingAttempt", back_populates="user")
     subusers = relationship("SubUser", back_populates="parent_user")
@@ -64,7 +65,8 @@ class ReadingAttempt(Base):
     __tablename__ = "reading_attempts"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True)
     text_id = Column(Integer, ForeignKey("texts.id"))
     time_spent_seconds = Column(Float)
     score = Column(Float) # Percentage or raw score
@@ -72,6 +74,7 @@ class ReadingAttempt(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="attempts")
+    subuser = relationship("SubUser", back_populates="attempts")
     text = relationship("Text", back_populates="attempts")
 
 
@@ -94,6 +97,7 @@ class SubUser(Base):
     # Relationships
     parent_user = relationship("User", back_populates="subusers")
     licenses = relationship("License", back_populates="subuser")
+    attempts = relationship("ReadingAttempt", back_populates="subuser")
 
 class License(Base):
     __tablename__ = "licenses"

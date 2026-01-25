@@ -150,6 +150,7 @@
         display: none !important;
     }
 </style>
+</style>
 {% endblock %}
 
 {% block navbar_actions %}
@@ -310,9 +311,10 @@
                 document.getElementById('dashboard-title').innerText = "Lecturas";
             }
 
+            const isStudent = localStorage.getItem('is_subuser') === 'true';
             const statusDiv = document.getElementById('subscription-status');
 
-            if (user.username === 'admin') {
+            if (user.username === 'admin' || isStudent) {
                 statusDiv.style.display = 'none';
             } else if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
                 const date = new Date(user.access_expires_at).toLocaleDateString();

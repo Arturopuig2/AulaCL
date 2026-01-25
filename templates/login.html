@@ -64,6 +64,7 @@
         if (googleToken && username) {
             localStorage.setItem('token', googleToken);
             localStorage.setItem('username', username);
+            localStorage.setItem('is_subuser', 'false');
             // Clear URL to hide token
             window.history.replaceState({}, document.title, "/login");
             // Redirect
@@ -90,6 +91,7 @@
             const response = await axios.post('/auth/token', formData);
             localStorage.setItem('token', response.data.access_token);
             localStorage.setItem('username', username);
+            localStorage.setItem('is_subuser', 'false');
             if (username === 'admin') {
                 window.location.href = '/reading/admin';
             } else {

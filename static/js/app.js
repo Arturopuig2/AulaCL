@@ -13,6 +13,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const username = user.username || "Usuario";
             let licenseInfoHTML = '';
 
+            // Update role flags based on server data
+            const isTeacher = !!user.is_teacher;
+            const isSubUser = !user.username;
+
+            localStorage.setItem('is_teacher', isTeacher);
+            localStorage.setItem('is_subuser', isSubUser);
+
+            // Update Dynamic Nav Title
+            const titleContainer = document.getElementById('dynamic-nav-title');
+            if (titleContainer && window.location.pathname === '/dashboard') {
+                if (isTeacher) {
+                    titleContainer.innerText = 'Panel de profesorado';
+                } else {
+                    titleContainer.innerText = '';
+                }
+            }
+
             if (user.username !== 'admin') {
                 if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
                     const date = new Date(user.access_expires_at).toLocaleDateString();
@@ -36,16 +53,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            let extraLinksHTML = '';
-            if (user.username && user.username !== 'admin') {
-                extraLinksHTML = `<a href="/my-subusers" class="dropdown-item">Mis Alumnos/as</a>`;
+            // Custom Navigation Logic based on User Role (Teacher vs Parent)
+            let menuItemsHTML = '';
+
+            // "Añadir Licencia" is for everyone (Teachers and Parents)
+            menuItemsHTML += `<a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>`;
+
+            // "Mis alumnos" is ONLY for Teachers
+            if (user.is_teacher) {
+                menuItemsHTML += `<a href="/my-subusers" class="dropdown-item">Mis Alumnos/as</a>`;
             }
 
-            // Dropdown HTML
-            let addLicenseHTML = '';
-            if (user.username !== 'admin') {
-                addLicenseHTML = `<a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>`;
-            }
+            // "Cambiar Contraseña" and "Cerrar Sesión" for everyone
+            menuItemsHTML += `
+                <a href="#" class="dropdown-item" id="change-password-action">Cambiar Contraseña</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logout-action" style="color: var(--danger);">Cerrar Sesión</div>
+            `;
 
             // Dropdown HTML
             const dropdownHTML = `
@@ -55,14 +79,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="font-size: 1.1rem; line-height: 1;">≡</span>
                     </button>
                     <div class="dropdown-menu">
-                        ${addLicenseHTML}
-                        ${extraLinksHTML}
-                        <a href="#" class="dropdown-item" id="change-password-action">Cambiar Contraseña</a>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-item" id="logout-action" style="color: var(--danger);">Cerrar Sesión</div>
+                        ${menuItemsHTML}
                     </div>
                 </div>
             `;
+
+            const isStudent = localStorage.getItem('is_subuser') === 'true';
+
+            if (isStudent) {
+                navLinks.innerHTML = `
+                    <button id="logout-btn-simple" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+                        Cerrar Sesión
+                    </button>
+                `;
+                document.getElementById('logout-btn-simple').onclick = () => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('is_subuser');
+                    window.location.href = '/login';
+                };
+                return; // Stop here for students
+            }
 
             navLinks.innerHTML = dropdownHTML;
 
@@ -87,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('logout-action').addEventListener('click', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
+                localStorage.removeItem('is_subuser');
                 window.location.href = '/login';
             });
 
@@ -118,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('logout-btn').addEventListener('click', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
+                localStorage.removeItem('is_subuser');
                 window.location.href = '/login';
             });
         });

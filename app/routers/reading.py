@@ -41,22 +41,32 @@ def get_admin_edit_reading(request: Request, text_id: int):
     return templates.TemplateResponse("admin_edit_reading.html", {"request": request})
 
 @router.get("/texts", response_model=List[schemas.TextResponse])
-def get_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+def get_texts(current_user=Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     # Return all texts so frontend can filter by course
     is_admin = False
-    if hasattr(current_user, "username") and current_user.username == "admin":
+    is_subuser = False
+    
+    # Determine user type
+    username = getattr(current_user, "username", None)
+    if username == "admin":
         is_admin = True
+    
+    if not hasattr(current_user, "username"): # SubUsers don't have username
+        is_subuser = True
         
     texts = db.query(models.Text).filter(models.Text.is_active == True).all()
 
-
-    
-    user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
+    # Query attempts based on user type
+    if is_subuser:
+        user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.subuser_id == current_user.id).all()
+    else:
+        user_attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
+        
     attempts_map = {a.text_id: a.score for a in user_attempts}
     
-    # Check Premium Status
+    # Check Premium Status (Students have their own access_expires_at)
     is_premium = False
-    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
+    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or is_admin:
         is_premium = True
         
     # First reading per course level is free
@@ -95,7 +105,8 @@ def get_text(text_id: int, current_user: schemas.User = Depends(auth.get_current
     
     # Enforcement Check
     is_premium = False
-    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or current_user.username == "admin":
+    is_admin = getattr(current_user, "username", None) == "admin"
+    if (current_user.access_expires_at and current_user.access_expires_at > datetime.utcnow()) or is_admin:
         is_premium = True
         
     # First reading of its course level is free
@@ -132,14 +143,12 @@ def get_questions(text_id: int, current_user: schemas.User = Depends(auth.get_cu
     return questions
 
 @router.post("/attempt", response_model=schemas.AttemptResponse)
-def submit_attempt(attempt: schemas.AttemptCreate, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    # Calculate score logic can be here if we receive answers, but for now we trust the frontend sends the score
-    # Or we could receive selected answers and calculate score here for security. 
-    # For MVP, believing the score from frontend is faster (as per user request "Le propone unas preguntas..."). 
-    # Let's stick to the schema which accepts 'score'. 
+def submit_attempt(attempt: schemas.AttemptCreate, current_user = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    is_subuser = not hasattr(current_user, "username")
     
     db_attempt = models.ReadingAttempt(
-        user_id=current_user.id,
+        user_id=current_user.id if not is_subuser else None,
+        subuser_id=current_user.id if is_subuser else None,
         text_id=attempt.text_id,
         time_spent_seconds=attempt.time_spent_seconds,
         score=attempt.score,
