@@ -3,7 +3,8 @@ from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-from .. import database, models, schemas, auth, config
+from .. import database, models, schemas, config
+from .. import auth # Import app.auth explicitly
 import os
 
 router = APIRouter(

@@ -3,8 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from .database import engine, Base
 from .database import engine, Base
-from .routers import auth, reading, subusers, analytics
-from . import schemas, config # Import config
+from .routers import auth as auth_router, reading, subusers, analytics
+from . import auth, models, schemas, config # Import config
 from fastapi import Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -20,7 +20,7 @@ app.mount("/texts", StaticFiles(directory=config.TEXTS_DIR), name="texts_files")
 app.mount("/audio", StaticFiles(directory=config.AUDIO_DIR), name="audio_files") # Serve audio
 
 # Include Routers
-app.include_router(auth.router)
+app.include_router(auth_router.router)
 app.include_router(reading.router)
 app.include_router(subusers.router)
 app.include_router(analytics.router)
