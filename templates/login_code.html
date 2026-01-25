@@ -1,24 +1,28 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 0 auto; padding-top: 4rem;">
-    <div class="glass-panel" style="padding: 2rem;">
-        <h2 style="text-align: center;">Acceso Estudiantes</h2>
-        <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem;">
+<div style="max-width: 320px; margin: 0 auto; padding-top: 2rem; font-family: 'Fredoka', sans-serif;">
+    <div class="glass-panel"
+        style="padding: 1.2rem; border-radius: 30px; border: 3px solid #FCD34D; background: #FEF3C7;">
+        <h2
+            style="text-align: center; font-family: 'Fredoka', sans-serif; margin-bottom: 0.8rem; font-size: 1.8rem; letter-spacing: -1px; color: #1e293b; font-weight: 500;">
+            Acceso Estudiantes</h2>
+        <p
+            style="text-align: center; font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; font-family: 'Fredoka';">
             Introduce tu código de acceso único.
         </p>
         <form id="login-code-form">
-            <div class="form-group">
-                <label for="code">Código de Acceso</label>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
                 <input type="text" id="code" required placeholder="CL123456ABC" onfocus="this.placeholder=''"
-                    onblur="this.placeholder='CL123456ABC'" style="text-align: center; font-family: monospace; font-size: 1.2rem; letter-spacing: 2px;
-                text-transform: uppercase;">
+                    onblur="this.placeholder='CL123456ABC'"
+                    style="width: 100%; padding: 0.8rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; text-align: center; font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase;">
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+            <button type="submit" class="btn-bubble btn-bubble-green"
+                style="width: 100%; padding: 0.7rem; font-size: 1.1rem;">Entrar</button>
         </form>
-        <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
-            <a href="/login" style="color: var(--text-secondary);">No soy estudiante (Login con email)</a>
+        <p style="margin-top: 1.2rem; text-align: center; font-size: 0.85rem; font-family: 'Fredoka';">
+            <a href="/login" style="color: #64748b; text-decoration: none;">No soy estudiante (Login con email)</a>
         </p>
     </div>
 </div>

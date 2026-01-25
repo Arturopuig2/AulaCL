@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aula CL - Comprensión Lectora</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Grand+Hotel&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Grand+Hotel&family=Fredoka:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/static/css/styles.css?v=17">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -41,18 +41,24 @@
     <div id="unlock-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
         <div class="glass-panel" onclick="event.stopPropagation()"
-            style="background: white; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-            <h2 style="margin-bottom: 1rem; text-align: center;">🔓 Desbloquear Todo</h2>
-            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Introduce tu licencia
+            style="background: white; padding: 2rem; max-width: 400px; width: 90%; border-radius: 30px; border: 3px solid #E2E8F0; font-family: 'Fredoka', sans-serif;">
+            <h2
+                style="margin-bottom: 1.2rem; text-align: center; font-family: 'Fredoka', sans-serif; font-size: 1.8rem; letter-spacing: -1px; color: #1e293b; font-weight: 500;">
+                🔓 Añadir Licencia</h2>
+            <p
+                style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary); font-family: 'Fredoka', sans-serif;">
+                Introduce tu licencia
                 para acceder a todas las lecturas durante 1 año.</p>
             <form id="unlock-form">
                 <input type="text" id="unlock-code" placeholder="XXXXXXXXX" onfocus="this.placeholder=''"
                     onblur="this.placeholder='XXXXXXXXX'" required
-                    style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase;">
-                <button type="submit" class="btn btn-primary"
-                    style="width: 100%; margin-bottom: 0.5rem;">Activar</button>
-                <button type="button" onclick="closeUnlockModal()" class="btn btn-outline"
-                    style="width: 100%;">Cancelar</button>
+                    style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; margin-bottom: 1.5rem; text-align: center; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; font-family: 'Fredoka', sans-serif;">
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-bubble"
+                        style="background: #DCFCE7; color: #16A34A; border: 2px solid #86EFAC; padding: 0.5rem 1.8rem; border-radius: 50px; font-size: 1rem; font-family: 'Fredoka', sans-serif !important; cursor: pointer; transition: all 0.2s ease;">activar</button>
+                    <button type="button" onclick="closeUnlockModal()" class="btn-bubble"
+                        style="background: #FCE7F3; color: #DB2777; border: 2px solid #F9A8D4; padding: 0.5rem 1.8rem; border-radius: 50px; font-size: 1rem; font-family: 'Fredoka', sans-serif !important; cursor: pointer; transition: all 0.2s ease;">cancelar</button>
+                </div>
             </form>
         </div>
     </div>
@@ -61,28 +67,32 @@
     <div id="change-password-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
         <div class="glass-panel" onclick="event.stopPropagation()"
-            style="background: white; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-            <h2 style="margin-bottom: 1rem; text-align: center;">🔐 Cambiar Contraseña</h2>
+            style="background: white; padding: 2.5rem; max-width: 400px; width: 90%; border-radius: 30px; border: 3px solid #E2E8F0; font-family: 'Fredoka', sans-serif;">
+            <h2
+                style="margin-bottom: 2rem; text-align: center; font-family: 'Fredoka', sans-serif; font-size: 1.8rem; letter-spacing: -1px; color: #1e293b; font-weight: 500;">
+                🔐 Cambiar Contraseña</h2>
             <form id="change-password-form">
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label style="font-size: 0.9rem;">Contraseña Actual</label>
-                    <input type="password" id="current-password" required
-                        style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                    <input type="password" id="current-password" required placeholder="Contraseña Actual"
+                        onfocus="this.placeholder=''" onblur="this.placeholder='Contraseña Actual'"
+                        style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif;">
                 </div>
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label style="font-size: 0.9rem;">Nueva Contraseña</label>
-                    <input type="password" id="new-password" required
-                        style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                    <input type="password" id="new-password" required placeholder="Nueva Contraseña"
+                        onfocus="this.placeholder=''" onblur="this.placeholder='Nueva Contraseña'"
+                        style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif;">
                 </div>
                 <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label style="font-size: 0.9rem;">Confirmar Nueva</label>
-                    <input type="password" id="confirm-new-password" required
-                        style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                    <input type="password" id="confirm-new-password" required placeholder="Confirmar Nueva"
+                        onfocus="this.placeholder=''" onblur="this.placeholder='Confirmar Nueva'"
+                        style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif;">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Guardar
-                    Cambios</button>
-                <button type="button" onclick="closeChangePasswordModal()" class="btn btn-outline"
-                    style="width: 100%;">Cancelar</button>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button type="submit" class="btn-bubble"
+                        style="background: #DCFCE7; color: #16A34A; border: 2px solid #86EFAC; padding: 0.6rem 1.5rem; border-radius: 50px; font-size: 1rem; font-family: 'Fredoka', sans-serif !important; cursor: pointer; transition: all 0.2s ease;">guardar</button>
+                    <button type="button" onclick="closeChangePasswordModal()" class="btn-bubble"
+                        style="background: #FCE7F3; color: #DB2777; border: 2px solid #F9A8D4; padding: 0.6rem 1.5rem; border-radius: 50px; font-size: 1rem; font-family: 'Fredoka', sans-serif !important; cursor: pointer; transition: all 0.2s ease;">cancelar</button>
+                </div>
             </form>
         </div>
     </div>

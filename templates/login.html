@@ -1,48 +1,54 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 0 auto; padding-top: 1rem;">
-    <div class="glass-panel" style="padding: 2rem;">
-        <h2 style="text-align: center;">Iniciar Sesión</h2>
+<div style="max-width: 320px; margin: 0 auto; padding-top: 1.5rem; font-family: 'Fredoka', sans-serif;">
+    <div class="glass-panel"
+        style="padding: 1.2rem; border-radius: 30px; border: 3px solid #E2E8F0; background: white;">
+        <h2
+            style="text-align: center; font-family: 'Fredoka', sans-serif; margin-bottom: 1.2rem; font-size: 1.8rem; letter-spacing: -1px; color: #1e293b; font-weight: 500;">
+            Iniciar Sesión</h2>
         <form id="login-form">
-            <div class="form-group">
-                <div class="form-group">
-                    <input type="text" id="username" required placeholder="Correo Electrónico"
-                        onfocus="this.placeholder=''" onblur="this.placeholder='Correo Electrónico'">
+            <div class="form-group" style="margin-bottom: 0.8rem;">
+                <input type="text" id="username" required placeholder="Correo Electrónico" onfocus="this.placeholder=''"
+                    onblur="this.placeholder='Correo Electrónico'"
+                    style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <div style="position: relative;">
+                    <input type="password" id="password" required placeholder="Contraseña" onfocus="this.placeholder=''"
+                        onblur="this.placeholder='Contraseña'"
+                        style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem;">
                 </div>
-                <div class="form-group">
-                    <div class="form-group">
-                        <div style="position: relative;">
-                            <input type="text" id="password" required style="width: 100%; padding-right: 0.5rem;"
-                                placeholder="Contraseña" onfocus="this.placeholder=''"
-                                onblur="this.placeholder='Contraseña'">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+            </div>
+            <button type="submit" class="btn-bubble btn-bubble-green"
+                style="width: 100%; padding: 0.6rem; font-size: 1rem;">Entrar</button>
 
-                    <div style="margin-top: 1rem; text-align: center;">
-                        <span style="color: #64748b; font-size: 0.9rem;">o</span>
-                    </div>
+            <div style="margin-top: 0.8rem; text-align: center;">
+                <span style="color: #64748b; font-size: 0.85rem; font-family: 'Fredoka';">o</span>
+            </div>
 
-                    <a href="/auth/google" class="btn btn-outline"
-                        style="width: 100%; margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #1e293b; border-color: #cbd5e1;">
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google"
-                            style="width: 20px; height: 20px;">
-                        Entrar con Google
-                    </a>
+            <a href="/auth/google" class="btn-bubble"
+                style="width: 100%; margin-top: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #1e293b; border: 2px solid #E2E8F0; background: white; padding: 0.6rem; border-radius: 50px; text-decoration: none; font-size: 0.9rem;">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google"
+                    style="width: 16px; height: 16px;">
+                Entrar con Google
+            </a>
 
         </form>
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center;">
-            <p style="margin-bottom: 0.5rem; font-weight: 500;">¿Eres estudiante?</p>
-            <a href="/login-code" class="btn btn-outline" style="display: block; width: 100%; text-decoration: none;">
-                Entrar con Código de Acceso
+        <div style="margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center;">
+            <p style="margin-bottom: 0.5rem; font-weight: 600; font-family: 'Fredoka'; font-size: 0.85rem;">¿Eres
+                estudiante?</p>
+            <a href="/login-code" class="btn-bubble btn-bubble-orange"
+                style="display: block; width: 100%; padding: 0.6rem; text-decoration: none; font-size: 0.9rem;">
+                Entrar con Código
             </a>
         </div>
 
-        <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
-            ¿No tienes cuenta? <a href="/register" style="color: var(--primary-color);">Regístrate</a>
-            <br>
-            <a href="/forgot-password" style="font-size: 0.8rem; color: var(--text-secondary);">¿Olvidaste tu
+        <p style="margin-top: 1.2rem; text-align: center; font-size: 0.85rem; font-family: 'Fredoka';">
+            ¿No tienes cuenta? <a href="/register"
+                style="color: #2563eb; font-weight: 600; text-decoration: none;">Regístrate</a>
+            <br><br>
+            <a href="/forgot-password" style="font-size: 0.8rem; color: #64748b; text-decoration: none;">¿Olvidaste tu
                 contraseña?</a>
         </p>
     </div>

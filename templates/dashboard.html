@@ -19,36 +19,136 @@
         font-family: 'Fredoka', sans-serif !important;
     }
 
-    /* Bubble Inputs */
-    .bubble-select {
-        border-radius: 50px !important;
-        border: 2px solid #7DD3FC !important;
-        background-color: #F0F9FF !important;
-        color: #0369A1 !important;
-        padding: 0.6rem 2.5rem 0.6rem 1.2rem !important;
-        /* Increased right padding */
-        font-size: 1rem !important;
-        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.2s ease;
+    /* Custom Dropdown System */
+    .custom-select-wrapper {
+        position: relative;
+        user-select: none;
+        width: 100%;
+        font-family: 'Fredoka', sans-serif;
+    }
+
+    .custom-select-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.7rem 1.2rem;
+        background: #F0F9FF;
+        border-radius: 50px;
         cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230369A1' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+        transition: all 0.2s ease;
+        font-weight: 500;
+        font-size: 1rem;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .custom-select-wrapper.open .custom-select-trigger {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .trigger-course {
+        border: 3px solid #7DD3FC;
+        color: #0369A1;
+    }
+
+    .trigger-lang {
+        border: 3px solid #7DD3FC;
+        background: #F0F9FF;
+        color: #0369A1;
+    }
+
+    .custom-select-trigger:after {
+        content: '';
+        width: 0.8rem;
+        height: 0.8rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+        background-size: contain;
         background-repeat: no-repeat;
-        background-position: right 1rem center;
-        background-size: 1rem;
+        transition: transform 0.2s ease;
     }
 
-    .bubble-select:hover {
-        background-color: white !important;
+    .custom-select-wrapper.open .custom-select-trigger:after {
+        transform: rotate(180deg);
     }
 
-    .bubble-select:focus {
-        outline: none;
-        border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+    .custom-options {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 25px;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 0.5rem;
+        max-height: 350px;
+        overflow-y: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        transform-origin: top;
     }
 
-    /* Card Override Styles injected via JS, but some base here */
+    .options-course {
+        border: 3px solid #7DD3FC;
+    }
+
+    .options-lang {
+        border: 3px solid #7DD3FC;
+    }
+
+    .custom-select-wrapper.open .custom-options {
+        display: block;
+        animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: scaleY(0);
+        }
+
+        to {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+    }
+
+    .custom-option {
+        padding: 0.7rem 1rem;
+        cursor: pointer;
+        border-radius: 15px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+        color: #475569;
+        margin-bottom: 2px;
+    }
+
+    .custom-option:hover {
+        background: #F8FAFC;
+        color: #1e293b;
+    }
+
+    .custom-option.selected {
+        background: #F0F9FF;
+        color: #0369A1;
+        font-weight: 600;
+    }
+
+    .opt-lang.selected {
+        background: #F0F9FF;
+        color: #0369A1;
+    }
+
+    /* Hide Scrollbar */
+    .custom-options::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide Native Selects */
+    .hidden-select {
+        display: none !important;
+    }
 </style>
 {% endblock %}
 
@@ -85,41 +185,78 @@
     <!-- Sub-users Section removed (moved to separate page) -->
 
     <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+        <!-- Course Custom Select -->
         <div style="flex: 1; min-width: 200px;">
-            <select id="course-select" onchange="applyFilters()" class="bubble-select" style="width: 100%;">
-                <option value="all">Todos los cursos</option>
-                <optgroup label="Primaria">
-                    <option value="1P">1º Primaria</option>
-                    <option value="2P">2º Primaria</option>
-                    <option value="3P">3º Primaria</option>
-                    <option value="4P">4º Primaria</option>
-                    <option value="5P">5º Primaria</option>
-                    <option value="6P">6º Primaria</option>
-                </optgroup>
-                <optgroup label="ESO">
-                    <option value="1ESO">1º ESO</option>
-                    <option value="2ESO">2º ESO</option>
-                    <option value="3ESO">3º ESO</option>
-                    <option value="4ESO">4º ESO</option>
-                </optgroup>
-                <optgroup label="Bachillerato">
-                    <option value="1BAT">1º Bachillerato</option>
-                    <option value="2BAT">2º Bachillerato</option>
-                </optgroup>
-                <option value="ALL">Sin Curso / General</option>
+            <div class="custom-select-wrapper" id="wrapper-course">
+                <div class="custom-select-trigger trigger-course"><span>Todos los cursos</span></div>
+                <div class="custom-options options-course">
+                    <div class="custom-option selected" data-value="all">Todos los cursos</div>
+                    <div
+                        style="padding: 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; font-weight: 700;">
+                        Primaria</div>
+                    <div class="custom-option" data-value="1P">1º Primaria</div>
+                    <div class="custom-option" data-value="2P">2º Primaria</div>
+                    <div class="custom-option" data-value="3P">3º Primaria</div>
+                    <div class="custom-option" data-value="4P">4º Primaria</div>
+                    <div class="custom-option" data-value="5P">5º Primaria</div>
+                    <div class="custom-option" data-value="6P">6º Primaria</div>
+                    <div
+                        style="padding: 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; font-weight: 700;">
+                        ESO</div>
+                    <div class="custom-option" data-value="1ESO">1º ESO</div>
+                    <div class="custom-option" data-value="2ESO">2º ESO</div>
+                    <div class="custom-option" data-value="3ESO">3º ESO</div>
+                    <div class="custom-option" data-value="4ESO">4º ESO</div>
+                    <div
+                        style="padding: 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; font-weight: 700;">
+                        Bachillerato</div>
+                    <div class="custom-option" data-value="1BAT">1º Bachillerato</div>
+                    <div class="custom-option" data-value="2BAT">2º Bachillerato</div>
+                    <div class="custom-option" data-value="ALL">Sin Curso / General</div>
+                </div>
+            </div>
+            <select id="course-select" onchange="applyFilters()" class="hidden-select">
+                <option value="all">all</option>
+                <option value="1P">1P</option>
+                <option value="2P">2P</option>
+                <option value="3P">3P</option>
+                <option value="4P">4P</option>
+                <option value="5P">5P</option>
+                <option value="6P">6P</option>
+                <option value="1ESO">1ESO</option>
+                <option value="2ESO">2ESO</option>
+                <option value="3ESO">3ESO</option>
+                <option value="4ESO">4ESO</option>
+                <option value="1BAT">1BAT</option>
+                <option value="2BAT">2BAT</option>
+                <option value="ALL">ALL</option>
             </select>
         </div>
 
+        <!-- Language Custom Select -->
         <div style="flex: 1; min-width: 200px;">
-            <select id="lang-select" onchange="applyFilters()" class="bubble-select" style="width: 100%;">
-                <option value="all">Todos los idiomas</option>
-                <option value="es">Español</option>
-                <option value="val">Valencià</option>
-                <option value="cat">Català</option>
-                <option value="gal">Gallego</option>
-                <option value="eus">Euskera</option>
-                <option value="en">Inglés</option>
-                <option value="fr">Francés</option>
+            <div class="custom-select-wrapper" id="wrapper-lang">
+                <div class="custom-select-trigger trigger-lang"><span>Todos los idiomas</span></div>
+                <div class="custom-options options-lang">
+                    <div class="custom-option selected opt-lang" data-value="all">Todos los idiomas</div>
+                    <div class="custom-option opt-lang" data-value="es">Español</div>
+                    <div class="custom-option opt-lang" data-value="val">Valencià</div>
+                    <div class="custom-option opt-lang" data-value="cat">Català</div>
+                    <div class="custom-option opt-lang" data-value="gal">Gallego</div>
+                    <div class="custom-option opt-lang" data-value="eus">Euskera</div>
+                    <div class="custom-option opt-lang" data-value="en">Inglés</div>
+                    <div class="custom-option opt-lang" data-value="fr">Francés</div>
+                </div>
+            </div>
+            <select id="lang-select" onchange="applyFilters()" class="hidden-select">
+                <option value="all">all</option>
+                <option value="es">es</option>
+                <option value="val">val</option>
+                <option value="cat">cat</option>
+                <option value="gal">gal</option>
+                <option value="eus">eus</option>
+                <option value="en">en</option>
+                <option value="fr">fr</option>
             </select>
         </div>
     </div>
@@ -351,6 +488,52 @@
 
 
 
-    loadDashboard();
+    // --- CUSTOM SELECT LOGIC ---
+    function setupCustomSelect(wrapperId, selectId) {
+        const wrapper = document.getElementById(wrapperId);
+        const trigger = wrapper.querySelector('.custom-select-trigger');
+        const options = wrapper.querySelectorAll('.custom-option');
+        const hiddenSelect = document.getElementById(selectId);
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other dropdowns
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                if (w.id !== wrapperId) w.classList.remove('open');
+            });
+            wrapper.classList.toggle('open');
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', () => {
+                const value = opt.getAttribute('data-value');
+                const text = opt.innerText;
+
+                // Update UI
+                trigger.querySelector('span').innerText = text;
+                options.forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+
+                // Update Native Select
+                hiddenSelect.value = value;
+
+                // Close & Filter
+                wrapper.classList.remove('open');
+                applyFilters();
+            });
+        });
+    }
+
+    // Close on outside click
+    window.addEventListener('click', () => {
+        document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        setupCustomSelect('wrapper-course', 'course-select');
+        setupCustomSelect('wrapper-lang', 'lang-select');
+        loadDashboard();
+    });
 </script>
 {% endblock %}
