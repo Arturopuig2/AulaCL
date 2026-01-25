@@ -1,9 +1,11 @@
 {% extends "layout.html" %}
 
+{% block navbar_logo %}{% endblock %}
+
 {% block navbar_actions %}
 <a href="/reading-room/{{ text_id }}" class="btn-bubble btn-bubble-pink"
     style="text-decoration: none; padding: 0.5rem 1.5rem; font-size: 1rem; margin-right: 0.5rem;">
-    < Volver</a>
+    < volver</a>
 
         {% endblock %}
         {% block head %}
@@ -14,11 +16,9 @@
             .btn-bubble {
                 border-radius: 50px;
                 border: none;
-                box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
                 transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 font-family: 'Fredoka', sans-serif;
                 font-weight: 500;
-                text-transform: uppercase;
                 letter-spacing: 0.5px;
                 display: inline-flex;
                 align-items: center;
@@ -113,12 +113,12 @@
             <div id="result-panel"
                 style="display: none; margin-top: 2rem; padding: 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.9); text-align: center;">
                 <h2>Resultado: <span id="score-display"></span></h2>
-                <a href="/dashboard" class="btn-bubble btn-bubble-pink" style="margin-top: 1rem;">Volver al Panel</a>
+                <a href="/dashboard" class="btn-bubble btn-bubble-pink" style="margin-top: 1rem;">volver al panel</a>
             </div>
 
             <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
                 <button id="submit-quiz" class="btn-bubble btn-bubble-green"
-                    style="padding: 0.8rem 2rem; font-size: 1.1rem;">Enviar Respuestas</button>
+                    style="padding: 0.8rem 2rem; font-size: 1.1rem;">enviar respuestas</button>
             </div>
         </div>
 

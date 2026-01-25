@@ -10,7 +10,6 @@
         transition: all 0.2s ease;
         font-family: 'Fredoka', sans-serif;
         font-weight: 500;
-        text-transform: uppercase;
         letter-spacing: 0.5px;
         display: inline-flex;
         align-items: center;
@@ -96,7 +95,7 @@
 {% block navbar_actions %}
 <a href="/dashboard" class="btn-bubble btn-bubble-pink"
     style="text-decoration: none; padding: 0.5rem 1.5rem; font-size: 1rem;">
-    < Volver </a>
+    < volver </a>
         {% endblock %}
 
         {% block content %}
@@ -108,7 +107,7 @@
                         Cargando...
                     </h1>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
                     <!-- Timer Bubble -->
                     <div class="btn-bubble btn-bubble-pink"
                         style="padding: 0.4rem 0.8rem; font-size: 0.9rem; cursor: pointer;" onclick="toggleTimer()"
@@ -119,7 +118,7 @@
                     </div>
 
                     <!-- Toolbar Island -->
-                    <div style="display: flex; gap: 0.8rem; padding: 0.5rem; background: white; border-radius: 50px;">
+                    <div style="display: flex; gap: 0.4rem; padding: 0.3rem; background: white; border-radius: 50px;">
                         <button onclick="openPdfModal()" class="btn-bubble btn-bubble-blue"
                             style="font-size: 0.9rem; padding: 0.4rem 0.8rem;" title="Descargar Ficha PDF">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -140,7 +139,7 @@
                             abc
                         </button>
 
-                        <div style="display: flex; gap: 0.2rem;">
+                        <div style="display: flex; gap: 0.1rem;">
                             <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
                                 style="padding: 0.4rem 0.6rem; font-size: 0.8rem;">A-</button>
                             <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
@@ -167,7 +166,7 @@
 
         <div style="margin-top: 2rem; text-align: right; padding-bottom: 2rem;">
             <button id="finish-btn" class="btn-bubble btn-bubble-green" style="font-size: 1rem; padding: 0.8rem 2rem;">
-                Ir a Preguntas
+                Preguntas >
             </button>
         </div>
 

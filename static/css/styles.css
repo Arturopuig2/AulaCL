@@ -96,12 +96,10 @@ h2 {
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
-    box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
 }
 
 .btn-primary:hover {
     transform: none !important;
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.23);
 }
 
 .btn-outline {
@@ -125,7 +123,6 @@ h2 {
     background: #15803d !important;
     color: white !important;
     transform: none !important;
-    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
 }
 
 .active-lang {
