@@ -25,15 +25,19 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 0.8rem;">
-                <input type="password" id="password" required placeholder="Contraseña" onfocus="this.placeholder=''"
-                    onblur="this.placeholder='Contraseña'"
-                    style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem;">
+                <div style="position: relative;">
+                    <input type="text" id="password" required placeholder="Contraseña" onfocus="this.placeholder=''"
+                        onblur="this.placeholder='Contraseña'"
+                        style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem;">
+                </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 1.2rem;">
-                <input type="password" id="confirm_password" required placeholder="Repetir Contraseña"
-                    onfocus="this.placeholder=''" onblur="this.placeholder='Repetir Contraseña'"
-                    style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem;">
+                <div style="position: relative;">
+                    <input type="text" id="confirm_password" required placeholder="Repetir Contraseña"
+                        onfocus="this.placeholder=''" onblur="this.placeholder='Repetir Contraseña'"
+                        style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem;">
+                </div>
             </div>
 
             <div class="form-group"
@@ -97,12 +101,16 @@
             formData.append('password', password);
 
             const loginResponse = await axios.post('/auth/token', formData);
+            const token = loginResponse.data.access_token;
 
             // 3. Store Token and Redirect
-            localStorage.setItem('token', loginResponse.data.access_token);
+            localStorage.setItem('token', token);
             localStorage.setItem('username', email);
+            localStorage.setItem('is_subuser', 'false');
 
-            // alert('Registro exitoso. Redirigiendo...'); // Optional: removed for seamless experience
+            // Set Cookie for server-side auth (30 days)
+            document.cookie = `access_token=${token}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+
             window.location.href = '/dashboard';
 
         } catch (error) {

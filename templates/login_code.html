@@ -44,6 +44,9 @@
             localStorage.setItem('is_subuser', 'true');
             localStorage.removeItem('username'); // Subusers don't use this, clears stale data
 
+            // Set Cookie for server-side auth (30 days)
+            document.cookie = `access_token=${token}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+
             window.location.href = '/dashboard';
         } catch (error) {
             btn.disabled = false;

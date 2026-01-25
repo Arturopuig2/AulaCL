@@ -57,15 +57,21 @@ def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard_page(request: Request):
+async def dashboard_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/reading-room/{text_id}", response_class=HTMLResponse)
-def reading_page(request: Request, text_id: int):
+async def reading_page(request: Request, text_id: int, user: models.User = Depends(auth.get_current_user_html)):
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("reading.html", {"request": request, "text_id": text_id})
 
 @app.get("/quiz/{text_id}", response_class=HTMLResponse)
-def quiz_page(request: Request, text_id: int):
+async def quiz_page(request: Request, text_id: int, user: models.User = Depends(auth.get_current_user_html)):
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("quiz.html", {"request": request, "text_id": text_id})
 
 @app.get("/forgot-password", response_class=HTMLResponse)
@@ -77,14 +83,20 @@ def reset_password_page(request: Request):
     return templates.TemplateResponse("reset_password.html", {"request": request})
 
 @app.get("/my-subusers", response_class=HTMLResponse)
-def subusers_page(request: Request):
+async def subusers_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("subusers.html", {"request": request})
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request):
+async def admin_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("admin.html", {"request": request})
 
 @app.get("/admin/magic", response_class=HTMLResponse)
-def magic_writer_page(request: Request):
+async def magic_writer_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("magic_writer.html", {"request": request})
 

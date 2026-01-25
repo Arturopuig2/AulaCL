@@ -15,28 +15,40 @@ from fastapi.templating import Jinja2Templates
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/admin/sync", response_class=HTMLResponse)
-def get_sync_tool(request: Request):
+def get_sync_tool(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     # We allow access to the HTML shell; JS handles the token check/redirect
     return templates.TemplateResponse("admin_sync.html", {"request": request})
 
 @router.get("/admin", response_class=HTMLResponse)
-def get_admin_hub(request: Request):
+def get_admin_hub(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("admin.html", {"request": request})
 
 @router.get("/admin/upload", response_class=HTMLResponse)
-def get_admin_upload(request: Request):
+def get_admin_upload(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("admin_upload.html", {"request": request})
 
 @router.get("/admin/codes", response_class=HTMLResponse)
-def get_admin_codes(request: Request):
+def get_admin_codes(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("admin_codes.html", {"request": request})
 
 @router.get("/admin/readings", response_class=HTMLResponse)
-def get_admin_readings(request: Request):
+def get_admin_readings(request: Request, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse("admin_readings.html", {"request": request})
 
 @router.get("/admin/edit/{text_id}", response_class=HTMLResponse)
-def get_admin_edit_reading(request: Request, text_id: int):
+def get_admin_edit_reading(request: Request, text_id: int, user: models.User = Depends(auth.get_current_user_html)):
+    if not user or user.username != 'admin':
+        return RedirectResponse(url="/login", status_code=302)
     # Just serve the template, JS handles data loading
     return templates.TemplateResponse("admin_edit_reading.html", {"request": request})
 

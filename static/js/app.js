@@ -56,8 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Custom Navigation Logic based on User Role (Teacher vs Parent)
             let menuItemsHTML = '';
 
-            // "Añadir Licencia" is for everyone (Teachers and Parents)
-            menuItemsHTML += `<a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>`;
+            // "Añadir Licencia" is for everyone EXCEPT admin
+            if (user.username !== 'admin') {
+                menuItemsHTML += `<a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>`;
+            }
 
             // "Mis alumnos" is ONLY for Teachers
             if (user.is_teacher) {
@@ -96,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('token');
                     localStorage.removeItem('username');
                     localStorage.removeItem('is_subuser');
+                    // Clear Cookie
+                    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
                     window.location.href = '/login';
                 };
                 return; // Stop here for students
@@ -125,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
                 localStorage.removeItem('is_subuser');
+                // Clear Cookie
+                document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
                 window.location.href = '/login';
             });
 
@@ -157,6 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
                 localStorage.removeItem('is_subuser');
+                // Clear Cookie
+                document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
                 window.location.href = '/login';
             });
         });
