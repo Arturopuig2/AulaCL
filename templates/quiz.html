@@ -28,11 +28,6 @@
                 text-decoration: none;
             }
 
-            .btn-bubble:active {
-                transform: translateY(4px);
-                box-shadow: none;
-            }
-
             .btn-bubble-blue {
                 background: #E0F2FE;
                 color: #0284C7;
@@ -111,9 +106,15 @@
             </div>
 
             <div id="result-panel"
-                style="display: none; margin-top: 2rem; padding: 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.9); text-align: center;">
-                <h2>Resultado: <span id="score-display"></span></h2>
-                <a href="/dashboard" class="btn-bubble btn-bubble-pink" style="margin-top: 1rem;">volver al panel</a>
+                style="display: none; margin-top: 2rem; padding: 1.5rem; border-radius: var(--radius); background: rgba(255,255,255,0.95); text-align: center; border: 3px solid #7DD3FC;">
+                <h2 style="font-size: 2rem; margin-bottom: 1.5rem;">Resultado: <span id="score-display"
+                        style="color: #0284C7;"></span></h2>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="resetQuiz()" class="btn-bubble btn-bubble-blue"
+                        style="padding: 0.8rem 2rem; font-size: 1.1rem;">Rehacer Quiz</button>
+                    <a href="/dashboard" class="btn-bubble btn-bubble-pink"
+                        style="padding: 0.8rem 2rem; font-size: 1.1rem;">Volver a Lecturas</a>
+                </div>
             </div>
 
             <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
@@ -206,7 +207,7 @@
             document.getElementById('submit-quiz').addEventListener('click', async () => {
                 // Disable button to prevent double submit
                 const submitBtn = document.getElementById('submit-quiz');
-                if (submitBtn.innerText === "Volver al Dashboard") {
+                if (submitBtn.innerText === "Volver a Lecturas") {
                     window.location.href = '/dashboard';
                     return;
                 }
@@ -316,6 +317,42 @@
                     console.error('Error enviando resultados', e);
                 }
             });
+
+            function resetQuiz() {
+                // 1. Hide results, show submit button
+                document.getElementById('result-panel').style.display = 'none';
+                document.getElementById('submit-quiz').style.display = 'inline-flex';
+
+                // 2. Reset all questions
+                questionsData.forEach(q => {
+                    // Clear and Enable textareas
+                    const textarea = document.getElementById(`ans_${q.id}`);
+                    if (textarea) {
+                        textarea.value = '';
+                        textarea.disabled = false;
+                    }
+
+                    // Clear and Enable Radios
+                    const radios = document.getElementsByName(`q_${q.id}`);
+                    radios.forEach(r => {
+                        r.checked = false;
+                        r.disabled = false;
+                    });
+
+                    // Reset styling on option divs
+                    q.options.forEach((opt, idx) => {
+                        const optDiv = document.getElementById(`opt-div-${q.id}-${idx}`);
+                        if (optDiv) {
+                            optDiv.style.backgroundColor = 'transparent';
+                            optDiv.style.border = 'none';
+                            optDiv.style.color = 'inherit';
+                        }
+                    });
+                });
+
+                // 3. Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
 
             loadQuiz();
 
