@@ -3,384 +3,382 @@
 {% block navbar_logo %}{% endblock %}
 
 {% block navbar_actions %}
-<a href="/reading-room/{{ text_id }}" class="btn-bubble btn-bubble-pink"
-    style="text-decoration: none; padding: 0.5rem 1.5rem; font-size: 1rem; margin-right: 0.5rem;">
-    < volver</a>
+<div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; justify-content: flex-end;">
+    <a href="/reading-room/{{ text_id }}" class="btn-bubble btn-bubble-pink"
+        style="text-decoration: none; padding: 0.5rem 1.2rem; font-size: 1rem; margin-right: auto;">
+        < volver</a>
 
-        {% endblock %}
-        {% block head %}
-        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet">
-        <style>
-            /* Bubble Button Style */
-            .btn-bubble {
-                border-radius: 50px;
-                border: none;
-                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                font-family: 'Fredoka', sans-serif;
-                font-weight: 500;
-                letter-spacing: 0.5px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                cursor: pointer;
-                text-decoration: none;
-            }
-
-            .btn-bubble-blue {
-                background: #E0F2FE;
-                color: #0284C7;
-                border: 2px solid #7DD3FC;
-            }
-
-            .btn-bubble-green {
-                background: #DCFCE7;
-                color: #16A34A;
-                border: 2px solid #86EFAC;
-            }
-
-            .btn-bubble-pink {
-                background: #FCE7F3;
-                color: #DB2777;
-                border: 2px solid #F9A8D4;
-            }
-
-            .btn-bubble-orange {
-                background: #FEF3C7;
-                color: #D97706;
-                border: 2px solid #FCD34D;
-            }
-
-            /* Child Friendly Overrides */
-            body {
-                background-color: #EFF6FF !important;
-                background-image: radial-gradient(#DBEAFE 1px, transparent 1px) !important;
-                background-size: 20px 20px !important;
-                font-family: 'Fredoka', sans-serif !important;
-            }
-
-            h1,
-            h2,
-            h3,
-            h4,
-            h5,
-            h6 {
-                font-family: 'Fredoka', sans-serif !important;
-                font-weight: 500 !important;
-            }
-
-            .glass-panel {
-                background: white !important;
-                border: 1px solid white !important;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
-            }
-
-            .question-card {
-                background: #F8FAFC !important;
-                border: 2px solid #E2E8F0;
-                box-shadow: 0 4px 0 #E2E8F0;
-            }
-
-            #nav-links {
-                display: none !important;
-            }
-        </style>
-        {% endblock %}
-
-        {% block content %}
-
-        <div class="glass-panel" style="padding: 1.5rem;">
-            <!-- Title moved above buttons for better mobile stability -->
-            <h1 style="margin: 0 0 1rem 0; text-align: left;">Quiz: <span id="text-title"></span></h1>
-
-            <div
-                style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
-                <div style="display: flex; gap: 0.5rem;">
-                    <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-blue"
-                        style="padding: 0.4rem 0.8rem; font-size: 1rem;">A-</button>
-                    <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-blue"
-                        style="padding: 0.4rem 0.8rem; font-size: 1rem;">A+</button>
-                </div>
+            <div style="display: flex; gap: 0.4rem; padding: 0.2rem; border-radius: 50px;">
+                <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
+                    style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">A-</button>
+                <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
+                    style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A+</button>
             </div>
+</div>
+{% endblock %}
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Bubble Button Style */
+    .btn-bubble {
+        border-radius: 50px;
+        border: none;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        text-decoration: none;
+    }
 
-            <div id="quiz-container">
-                <!-- Questions loaded here -->
-            </div>
+    .btn-bubble-blue {
+        background: #E0F2FE;
+        color: #0284C7;
+        border: 2px solid #7DD3FC;
+    }
 
-            <div id="result-panel"
-                style="display: none; margin-top: 2rem; padding: 1.5rem; border-radius: var(--radius); background: rgba(255,255,255,0.95); text-align: center; border: 3px solid #7DD3FC;">
-                <h2 style="font-size: 2rem; margin-bottom: 1.5rem;">Resultado: <span id="score-display"
-                        style="color: #0284C7;"></span></h2>
-                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="resetQuiz()" class="btn-bubble btn-bubble-blue"
-                        style="padding: 0.8rem 2rem; font-size: 1.1rem;">Rehacer Quiz</button>
-                    <a href="/dashboard" class="btn-bubble btn-bubble-pink"
-                        style="padding: 0.8rem 2rem; font-size: 1.1rem;">Volver a Lecturas</a>
-                </div>
-            </div>
+    .btn-bubble-green {
+        background: #DCFCE7;
+        color: #16A34A;
+        border: 2px solid #86EFAC;
+    }
 
-            <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-                <button id="submit-quiz" class="btn-bubble btn-bubble-green"
-                    style="padding: 0.8rem 2rem; font-size: 1.1rem;">enviar respuestas</button>
-            </div>
+    .btn-bubble-pink {
+        background: #FCE7F3;
+        color: #DB2777;
+        border: 2px solid #F9A8D4;
+    }
+
+    .btn-bubble-orange {
+        background: #FEF3C7;
+        color: #D97706;
+        border: 2px solid #FCD34D;
+    }
+
+    /* Child Friendly Overrides */
+    body {
+        background-color: #EFF6FF !important;
+        background-image: radial-gradient(#DBEAFE 1px, transparent 1px) !important;
+        background-size: 20px 20px !important;
+        font-family: 'Fredoka', sans-serif !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Fredoka', sans-serif !important;
+        font-weight: 500 !important;
+    }
+
+    .glass-panel {
+        background: white !important;
+        border: 1px solid white !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
+    }
+
+    .question-card {
+        background: #F8FAFC !important;
+        border: 2px solid #E2E8F0;
+        box-shadow: 0 4px 0 #E2E8F0;
+    }
+
+    #nav-links {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="glass-panel" style="padding: 1.5rem;">
+    <!-- Title moved above buttons for better mobile stability -->
+    <h1 style="margin: 0 0 1rem 0; text-align: left;">Quiz: <span id="text-title"></span></h1>
+
+
+    <div id="quiz-container">
+        <!-- Questions loaded here -->
+    </div>
+
+    <div id="result-panel"
+        style="display: none; margin-top: 2rem; padding: 1.5rem; border-radius: var(--radius); background: rgba(255,255,255,0.95); text-align: center; border: 3px solid #7DD3FC;">
+        <h2 style="font-size: 2rem; margin-bottom: 1.5rem;">Resultado: <span id="score-display"
+                style="color: #0284C7;"></span></h2>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button onclick="resetQuiz()" class="btn-bubble btn-bubble-blue"
+                style="padding: 0.8rem 2rem; font-size: 1.1rem;">Rehacer Quiz</button>
+            <a href="/dashboard" class="btn-bubble btn-bubble-pink"
+                style="padding: 0.8rem 2rem; font-size: 1.1rem;">Volver a Lecturas</a>
         </div>
+    </div>
 
-        <script>
-            const textId = parseInt("{{ text_id }}");
-            let questionsData = [];
+    <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+        <button id="submit-quiz" class="btn-bubble btn-bubble-green"
+            style="padding: 0.8rem 2rem; font-size: 1.1rem;">enviar respuestas</button>
+    </div>
+</div>
 
-            async function loadQuiz() {
-                const token = localStorage.getItem('token');
-                axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+<script>
+    const textId = parseInt("{{ text_id }}");
+    let questionsData = [];
 
-                try {
-                    // Get text title
-                    const textRes = await axios.get(`/reading/texts/${textId}`);
-                    document.getElementById('text-title').innerText = textRes.data.title;
+    async function loadQuiz() {
+        const token = localStorage.getItem('token');
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 
-                    // Get questions
-                    const qRes = await axios.get(`/reading/texts/${textId}/questions`);
-                    questionsData = qRes.data;
+        try {
+            // Get text title
+            const textRes = await axios.get(`/reading/texts/${textId}`);
+            document.getElementById('text-title').innerText = textRes.data.title;
 
-                    const container = document.getElementById('quiz-container');
+            // Get questions
+            const qRes = await axios.get(`/reading/texts/${textId}/questions`);
+            questionsData = qRes.data;
 
-                    let scorableCount = 0;
+            const container = document.getElementById('quiz-container');
 
-                    questionsData.forEach((q, index) => {
-                        const qDiv = document.createElement('div');
-                        qDiv.className = 'question-card';
-                        qDiv.id = `q-card-${q.id}`;
-                        qDiv.style.marginBottom = '2rem';
-                        qDiv.style.padding = '1rem';
-                        qDiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
-                        qDiv.style.borderRadius = '12px';
+            let scorableCount = 0;
 
-                        // Check for special types
-                        // Check for special types via Category (Fallback to content if category missing)
-                        const cat = (q.category || "").toUpperCase();
-                        const isWritten = cat.includes("ESCRITA");
-                        const isReflexive = cat.includes("REFLEXIVA");
-                        const isOral = cat.includes("ORAL");
-                        const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
+            questionsData.forEach((q, index) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'question-card';
+                qDiv.id = `q-card-${q.id}`;
+                qDiv.style.marginBottom = '2rem';
+                qDiv.style.padding = '1rem';
+                qDiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                qDiv.style.borderRadius = '12px';
 
-                        // Show input for Written/Reflexive
-                        // Show only instruction for Oral/Ludica
-                        // Show options for others (Literal, Referential, Vocab, True/False)
+                // Check for special types
+                // Check for special types via Category (Fallback to content if category missing)
+                const cat = (q.category || "").toUpperCase();
+                const isWritten = cat.includes("ESCRITA");
+                const isReflexive = cat.includes("REFLEXIVA");
+                const isOral = cat.includes("ORAL");
+                const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
 
-                        if (isWritten || isReflexive) {
-                            qDiv.innerHTML = `
-                        <h3 style="font-size: 1.6rem;">${index + 1}. ${q.question_content}</h3>
-                        <textarea id="ans_${q.id}" rows="4" style="width: 100%; border-radius: 8px; padding: 0.5rem; margin-top: 0.5rem;" placeholder="Escribe tu respuesta aquí..."></textarea>
+                // Show input for Written/Reflexive
+                // Show only instruction for Oral/Ludica
+                // Show options for others (Literal, Referential, Vocab, True/False)
+
+                if (isWritten || isReflexive) {
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
+                        <textarea id="ans_${q.id}" rows="4" style="width: 100%; border-radius: 8px; padding: 0.5rem; margin-top: 0.5rem; font-size: ${currentOptSize}rem;" placeholder="Escribe tu respuesta aquí..."></textarea>
                     `;
-                        } else if (isOral || isLudica) {
-                            qDiv.innerHTML = `
-                        <h3 style="font-size: 1.6rem;">${index + 1}. ${q.question_content}</h3>
-                        <div style="margin-top: 0.5rem; font-style: italic; color: #666;">
+                } else if (isOral || isLudica) {
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
+                        <div style="margin-top: 0.5rem; font-style: italic; color: #666; font-size: ${currentOptSize}rem;">
                             (Actividad para realizar en clase o en casa. No se evalúa aquí.)
                         </div>
                     `;
-                        } else {
-                            // Standard Test Question
-                            let optionsHtml = '';
-                            q.options.forEach((opt, optedIndex) => {
-                                optionsHtml += `
+                } else {
+                    // Standard Test Question
+                    let optionsHtml = '';
+                    q.options.forEach((opt, optedIndex) => {
+                        optionsHtml += `
                             <div id="opt-div-${q.id}-${optedIndex}" style="margin: 0.5rem 0; display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem;">
                                 <input type="radio" name="q_${q.id}" value="${optedIndex}" id="q_${q.id}_${optedIndex}" style="width: auto; margin-right: 0.5rem;">
-                                <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer; font-size: 1.3rem;">${opt}</label>
+                                <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer; font-size: ${currentOptSize}rem;">${opt}</label>
                             </div>
                         `;
-                            });
+                    });
 
-                            qDiv.innerHTML = `
-                        <h3 style="font-size: 1.6rem;">${index + 1}. ${q.question_content}</h3>
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
                         ${optionsHtml}
                     `;
-                        }
-
-                        container.appendChild(qDiv);
-                    });
-
-                } catch (error) {
-                    console.error(error);
-                    alert("Error cargando preguntas");
-                }
-            }
-
-            document.getElementById('submit-quiz').addEventListener('click', async () => {
-                // Disable button to prevent double submit
-                const submitBtn = document.getElementById('submit-quiz');
-                if (submitBtn.innerText === "Volver a Lecturas") {
-                    window.location.href = '/dashboard';
-                    return;
                 }
 
-                let score = 0;
-                let scorableQuestions = 0;
-
-                questionsData.forEach(q => {
-                    const cat = (q.category || "").toUpperCase();
-                    const isWritten = cat.includes("ESCRITA");
-                    const isReflexive = cat.includes("REFLEXIVA");
-                    const isOral = cat.includes("ORAL");
-                    const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
-
-                    // If it is one of the excluded types, skip scoring logic
-                    if (isWritten || isReflexive || isOral || isLudica) {
-                        // For Written/Reflexive, we might want to save the answer, but for now just disable input
-                        if (isWritten || isReflexive) {
-                            const txt = document.getElementById(`ans_${q.id}`);
-                            if (txt) txt.disabled = true;
-                        }
-                        return;
-                    }
-
-                    scorableQuestions++;
-
-                    const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
-                    const correctIndex = q.correct_answer;
-
-                    // Highlight Correct Answer (Green)
-                    const correctDiv = document.getElementById(`opt-div-${q.id}-${correctIndex}`);
-                    if (correctDiv) {
-                        correctDiv.style.backgroundColor = '#dcfce7'; // green-100
-                        correctDiv.style.border = '1px solid #22c55e';
-                        correctDiv.style.color = '#15803d';
-                    }
-
-                    if (selected) {
-                        const selectedVal = parseInt(selected.value);
-                        if (selectedVal === correctIndex) {
-                            score++;
-                        } else {
-                            // Highlight Incorrect Selection (Red)
-                            const wrongDiv = document.getElementById(`opt-div-${q.id}-${selectedVal}`);
-                            if (wrongDiv) {
-                                wrongDiv.style.backgroundColor = '#fee2e2'; // red-100
-                                wrongDiv.style.border = '1px solid #ef4444';
-                                wrongDiv.style.color = '#b91c1c';
-                            }
-                        }
-                    } else {
-                        // Not answered
-                        // Optional: Mark question title as unanswered?
-                    }
-
-                    // Disable inputs
-                    const inputs = document.getElementsByName(`q_${q.id}`);
-                    inputs.forEach(input => input.disabled = true);
-                });
-
-                // Avoid division by zero if all questions are non-scorable
-                if (scorableQuestions === 0) scorableQuestions = 1;
-
-                const finalScore = (score / scorableQuestions) * 100;
-                const timeSpent = parseFloat(localStorage.getItem(`time_spent_${textId}`)) || 0;
-
-                // Display Result
-                document.getElementById('submit-quiz').style.display = 'none';
-                const resultPanel = document.getElementById('result-panel');
-                resultPanel.style.display = 'block';
-                document.getElementById('score-display').innerText = `${score} / ${scorableQuestions}`;
-
-                // Scroll to bottom
-                resultPanel.scrollIntoView({ behavior: 'smooth' });
-
-                // Collect Details (Q_ID -> isCorrect)
-                let details = {};
-                questionsData.forEach(q => {
-                    // Only for scorable questions
-                    // Only for scorable questions
-                    const cat = (q.category || "").toUpperCase();
-                    const isScorable = !(cat.includes("ESCRITA") ||
-                        cat.includes("REFLEXIVA") ||
-                        cat.includes("ORAL") ||
-                        cat.includes("LÚDICA") ||
-                        cat.includes("LUDICA"));
-
-                    if (isScorable) {
-                        const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
-                        const correctIndex = q.correct_answer;
-                        let isCorrect = false;
-                        if (selected && parseInt(selected.value) === correctIndex) {
-                            isCorrect = true;
-                        }
-                        details[q.id] = isCorrect;
-                    }
-                });
-
-                try {
-                    await axios.post('/reading/attempt', {
-                        text_id: textId,
-                        time_spent_seconds: timeSpent,
-                        score: finalScore,
-                        details: details
-                    });
-                } catch (e) {
-                    console.error('Error enviando resultados', e);
-                }
+                container.appendChild(qDiv);
             });
 
-            function resetQuiz() {
-                // 1. Hide results, show submit button
-                document.getElementById('result-panel').style.display = 'none';
-                document.getElementById('submit-quiz').style.display = 'inline-flex';
+        } catch (error) {
+            console.error(error);
+            alert("Error cargando preguntas");
+        }
+    }
 
-                // 2. Reset all questions
-                questionsData.forEach(q => {
-                    // Clear and Enable textareas
-                    const textarea = document.getElementById(`ans_${q.id}`);
-                    if (textarea) {
-                        textarea.value = '';
-                        textarea.disabled = false;
+    document.getElementById('submit-quiz').addEventListener('click', async () => {
+        // Disable button to prevent double submit
+        const submitBtn = document.getElementById('submit-quiz');
+        if (submitBtn.innerText === "Volver a Lecturas") {
+            window.location.href = '/dashboard';
+            return;
+        }
+
+        let score = 0;
+        let scorableQuestions = 0;
+
+        questionsData.forEach(q => {
+            const cat = (q.category || "").toUpperCase();
+            const isWritten = cat.includes("ESCRITA");
+            const isReflexive = cat.includes("REFLEXIVA");
+            const isOral = cat.includes("ORAL");
+            const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
+
+            // If it is one of the excluded types, skip scoring logic
+            if (isWritten || isReflexive || isOral || isLudica) {
+                // For Written/Reflexive, we might want to save the answer, but for now just disable input
+                if (isWritten || isReflexive) {
+                    const txt = document.getElementById(`ans_${q.id}`);
+                    if (txt) txt.disabled = true;
+                }
+                return;
+            }
+
+            scorableQuestions++;
+
+            const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+            const correctIndex = q.correct_answer;
+
+            // Highlight Correct Answer (Green)
+            const correctDiv = document.getElementById(`opt-div-${q.id}-${correctIndex}`);
+            if (correctDiv) {
+                correctDiv.style.backgroundColor = '#dcfce7'; // green-100
+                correctDiv.style.border = '1px solid #22c55e';
+                correctDiv.style.color = '#15803d';
+            }
+
+            if (selected) {
+                const selectedVal = parseInt(selected.value);
+                if (selectedVal === correctIndex) {
+                    score++;
+                } else {
+                    // Highlight Incorrect Selection (Red)
+                    const wrongDiv = document.getElementById(`opt-div-${q.id}-${selectedVal}`);
+                    if (wrongDiv) {
+                        wrongDiv.style.backgroundColor = '#fee2e2'; // red-100
+                        wrongDiv.style.border = '1px solid #ef4444';
+                        wrongDiv.style.color = '#b91c1c';
                     }
-
-                    // Clear and Enable Radios
-                    const radios = document.getElementsByName(`q_${q.id}`);
-                    radios.forEach(r => {
-                        r.checked = false;
-                        r.disabled = false;
-                    });
-
-                    // Reset styling on option divs
-                    q.options.forEach((opt, idx) => {
-                        const optDiv = document.getElementById(`opt-div-${q.id}-${idx}`);
-                        if (optDiv) {
-                            optDiv.style.backgroundColor = 'transparent';
-                            optDiv.style.border = 'none';
-                            optDiv.style.color = 'inherit';
-                        }
-                    });
-                });
-
-                // 3. Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } else {
+                // Not answered
+                // Optional: Mark question title as unanswered?
             }
 
-            loadQuiz();
+            // Disable inputs
+            const inputs = document.getElementsByName(`q_${q.id}`);
+            inputs.forEach(input => input.disabled = true);
+        });
 
-            let currentQSize = 1.2;
-            let currentOptSize = 1.2;
+        // Avoid division by zero if all questions are non-scorable
+        if (scorableQuestions === 0) scorableQuestions = 1;
 
-            function adjustFontSize(change) {
-                currentQSize += change;
-                currentOptSize += change;
+        const finalScore = (score / scorableQuestions) * 100;
+        const timeSpent = parseFloat(localStorage.getItem(`time_spent_${textId}`)) || 0;
 
-                // Clamp
-                if (currentQSize < 1.0) currentQSize = 1.0;
-                if (currentQSize > 3.0) currentQSize = 3.0;
-                if (currentOptSize < 1.0) currentOptSize = 1.0;
-                if (currentOptSize > 3.0) currentOptSize = 3.0;
+        // Display Result
+        document.getElementById('submit-quiz').style.display = 'none';
+        const resultPanel = document.getElementById('result-panel');
+        resultPanel.style.display = 'block';
+        document.getElementById('score-display').innerText = `${score} / ${scorableQuestions}`;
 
-                // Apply to all headers
-                document.querySelectorAll('.question-card h3').forEach(el => {
-                    el.style.fontSize = currentQSize + 'rem';
-                });
+        // Scroll to bottom
+        resultPanel.scrollIntoView({ behavior: 'smooth' });
 
-                // Apply to all labels
-                document.querySelectorAll('.question-card label').forEach(el => {
-                    el.style.fontSize = currentOptSize + 'rem';
-                });
+        // Collect Details (Q_ID -> isCorrect)
+        let details = {};
+        questionsData.forEach(q => {
+            // Only for scorable questions
+            // Only for scorable questions
+            const cat = (q.category || "").toUpperCase();
+            const isScorable = !(cat.includes("ESCRITA") ||
+                cat.includes("REFLEXIVA") ||
+                cat.includes("ORAL") ||
+                cat.includes("LÚDICA") ||
+                cat.includes("LUDICA"));
+
+            if (isScorable) {
+                const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                const correctIndex = q.correct_answer;
+                let isCorrect = false;
+                if (selected && parseInt(selected.value) === correctIndex) {
+                    isCorrect = true;
+                }
+                details[q.id] = isCorrect;
             }
-        </script>
-        {% endblock %}
+        });
+
+        try {
+            await axios.post('/reading/attempt', {
+                text_id: textId,
+                time_spent_seconds: timeSpent,
+                score: finalScore,
+                details: details
+            });
+        } catch (e) {
+            console.error('Error enviando resultados', e);
+        }
+    });
+
+    function resetQuiz() {
+        // 1. Hide results, show submit button
+        document.getElementById('result-panel').style.display = 'none';
+        document.getElementById('submit-quiz').style.display = 'inline-flex';
+
+        // 2. Reset all questions
+        questionsData.forEach(q => {
+            // Clear and Enable textareas
+            const textarea = document.getElementById(`ans_${q.id}`);
+            if (textarea) {
+                textarea.value = '';
+                textarea.disabled = false;
+            }
+
+            // Clear and Enable Radios
+            const radios = document.getElementsByName(`q_${q.id}`);
+            radios.forEach(r => {
+                r.checked = false;
+                r.disabled = false;
+            });
+
+            // Reset styling on option divs
+            q.options.forEach((opt, idx) => {
+                const optDiv = document.getElementById(`opt-div-${q.id}-${idx}`);
+                if (optDiv) {
+                    optDiv.style.backgroundColor = 'transparent';
+                    optDiv.style.border = 'none';
+                    optDiv.style.color = 'inherit';
+                }
+            });
+        });
+
+        // 3. Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    loadQuiz();
+
+    let currentQSize = 1.8;
+    let currentOptSize = 1.8;
+
+    function adjustFontSize(change) {
+        currentQSize += change;
+        currentOptSize += change;
+
+        // Clamp
+        if (currentQSize < 1.0) currentQSize = 1.0;
+        if (currentQSize > 3.0) currentQSize = 3.0;
+        if (currentOptSize < 1.0) currentOptSize = 1.0;
+        if (currentOptSize > 3.0) currentOptSize = 3.0;
+
+        // Apply to all headers
+        document.querySelectorAll('.question-card h3').forEach(el => {
+            el.style.fontSize = currentQSize + 'rem';
+        });
+
+        // Apply to all labels
+        document.querySelectorAll('.question-card label').forEach(el => {
+            el.style.fontSize = currentOptSize + 'rem';
+        });
+    }
+</script>
+{% endblock %}

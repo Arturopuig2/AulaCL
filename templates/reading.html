@@ -76,6 +76,13 @@
         font-weight: 500 !important;
     }
 
+    .glass-panel {
+        background: white !important;
+        border: 1px solid white !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
+    }
+
+
     body {
         background-color: white !important;
         background-image: none !important;
@@ -93,546 +100,544 @@
 {% block navbar_logo %}{% endblock %}
 
 {% block navbar_actions %}
-<a href="/dashboard" class="btn-bubble btn-bubble-pink"
-    style="text-decoration: none; padding: 0.5rem 1.5rem; font-size: 1rem;">
-    < volver </a>
-        {% endblock %}
+<div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; flex: 1;">
+    <a href="/dashboard" class="btn-bubble btn-bubble-pink"
+        style="text-decoration: none; padding: 0.5rem 1.2rem; font-size: 1rem; margin-right: auto;">
+        < volver </a>
 
-        {% block content %}
+            <!-- Timer Bubble -->
+            <div class="btn-bubble btn-bubble-pink" style="padding: 0.5rem 1.2rem; font-size: 1rem; cursor: pointer;"
+                onclick="toggleTimer()" title="Clic para ocultar/mostrar tiempo">
+                <span id="timer" style="font-family: 'Fredoka'; display: none; margin-right: 0.3rem;">00:00</span>
+                <span>⏱</span>
+            </div>
 
-        <div style="padding: 1.5rem;">
-            <!-- Title moved above buttons for better mobile stability -->
-            <h1 id="text-title"
-                style="margin: 0 0 1.5rem 0; color: #1e293b; font-size: 2rem; letter-spacing: -0.5px; text-align: left;">
-                Cargando...
-            </h1>
+            <!-- Toolbar Island -->
+            <div style="display: flex; gap: 0.3rem; padding: 0.2rem; border-radius: 50px;">
+                <button onclick="openPdfModal()" class="btn-bubble btn-bubble-blue"
+                    style="font-size: 1rem; padding: 0.5rem 1.2rem;" title="Descargar Ficha PDF">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    PDF
+                </button>
 
-            <div
-                style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.4rem;">
-                <!-- Timer Bubble -->
-                <div class="btn-bubble btn-bubble-pink"
-                    style="padding: 0.4rem 0.8rem; font-size: 0.9rem; cursor: pointer;" onclick="toggleTimer()"
-                    title="Clic para ocultar/mostrar tiempo">
-                    <span id="timer"
-                        style="font-family: 'Fredoka'; min-width: 60px; text-align: right; display: none;">00:00</span>
-                    <span>⏱</span>
-                </div>
+                <button onclick="toggleFontStyle()" class="btn-bubble btn-bubble-orange"
+                    style="font-size: 1.1rem; padding: 0.5rem 1.2rem; font-family: 'AulaCNova', cursive !important; line-height: 1; text-transform: none;"
+                    title="Letra Ligada">
+                    abc
+                </button>
 
-                <!-- Toolbar Island -->
-                <div style="display: flex; gap: 0.4rem; padding: 0.3rem; background: white; border-radius: 50px;">
-                    <button onclick="openPdfModal()" class="btn-bubble btn-bubble-blue"
-                        style="font-size: 0.9rem; padding: 0.4rem 0.8rem;" title="Descargar Ficha PDF">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        PDF
-                    </button>
-
-                    <button onclick="toggleFontStyle()" class="btn-bubble btn-bubble-orange"
-                        style="font-size: 1.1rem; padding: 0.4rem 0.8rem; font-family: 'AulaCNova', cursive !important; line-height: 1; text-transform: none;"
-                        title="Letra Ligada">
-                        abc
-                    </button>
-
-                    <div style="display: flex; gap: 0.1rem;">
-                        <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
-                            style="padding: 0.4rem 0.6rem; font-size: 0.8rem;">A-</button>
-                        <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
-                            style="padding: 0.4rem 0.6rem; font-size: 1rem;">A+</button>
-                    </div>
+                <div style="display: flex; gap: 0.4rem;">
+                    <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
+                        style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">A-</button>
+                    <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
+                        style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A+</button>
                 </div>
             </div>
-        </div>
+</div>
+{% endblock %}
 
-        <div id="illustration-container" style="text-align: center; margin-bottom: 1.5rem; display: none;">
-            <img id="text-illustration" src="" alt="Ilustración" style="max-height: 250px;">
-            <audio id="audio-player" controls style="width: 100%; display: none;">
-                <source id="audio-source" src="" type="audio/mpeg">
-                Tu navegador no soporta audio.
-            </audio>
-        </div>
+{% block content %}
 
-        <div id="text-content"
-            style="background: white; padding: 2rem; border-radius: var(--radius); line-height: 1.8; font-size: 1.2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); max-height: 60vh; overflow-y: auto;">
-            <div id="text-body">Cargando texto...</div>
-        </div>
+<div style="padding: 1.5rem;">
+    <!-- Title moved above buttons for better mobile stability -->
+    <h1 id="text-title"
+        style="margin: 0 0 1.5rem 0; color: #1e293b; font-size: 2.8rem; letter-spacing: -0.8px; text-align: left; line-height: 1.1;">
+        Cargando...
+    </h1>
 
-        </div>
+</div>
 
-        <div style="margin-top: 2rem; text-align: right; padding-bottom: 2rem;">
-            <button id="finish-btn" class="btn-bubble btn-bubble-green" style="font-size: 1rem; padding: 0.8rem 2rem;">
-                Preguntas >
+<div id="illustration-container" style="text-align: center; margin-bottom: 1.5rem; display: none;">
+    <img id="text-illustration" src="" alt="Ilustración" style="max-height: 250px;">
+    <audio id="audio-player" controls style="width: 100%; display: none;">
+        <source id="audio-source" src="" type="audio/mpeg">
+        Tu navegador no soporta audio.
+    </audio>
+</div>
+
+<div id="text-content"
+    style="background: white; padding: 2rem; border-radius: var(--radius); line-height: 1.8; font-size: 1.2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); max-height: 60vh; overflow-y: auto;">
+    <div id="text-body">Cargando texto...</div>
+</div>
+
+</div>
+
+<div style="margin-top: 2rem; text-align: right; padding-bottom: 2rem; padding-right: 1.5rem;">
+    <button id="finish-btn" class="btn-bubble btn-bubble-green" style="font-size: 1rem; padding: 0.8rem 2rem;">
+        Preguntas >
+    </button>
+</div>
+
+<!-- PDF Options Modal -->
+<div id="pdf-options-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div class="glass-panel" onclick="event.stopPropagation()"
+        style="background: white; padding: 2rem; max-width: 400px; width: 90%; border-radius: 30px; border: 3px solid #E2E8F0; font-family: 'Fredoka', sans-serif;">
+        <h2 style="margin-bottom: 2rem; text-align: center; font-family: 'Fredoka', sans-serif;">
+            Opciones de
+            Ficha PDF</h2>
+
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 1rem; font-weight: 500; font-family: 'Fredoka';">Tipo
+                de Letra</label>
+            <div style="display: flex; gap: 0.8rem; margin-bottom: 0.8rem;">
+                <button type="button" class="btn-bubble btn-bubble-blue" style="flex: 1; padding: 0.6rem;"
+                    onclick="selectPdfFont(this, 'imprenta')" id="btn-font-imprenta">
+                    Imprenta
+                </button>
+                <button type="button" class="btn-bubble btn-bubble-blue"
+                    style="flex: 1; padding: 0.6rem; font-family: 'AulaCNova', cursive !important;"
+                    onclick="selectPdfFont(this, 'ligada')" id="btn-font-ligada">
+                    Ligada
+                </button>
+            </div>
+            <button type="button" class="btn-bubble btn-bubble-blue"
+                style="width: 100%; text-transform: uppercase; padding: 0.6rem;"
+                onclick="selectPdfFont(this, 'mayuscula')" id="btn-font-mayuscula">
+                MAYÚSCULA
             </button>
         </div>
 
-        <!-- PDF Options Modal -->
-        <div id="pdf-options-modal"
-            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
-            <div class="glass-panel" onclick="event.stopPropagation()"
-                style="background: white; padding: 2rem; max-width: 400px; width: 90%; border-radius: 30px; border: 3px solid #E2E8F0; font-family: 'Fredoka', sans-serif;">
-                <h2 style="margin-bottom: 2rem; text-align: center; font-family: 'Fredoka', sans-serif;">
-                    Opciones de
-                    Ficha PDF</h2>
-
-                <div class="form-group">
-                    <label style="display: block; margin-bottom: 1rem; font-weight: 500; font-family: 'Fredoka';">Tipo
-                        de Letra</label>
-                    <div style="display: flex; gap: 0.8rem; margin-bottom: 0.8rem;">
-                        <button type="button" class="btn-bubble btn-bubble-blue" style="flex: 1; padding: 0.6rem;"
-                            onclick="selectPdfFont(this, 'imprenta')" id="btn-font-imprenta">
-                            Imprenta
-                        </button>
-                        <button type="button" class="btn-bubble btn-bubble-blue"
-                            style="flex: 1; padding: 0.6rem; font-family: 'AulaCNova', cursive !important;"
-                            onclick="selectPdfFont(this, 'ligada')" id="btn-font-ligada">
-                            Ligada
-                        </button>
-                    </div>
-                    <button type="button" class="btn-bubble btn-bubble-blue"
-                        style="width: 100%; text-transform: uppercase; padding: 0.6rem;"
-                        onclick="selectPdfFont(this, 'mayuscula')" id="btn-font-mayuscula">
-                        MAYÚSCULA
-                    </button>
-                </div>
-
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tamaño de
-                        Letra</label>
-                    <input type="range" min="1" max="4" value="3" class="slider" id="pdf-font-size"
-                        style="width: 100%;">
-                    <div
-                        style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
-                        <span>Pequeño</span>
-                        <span>Medio</span>
-                        <span>Grande</span>
-                        <span>Gigante</span>
-                    </div>
-                </div>
-
-                <div style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: center;">
-                    <button onclick="confirmDownloadPDF()" class="btn-bubble btn-bubble-green"
-                        style="padding: 0.7rem 1.8rem; font-size: 1.1rem;">descargar</button>
-                    <button onclick="closePdfModal()" class="btn-bubble btn-bubble-pink"
-                        style="padding: 0.7rem 1.8rem; font-size: 1.1rem;">cancelar</button>
-                </div>
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tamaño de
+                Letra</label>
+            <input type="range" min="1" max="4" value="3" class="slider" id="pdf-font-size" style="width: 100%;">
+            <div
+                style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+                <span>Pequeño</span>
+                <span>Medio</span>
+                <span>Grande</span>
+                <span>Gigante</span>
             </div>
         </div>
 
-        <script>
-            const textId = parseInt("{{ text_id }}");
-            let startTime;
-            let timerInterval;
-            let currentFontSize = 1.2; // Default rem size
+        <div style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: center;">
+            <button onclick="confirmDownloadPDF()" class="btn-bubble btn-bubble-green"
+                style="padding: 0.7rem 1.8rem; font-size: 1.1rem;">descargar</button>
+            <button onclick="closePdfModal()" class="btn-bubble btn-bubble-pink"
+                style="padding: 0.7rem 1.8rem; font-size: 1.1rem;">cancelar</button>
+        </div>
+    </div>
+</div>
 
-            // Karaoke Logic: Rough timestamps for Demo (Text ID 2)
-            // Adjusted: Shifted +4s based on user feedback (was too fast)
-            // Karaoke Logic: Timestamps calibrated by user (Text ID 2)
-            // Fixed: Prepend 0-11.27s for the first sentence
-            const demoTimestamps = [
-                { "start": 0, "end": 11.27 },
-                { "start": 11.27, "end": 17.61 },
-                { "start": 17.61, "end": 25.6 },
-                { "start": 25.6, "end": 30.49 },
-                { "start": 30.49, "end": 34.88 },
-                { "start": 34.88, "end": 39.74 },
-                { "start": 39.74, "end": 48.17 },
-                { "start": 48.17, "end": 53.89 },
-                { "start": 53.89, "end": 61.14 },
-                { "start": 61.14, "end": 68.64 },
-                { "start": 68.64, "end": 73.45 },
-                { "start": 73.45, "end": 79.45 },
-                { "start": 79.45, "end": 85.39 },
-                { "start": 85.39, "end": 91.8 },
-                { "start": 91.8, "end": 97.88 },
-                { "start": 97.88, "end": 105.87 },
-                { "start": 105.87, "end": 116.03 },
-                { "start": 116.03, "end": 120.64 },
-                { "start": 120.64, "end": 128.52 },
-                { "start": 128.52, "end": 135.31 },
-                { "start": 135.31, "end": 136.96 },
-                { "start": 136.96, "end": 143.8 },
-                { "start": 143.8, "end": 146.54 },
-                { "start": 146.54, "end": 152.66 },
-                { "start": 152.66, "end": 159.55 },
-                { "start": 159.55, "end": 165.12 },
-                { "start": 165.12, "end": 171.52 }
-            ];
+<script>
+    const textId = parseInt("{{ text_id }}");
+    let startTime;
+    let timerInterval;
+    let currentFontSize = 1.8; // Increased default rem size (was 1.5)
+    document.getElementById('text-content').style.fontSize = currentFontSize + 'rem';
 
-            function adjustFontSize(change) {
-                currentFontSize += change;
-                if (currentFontSize < 0.8) currentFontSize = 0.8;
-                if (currentFontSize > 3.0) currentFontSize = 3.0;
-                document.getElementById('text-content').style.fontSize = currentFontSize + 'rem';
+    // Karaoke Logic: Rough timestamps for Demo (Text ID 2)
+    // Adjusted: Shifted +4s based on user feedback (was too fast)
+    // Karaoke Logic: Timestamps calibrated by user (Text ID 2)
+    // Fixed: Prepend 0-11.27s for the first sentence
+    const demoTimestamps = [
+        { "start": 0, "end": 11.27 },
+        { "start": 11.27, "end": 17.61 },
+        { "start": 17.61, "end": 25.6 },
+        { "start": 25.6, "end": 30.49 },
+        { "start": 30.49, "end": 34.88 },
+        { "start": 34.88, "end": 39.74 },
+        { "start": 39.74, "end": 48.17 },
+        { "start": 48.17, "end": 53.89 },
+        { "start": 53.89, "end": 61.14 },
+        { "start": 61.14, "end": 68.64 },
+        { "start": 68.64, "end": 73.45 },
+        { "start": 73.45, "end": 79.45 },
+        { "start": 79.45, "end": 85.39 },
+        { "start": 85.39, "end": 91.8 },
+        { "start": 91.8, "end": 97.88 },
+        { "start": 97.88, "end": 105.87 },
+        { "start": 105.87, "end": 116.03 },
+        { "start": 116.03, "end": 120.64 },
+        { "start": 120.64, "end": 128.52 },
+        { "start": 128.52, "end": 135.31 },
+        { "start": 135.31, "end": 136.96 },
+        { "start": 136.96, "end": 143.8 },
+        { "start": 143.8, "end": 146.54 },
+        { "start": 146.54, "end": 152.66 },
+        { "start": 152.66, "end": 159.55 },
+        { "start": 159.55, "end": 165.12 },
+        { "start": 165.12, "end": 171.52 }
+    ];
+
+    function adjustFontSize(change) {
+        currentFontSize += change;
+        if (currentFontSize < 0.8) currentFontSize = 0.8;
+        if (currentFontSize > 3.0) currentFontSize = 3.0;
+        document.getElementById('text-content').style.fontSize = currentFontSize + 'rem';
+    }
+
+    function toggleFontStyle() {
+        const content = document.getElementById('text-content');
+        if (content.style.fontFamily.includes('AulaCNova')) {
+            content.style.fontFamily = "'Inter', sans-serif";
+            currentFontSize = 1.8; // Increased default base (was 1.5)
+            content.style.fontSize = currentFontSize + 'rem';
+        } else {
+            content.style.fontFamily = "'AulaCNova', cursive";
+            currentFontSize = 2.4; // Scaled up for ligada (was 2.0)
+            content.style.fontSize = currentFontSize + 'rem';
+        }
+    }
+
+    function updateTimer() {
+        const now = new Date();
+        const diff = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+        const seconds = (diff % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+    }
+
+    function toggleTimer() {
+        const timerSpan = document.getElementById('timer');
+        if (timerSpan.style.display === 'none') {
+            timerSpan.style.display = 'inline-block';
+        } else {
+            timerSpan.style.display = 'none';
+        }
+    }
+
+    // Process text into sentences for karaoke
+    function processTextContent(text) {
+        // Robust splitting for various newline formats
+        const lines = text.split(/\r?\n/);
+        let htmlContent = '';
+        let globalIndex = 0;
+
+        lines.forEach(line => {
+            if (line.trim() === '') {
+                htmlContent += '<br><br>';
+                return;
             }
 
-            function toggleFontStyle() {
-                const content = document.getElementById('text-content');
-                if (content.style.fontFamily.includes('AulaCNova')) {
-                    content.style.fontFamily = "'Inter', sans-serif";
-                    currentFontSize = 1.2;
-                    content.style.fontSize = currentFontSize + 'rem';
-                } else {
-                    content.style.fontFamily = "'AulaCNova', cursive";
-                    currentFontSize = 1.8;
-                    content.style.fontSize = currentFontSize + 'rem';
-                }
+            // Wrap content
+            htmlContent += `<span id="sent-${globalIndex}" class="audio-sentence">${line}</span><br>`;
+            globalIndex++;
+        });
+
+        return htmlContent;
+    }
+
+    // --- TTS LOGIC ---
+    let ttsActive = false;
+    let ttsUtterance = null;
+    let currentSentenceIndex = 0;
+    let sentencesElements = [];
+
+    function stopTTS() {
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            window.speechSynthesis.cancel();
+        }
+        ttsActive = false;
+        // Reset highlights
+        document.querySelectorAll('.audio-sentence').forEach(span => span.classList.remove('active-highlight'));
+        const btn = document.getElementById('btn-tts');
+        if (btn) btn.innerHTML = "🔊 Leer (IA)";
+    }
+
+    function playTTS() {
+        if (ttsActive) {
+            stopTTS();
+            return;
+        }
+
+        const btn = document.getElementById('btn-tts');
+        if (btn) btn.innerHTML = "⏹ Detener";
+        ttsActive = true;
+
+        sentencesElements = Array.from(document.querySelectorAll('.audio-sentence'));
+        currentSentenceIndex = 0;
+        speakNextSentence();
+    }
+
+    function speakNextSentence() {
+        if (!ttsActive) return;
+        if (currentSentenceIndex >= sentencesElements.length) {
+            stopTTS();
+            return;
+        }
+
+        const span = sentencesElements[currentSentenceIndex];
+        const text = span.innerText;
+
+        // Highlight
+        document.querySelectorAll('.audio-sentence').forEach(s => s.classList.remove('active-highlight'));
+        span.classList.add('active-highlight');
+        span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Speak
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        // Language Map
+        const langMap = {
+            'es': 'es-ES',
+            'en': 'en-GB', // or en-US
+            'fr': 'fr-FR',
+            'val': 'ca-ES' // Valencian/Catalan
+        };
+        // Global textData should be accessible or passed. 
+        // We need to store textData globally in loadText
+        const langCode = window.currentTextData ? window.currentTextData.language : 'es';
+        utterance.lang = langMap[langCode] || 'es-ES';
+
+        utterance.rate = 0.9; // Slightly slower for kids
+
+        utterance.onend = () => {
+            currentSentenceIndex++;
+            speakNextSentence();
+        };
+
+        utterance.onerror = (e) => {
+            console.error("TTS Error", e);
+            stopTTS();
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    async function loadText() {
+        const token = localStorage.getItem('token');
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+
+        try {
+            const response = await axios.get(`/reading/texts/${textId}`);
+            const textData = response.data;
+            window.currentTextData = textData; // Store globally for TTS
+
+            document.getElementById('text-title').innerText = textData.title;
+
+            // Handle Illustration and Audio Container
+            const container = document.getElementById('illustration-container');
+            const img = document.getElementById('text-illustration');
+            const audioPlayer = document.getElementById('audio-player');
+
+            let showContainer = false;
+
+            if (textData.image_path) {
+                img.src = textData.image_path;
+                img.style.display = 'inline-block';
+                showContainer = true;
+            } else {
+                img.style.display = 'none';
             }
 
-            function updateTimer() {
-                const now = new Date();
-                const diff = Math.floor((now - startTime) / 1000);
-                const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
-                const seconds = (diff % 60).toString().padStart(2, '0');
-                document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+            if (textData.audio_path) {
+                // Use dedicated /audio mount point as it handles persistent disks better than /static
+                document.getElementById('audio-source').src = textData.audio_path.startsWith('/') ? textData.audio_path : "/" + textData.audio_path;
+                audioPlayer.load();
+                audioPlayer.style.display = 'block';
+                showContainer = true;
+            } else {
+                audioPlayer.style.display = 'none';
             }
 
-            function toggleTimer() {
-                const timerSpan = document.getElementById('timer');
-                if (timerSpan.style.display === 'none') {
-                    timerSpan.style.display = 'inline-block';
-                } else {
-                    timerSpan.style.display = 'none';
-                }
+            if (showContainer) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
             }
 
-            // Process text into sentences for karaoke
-            function processTextContent(text) {
-                // Robust splitting for various newline formats
-                const lines = text.split(/\r?\n/);
-                let htmlContent = '';
-                let globalIndex = 0;
-
-                lines.forEach(line => {
-                    if (line.trim() === '') {
-                        htmlContent += '<br><br>';
-                        return;
-                    }
-
-                    // Wrap content
-                    htmlContent += `<span id="sent-${globalIndex}" class="audio-sentence">${line}</span><br>`;
-                    globalIndex++;
-                });
-
-                return htmlContent;
+            if (textData.content) {
+                // ENABLE KARAOKE FORMATTING FOR ALL TEXTS
+                // This wraps lines in spans so we can highlight them via Audio or TTS
+                console.log("Enabling Karaoke Mode formatting...");
+                document.getElementById('text-body').innerHTML = processTextContent(textData.content);
+            } else {
+                document.getElementById('text-body').innerText = "No se pudo cargar el contenido.";
             }
 
-            // --- TTS LOGIC ---
-            let ttsActive = false;
-            let ttsUtterance = null;
-            let currentSentenceIndex = 0;
-            let sentencesElements = [];
+            // Button Container
+            const controlsDiv = document.querySelector('.glass-panel > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)');
 
-            function stopTTS() {
-                if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-                    window.speechSynthesis.cancel();
-                }
-                ttsActive = false;
-                // Reset highlights
-                document.querySelectorAll('.audio-sentence').forEach(span => span.classList.remove('active-highlight'));
-                const btn = document.getElementById('btn-tts');
-                if (btn) btn.innerHTML = "🔊 Leer (IA)";
-            }
+            // TTS Button Removed as per user request
 
-            function playTTS() {
-                if (ttsActive) {
-                    stopTTS();
-                    return;
-                }
+            if (textData.audio_path) {
+                // Background Music Logic
+                const bgMusic = new Audio('/static/audio/background_music.mp3');
+                bgMusic.loop = true;
+                bgMusic.volume = 0.04;
 
-                const btn = document.getElementById('btn-tts');
-                if (btn) btn.innerHTML = "⏹ Detener";
-                ttsActive = true;
-
-                sentencesElements = Array.from(document.querySelectorAll('.audio-sentence'));
-                currentSentenceIndex = 0;
-                speakNextSentence();
-            }
-
-            function speakNextSentence() {
-                if (!ttsActive) return;
-                if (currentSentenceIndex >= sentencesElements.length) {
-                    stopTTS();
-                    return;
-                }
-
-                const span = sentencesElements[currentSentenceIndex];
-                const text = span.innerText;
-
-                // Highlight
-                document.querySelectorAll('.audio-sentence').forEach(s => s.classList.remove('active-highlight'));
-                span.classList.add('active-highlight');
-                span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // Speak
-                const utterance = new SpeechSynthesisUtterance(text);
-
-                // Language Map
-                const langMap = {
-                    'es': 'es-ES',
-                    'en': 'en-GB', // or en-US
-                    'fr': 'fr-FR',
-                    'val': 'ca-ES' // Valencian/Catalan
+                audioPlayer.onplay = () => {
+                    bgMusic.play().catch(e => console.log("Background music blocked"));
+                    stopTTS(); // Stop TTS if Audio plays
                 };
-                // Global textData should be accessible or passed. 
-                // We need to store textData globally in loadText
-                const langCode = window.currentTextData ? window.currentTextData.language : 'es';
-                utterance.lang = langMap[langCode] || 'es-ES';
 
-                utterance.rate = 0.9; // Slightly slower for kids
-
-                utterance.onend = () => {
-                    currentSentenceIndex++;
-                    speakNextSentence();
+                audioPlayer.onpause = () => {
+                    bgMusic.pause();
                 };
 
-                utterance.onerror = (e) => {
-                    console.error("TTS Error", e);
-                    stopTTS();
+                audioPlayer.onended = () => {
+                    bgMusic.pause();
+                    bgMusic.currentTime = 0;
                 };
 
-                window.speechSynthesis.speak(utterance);
-            }
+                // Karaoke Sync Listener
+                // Priority: DB Timestamps > Demo Hardcoded > None
+                let activeTimestamps = null;
+                if (textData.timestamps && textData.timestamps.length > 0) {
+                    activeTimestamps = textData.timestamps;
+                    console.log("Using DB Timestamps for Karaoke", activeTimestamps);
+                } else if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
+                    activeTimestamps = demoTimestamps;
+                    console.log("Using Demo Timestamps for Karaoke");
+                }
 
-            async function loadText() {
-                const token = localStorage.getItem('token');
-                axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+                if (activeTimestamps) {
+                    audioPlayer.ontimeupdate = () => {
+                        const t = audioPlayer.currentTime;
 
-                try {
-                    const response = await axios.get(`/reading/texts/${textId}`);
-                    const textData = response.data;
-                    window.currentTextData = textData; // Store globally for TTS
-
-                    document.getElementById('text-title').innerText = textData.title;
-
-                    // Handle Illustration and Audio Container
-                    const container = document.getElementById('illustration-container');
-                    const img = document.getElementById('text-illustration');
-                    const audioPlayer = document.getElementById('audio-player');
-
-                    let showContainer = false;
-
-                    if (textData.image_path) {
-                        img.src = textData.image_path;
-                        img.style.display = 'inline-block';
-                        showContainer = true;
-                    } else {
-                        img.style.display = 'none';
-                    }
-
-                    if (textData.audio_path) {
-                        // Use dedicated /audio mount point as it handles persistent disks better than /static
-                        document.getElementById('audio-source').src = textData.audio_path.startsWith('/') ? textData.audio_path : "/" + textData.audio_path;
-                        audioPlayer.load();
-                        audioPlayer.style.display = 'block';
-                        showContainer = true;
-                    } else {
-                        audioPlayer.style.display = 'none';
-                    }
-
-                    if (showContainer) {
-                        container.style.display = 'block';
-                    } else {
-                        container.style.display = 'none';
-                    }
-
-                    if (textData.content) {
-                        // ENABLE KARAOKE FORMATTING FOR ALL TEXTS
-                        // This wraps lines in spans so we can highlight them via Audio or TTS
-                        console.log("Enabling Karaoke Mode formatting...");
-                        document.getElementById('text-body').innerHTML = processTextContent(textData.content);
-                    } else {
-                        document.getElementById('text-body').innerText = "No se pudo cargar el contenido.";
-                    }
-
-                    // Button Container
-                    const controlsDiv = document.querySelector('.glass-panel > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)');
-
-                    // TTS Button Removed as per user request
-
-                    if (textData.audio_path) {
-                        // Background Music Logic
-                        const bgMusic = new Audio('/static/audio/background_music.mp3');
-                        bgMusic.loop = true;
-                        bgMusic.volume = 0.04;
-
-                        audioPlayer.onplay = () => {
-                            bgMusic.play().catch(e => console.log("Background music blocked"));
-                            stopTTS(); // Stop TTS if Audio plays
-                        };
-
-                        audioPlayer.onpause = () => {
-                            bgMusic.pause();
-                        };
-
-                        audioPlayer.onended = () => {
-                            bgMusic.pause();
-                            bgMusic.currentTime = 0;
-                        };
-
-                        // Karaoke Sync Listener
-                        // Priority: DB Timestamps > Demo Hardcoded > None
-                        let activeTimestamps = null;
-                        if (textData.timestamps && textData.timestamps.length > 0) {
-                            activeTimestamps = textData.timestamps;
-                            console.log("Using DB Timestamps for Karaoke", activeTimestamps);
-                        } else if (textId === 2 || textData.title.toLowerCase().includes('liebre')) {
-                            activeTimestamps = demoTimestamps;
-                            console.log("Using Demo Timestamps for Karaoke");
+                        // Find active sentence
+                        let activeIdx = -1;
+                        for (let i = 0; i < activeTimestamps.length; i++) {
+                            const ts = activeTimestamps[i];
+                            // Check if valid range (start exists)
+                            if (ts && ts.start !== null && ts.start !== undefined) {
+                                // If end is null, assume it goes until next start or +5s? 
+                                // Better: if end is null, ignore? Or assume until start of next?
+                                // Let's rely on robust data. If end is null, treat as open-ended segment?
+                                // Our tool saves End, so let's stick to start <= t < end
+                                const endTime = ts.end || 999999;
+                                if (t >= ts.start && t < endTime) {
+                                    activeIdx = i;
+                                    break;
+                                }
+                            }
                         }
 
-                        if (activeTimestamps) {
-                            audioPlayer.ontimeupdate = () => {
-                                const t = audioPlayer.currentTime;
+                        // Update UI
+                        const allSpans = document.querySelectorAll('.audio-sentence');
+                        allSpans.forEach(span => span.classList.remove('active-highlight'));
 
-                                // Find active sentence
-                                let activeIdx = -1;
-                                for (let i = 0; i < activeTimestamps.length; i++) {
-                                    const ts = activeTimestamps[i];
-                                    // Check if valid range (start exists)
-                                    if (ts && ts.start !== null && ts.start !== undefined) {
-                                        // If end is null, assume it goes until next start or +5s? 
-                                        // Better: if end is null, ignore? Or assume until start of next?
-                                        // Let's rely on robust data. If end is null, treat as open-ended segment?
-                                        // Our tool saves End, so let's stick to start <= t < end
-                                        const endTime = ts.end || 999999;
-                                        if (t >= ts.start && t < endTime) {
-                                            activeIdx = i;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                // Update UI
-                                const allSpans = document.querySelectorAll('.audio-sentence');
-                                allSpans.forEach(span => span.classList.remove('active-highlight'));
-
-                                if (activeIdx !== -1) {
-                                    const activeSpan = document.getElementById(`sent-${activeIdx}`);
-                                    if (activeSpan) {
-                                        activeSpan.classList.add('active-highlight');
-                                        // Only auto-scroll if NOT tts (tts handles its own scroll)
-                                        if (!ttsActive) activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    }
-                                }
-                            };
+                        if (activeIdx !== -1) {
+                            const activeSpan = document.getElementById(`sent-${activeIdx}`);
+                            if (activeSpan) {
+                                activeSpan.classList.add('active-highlight');
+                                // Only auto-scroll if NOT tts (tts handles its own scroll)
+                                if (!ttsActive) activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
                         }
-                    }
-
-                    // Start Timer
-                    startTime = new Date();
-                    timerInterval = setInterval(updateTimer, 1000);
-
-                } catch (error) {
-                    console.error(error);
-                    if (error.response) {
-                        alert(`Error ${error.response.status}: ${error.response.data.detail || 'Error cargando el texto'}`);
-                    } else {
-                        alert("Error de conexión o desconocido cargando el texto");
-                    }
+                    };
                 }
             }
 
-            document.getElementById('finish-btn').addEventListener('click', () => {
-                clearInterval(timerInterval);
-                const now = new Date();
-                const timeSpent = (now - startTime) / 1000;
-                localStorage.setItem(`time_spent_${textId}`, timeSpent);
-                window.location.href = `/quiz/${textId}`;
+            // Start Timer
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+
+        } catch (error) {
+            console.error(error);
+            if (error.response) {
+                alert(`Error ${error.response.status}: ${error.response.data.detail || 'Error cargando el texto'}`);
+            } else {
+                alert("Error de conexión o desconocido cargando el texto");
+            }
+        }
+    }
+
+    document.getElementById('finish-btn').addEventListener('click', () => {
+        clearInterval(timerInterval);
+        const now = new Date();
+        const timeSpent = (now - startTime) / 1000;
+        localStorage.setItem(`time_spent_${textId}`, timeSpent);
+        window.location.href = `/quiz/${textId}`;
+    });
+
+    let selectedPdfFont = 'imprenta';
+
+    function openPdfModal() {
+        const modal = document.getElementById('pdf-options-modal');
+        modal.style.display = 'flex';
+
+        // Auto-select current font
+        const content = document.getElementById('text-content');
+        const currentStyle = content.style.fontFamily.includes('AulaCNova') ? 'ligada' : 'imprenta';
+
+        // Reset buttons
+        document.querySelectorAll('[id^="btn-font-"]').forEach(btn => {
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--primary-color)';
+        });
+
+        // Select active
+        const btn = document.getElementById(`btn-font-${currentStyle}`);
+        if (btn) selectPdfFont(btn, currentStyle);
+        else selectPdfFont(document.getElementById('btn-font-imprenta'), 'imprenta');
+    }
+
+    function closePdfModal() {
+        document.getElementById('pdf-options-modal').style.display = 'none';
+    }
+
+    function selectPdfFont(btn, type) {
+        selectedPdfFont = type;
+        // Reset all to unselected bubble (blue)
+        document.querySelectorAll('[id^="btn-font-"]').forEach(b => {
+            b.classList.remove('btn-bubble-green');
+            b.classList.add('btn-bubble-blue');
+        });
+        // Set active to success bubble (green)
+        btn.classList.remove('btn-bubble-blue');
+        btn.classList.add('btn-bubble-green');
+    }
+
+    async function confirmDownloadPDF() {
+        closePdfModal();
+        const btn = document.querySelector('button[title="Descargar Ficha PDF"]');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Generando...";
+        btn.disabled = true;
+
+        const sizeVal = document.getElementById('pdf-font-size').value;
+        // Map slider 1-4 to S, M, L, XL
+        const sizes = ['S', 'M', 'L', 'XL'];
+        const size = sizes[sizeVal - 1];
+
+        try {
+            const response = await axios.get(`/reading/texts/${textId}/pdf`, {
+                params: {
+                    font_style: selectedPdfFont,
+                    font_size: size
+                },
+                responseType: 'blob'
             });
 
-            let selectedPdfFont = 'imprenta';
+            // Create Blob URL
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
 
-            function openPdfModal() {
-                const modal = document.getElementById('pdf-options-modal');
-                modal.style.display = 'flex';
-
-                // Auto-select current font
-                const content = document.getElementById('text-content');
-                const currentStyle = content.style.fontFamily.includes('AulaCNova') ? 'ligada' : 'imprenta';
-
-                // Reset buttons
-                document.querySelectorAll('[id^="btn-font-"]').forEach(btn => {
-                    btn.style.background = 'transparent';
-                    btn.style.color = 'var(--primary-color)';
-                });
-
-                // Select active
-                const btn = document.getElementById(`btn-font-${currentStyle}`);
-                if (btn) selectPdfFont(btn, currentStyle);
-                else selectPdfFont(document.getElementById('btn-font-imprenta'), 'imprenta');
-            }
-
-            function closePdfModal() {
-                document.getElementById('pdf-options-modal').style.display = 'none';
-            }
-
-            function selectPdfFont(btn, type) {
-                selectedPdfFont = type;
-                // Reset all to unselected bubble (blue)
-                document.querySelectorAll('[id^="btn-font-"]').forEach(b => {
-                    b.classList.remove('btn-bubble-green');
-                    b.classList.add('btn-bubble-blue');
-                });
-                // Set active to success bubble (green)
-                btn.classList.remove('btn-bubble-blue');
-                btn.classList.add('btn-bubble-green');
-            }
-
-            async function confirmDownloadPDF() {
-                closePdfModal();
-                const btn = document.querySelector('button[title="Descargar Ficha PDF"]');
-                const originalText = btn.innerText;
-                btn.innerText = "⏳ Generando...";
-                btn.disabled = true;
-
-                const sizeVal = document.getElementById('pdf-font-size').value;
-                // Map slider 1-4 to S, M, L, XL
-                const sizes = ['S', 'M', 'L', 'XL'];
-                const size = sizes[sizeVal - 1];
-
-                try {
-                    const response = await axios.get(`/reading/texts/${textId}/pdf`, {
-                        params: {
-                            font_style: selectedPdfFont,
-                            font_size: size
-                        },
-                        responseType: 'blob'
-                    });
-
-                    // Create Blob URL
-                    const url = window.URL.createObjectURL(new Blob([response.data]));
-                    const link = document.createElement('a');
-                    link.href = url;
-
-                    // Try to extract filename from header or default
-                    let filename = `Ficha_Texto_${textId}.pdf`;
-                    const disposition = response.headers['content-disposition'];
-                    if (disposition && disposition.indexOf('attachment') !== -1) {
-                        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-                        if (matches != null && matches[1]) {
-                            filename = matches[1].replace(/['"]/g, '');
-                        }
-                    }
-
-                    link.setAttribute('download', filename);
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-
-                } catch (error) {
-                    console.error("Download failed", error);
-                    alert("Error al descargar la ficha. Verifica tu sesión.");
-                } finally {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
+            // Try to extract filename from header or default
+            let filename = `Ficha_Texto_${textId}.pdf`;
+            const disposition = response.headers['content-disposition'];
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
                 }
             }
 
-            loadText();
-        </script>
-        {% endblock %}
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+        } catch (error) {
+            console.error("Download failed", error);
+            alert("Error al descargar la ficha. Verifica tu sesión.");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    loadText();
+</script>
+{% endblock %}
