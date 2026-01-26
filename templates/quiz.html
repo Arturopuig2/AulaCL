@@ -91,8 +91,11 @@
         {% block content %}
 
         <div class="glass-panel" style="padding: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h1 style="margin: 0;">Quiz: <span id="text-title"></span></h1>
+            <!-- Title moved above buttons for better mobile stability -->
+            <h1 style="margin: 0 0 1rem 0; text-align: left;">Quiz: <span id="text-title"></span></h1>
+
+            <div
+                style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
                 <div style="display: flex; gap: 0.5rem;">
                     <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-blue"
                         style="padding: 0.4rem 0.8rem; font-size: 1rem;">A-</button>
