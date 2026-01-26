@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="font-size: 1.1rem; line-height: 1;">≡</span>
                     </button>
                     <div class="dropdown-menu">
+                        ${licenseInfoHTML}
                         ${menuItemsHTML}
                     </div>
                 </div>
