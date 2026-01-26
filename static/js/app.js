@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const navLinks = document.getElementById('nav-links');
 
-    if (token && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+    const publicPaths = ['/login', '/register', '/login-code', '/forgot-password', '/reset-password'];
+    if (token && !publicPaths.includes(window.location.pathname)) {
         // Fetch User Info to get License Data
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 

@@ -9,22 +9,25 @@
 <h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Escritor Mágico IA</h1>
 
 <div style="max-width: 1000px; margin: 0 auto;">
+
     <div
         style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
 
         <!-- MAGIC CONFIG -->
+        <style>
+            .image-preview {
+                width: 100%;
+                max-height: 200px;
+                object-fit: cover;
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+                display: none;
+                border: 2px solid #e2e8f0;
+            }
+        </style>
+
+
         <div id="magic-config">
-            <style>
-                .image-preview {
-                    width: 100%;
-                    max-height: 200px;
-                    object-fit: cover;
-                    border-radius: 0.5rem;
-                    margin-bottom: 1rem;
-                    display: none;
-                    border: 2px solid #e2e8f0;
-                }
-            </style>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <input type="text" id="magic-topic"
                     placeholder="Tema / Sinopsis (ej: Dos astronautas descubren una flor)" class="form-control">
@@ -38,16 +41,6 @@
                         <option value="4P">4º Primaria</option>
                         <option value="5P">5º Primaria</option>
                         <option value="6P">6º Primaria</option>
-                    </optgroup>
-                    <optgroup label="ESO">
-                        <option value="1ESO">1º ESO</option>
-                        <option value="2ESO">2º ESO</option>
-                        <option value="3ESO">3º ESO</option>
-                        <option value="4ESO">4º ESO</option>
-                    </optgroup>
-                    <optgroup label="Bachillerato">
-                        <option value="1BAT">1º Bachillerato</option>
-                        <option value="2BAT">2º Bachillerato</option>
                     </optgroup>
                     <option value="ALL">Sin Curso / General</option>
                 </select>
@@ -116,7 +109,8 @@
 
             <!-- STEP 1 VALIDATION ACTION -->
             <div id="step-1-actions" style="margin-bottom: 2rem;">
-                <button onclick="validateAndGenerateQuestions()" id="btn-validate" class="btn btn-primary"
+                <button onclick="showLoading('🧠 Validando contenido...'); validateAndGenerateQuestions()"
+                    id="btn-validate" class="btn btn-primary"
                     style="width: 100%; padding: 1rem; font-size: 1.1rem; background: #16a34a; border-color: #16a34a;">
                     ✅ Validar Historia y Generar Preguntas
                 </button>
@@ -165,6 +159,28 @@
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     })();
 
+    function showLoading(msg) {
+        console.log("Showing loading with message:", msg);
+        const overlay = document.getElementById('magic-loading');
+        const msgEl = document.getElementById('loading-msg');
+        if (overlay && msgEl) {
+            msgEl.innerText = msg || "Cargando...";
+            overlay.style.setProperty('display', 'flex', 'important');
+        } else {
+            console.error("Critical: Loading overlay elements not found in DOM!");
+            // Failsafe: at least alert the user something is happening
+            if (!msg) alert("Procesando, por favor espere...");
+        }
+    }
+
+    function hideLoading() {
+        console.log("Hiding loading overlay");
+        const overlay = document.getElementById('magic-loading');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
     async function generateMagicStory() {
         const topic = document.getElementById('magic-topic').value;
         const course = document.getElementById('magic-course-select').value;
@@ -179,7 +195,8 @@
 
         const btn = document.getElementById('btn-magic-gen');
         const originalText = btn.innerText;
-        btn.innerText = "✨ Escribiendo Historia... (Paso 1/2)";
+
+        showLoading("✨ Escribiendo Historia... (Paso 1/2)\nEsto puede tardar unos segundos.");
         btn.disabled = true;
 
         try {
@@ -206,6 +223,7 @@
         } catch (error) {
             handleError(error, "Error generando cuento");
         } finally {
+            hideLoading();
             btn.innerText = originalText;
             btn.disabled = false;
         }
@@ -338,9 +356,19 @@
             return;
         }
 
-        const btn = document.getElementById('btn-regen-questions') || document.getElementById('btn-validate');
+        // Target whichever button is relevant
+        const btnRegen = document.getElementById('btn-regen-questions');
+        const btnValidate = document.getElementById('btn-validate');
+
+        let btn = btnValidate;
+        // If Regen button exists and is visible, use that one as the target for status
+        if (btnRegen && btnRegen.offsetParent !== null) {
+            btn = btnRegen;
+        }
+
         const originalText = btn.innerText;
-        btn.innerText = "🧠 Generando preguntas...";
+
+        showLoading("🧠 Validando contenido y generando preguntas...\nEstamos analizando tu texto para crear las mejores preguntas posibles.");
         btn.disabled = true;
 
         try {
@@ -349,8 +377,22 @@
                 topic: topic
             });
 
+            // Filter out empty options from AI response
+            const cleanedQuestions = response.data.questions.map(q => {
+                const correctOptionText = q.options[q.correct_index] || "";
+                const filteredOptions = q.options.filter(opt => opt && opt.trim() !== "");
+                let newCorrectIndex = filteredOptions.indexOf(correctOptionText);
+                if (newCorrectIndex === -1 && filteredOptions.length > 0) newCorrectIndex = 0;
+
+                return {
+                    ...q,
+                    options: filteredOptions,
+                    correct_index: newCorrectIndex
+                };
+            });
+
             // Replace questions but keep text (updated with user edits)
-            currentMagicDraft.questions = response.data.questions;
+            currentMagicDraft.questions = cleanedQuestions;
             currentMagicDraft.title = topic;
             currentMagicDraft.content = content;
 
@@ -363,6 +405,7 @@
         } catch (error) {
             handleError(error, "Error generando preguntas");
         } finally {
+            hideLoading();
             btn.innerText = originalText;
             btn.disabled = false;
         }
@@ -376,7 +419,9 @@
         if (!currentMagicDraft) return;
 
         const btn = document.getElementById('btn-magic-save');
-        btn.innerText = "Guardando...";
+        const originalText = btn.innerText;
+
+        showLoading("💾 Guardando en la librería...");
         btn.disabled = true;
 
         try {
@@ -397,17 +442,29 @@
                 const qText = card.querySelector('.q-input').value;
 
                 const optInputs = card.querySelectorAll('.q-opt-input');
-                const options = Array.from(optInputs).map(input => input.value);
-
                 const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
-                const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+                const originalCorrectIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+                // Get the text of the selected correct option BEFORE filtering
+                const selectedCorrectText = optInputs[originalCorrectIndex] ? optInputs[originalCorrectIndex].value.trim() : "";
+
+                // Filter options
+                const filteredOptions = Array.from(optInputs)
+                    .map(input => input.value.trim())
+                    .filter(val => val !== "");
+
+                // Find the NEW correct index
+                let newCorrectIndex = filteredOptions.indexOf(selectedCorrectText);
+                if (newCorrectIndex === -1 && filteredOptions.length > 0) {
+                    newCorrectIndex = 0; // Fallback to first option
+                }
 
                 const category = card.querySelector('.q-category').value;
 
                 questions.push({
                     question: qText,
-                    options: options,
-                    correct_index: correctIndex,
+                    options: filteredOptions,
+                    correct_index: newCorrectIndex,
                     category: category // Send category to API
                 });
             }
@@ -430,13 +487,19 @@
         } catch (error) {
             handleError(error, "Error guardando");
         } finally {
-            btn.innerText = "💾 Guardar en Librería";
+            hideLoading();
+            btn.innerText = originalText;
             btn.disabled = false;
         }
     }
 
     async function handleImageUpload(input) {
         if (input.files && input.files[0]) {
+            if (!currentMagicDraft) {
+                alert("Debes generar un cuento primero.");
+                return;
+            }
+
             const file = input.files[0];
             const formData = new FormData();
             formData.append('file', file);
@@ -444,11 +507,8 @@
             document.getElementById('upload-status').innerText = "Subiendo...";
 
             try {
-                const response = await axios.post('/reading/admin/upload-image', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-
-                const imagePath = "/" + response.data.path; // Ensure relative web path
+                const response = await axios.post('/reading/admin/upload-image', formData);
+                const imagePath = response.data.path; // Backend already returns /static/images/uploads/...
 
                 // Update State
                 currentMagicDraft.image_path = imagePath;

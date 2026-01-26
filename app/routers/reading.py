@@ -3,9 +3,21 @@ from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-from .. import database, models, schemas, config
-from .. import auth # Import app.auth explicitly
 import os
+from app import schemas, auth, models, database, config
+
+def robust_decode(raw_bytes: bytes) -> str:
+    """
+    Attempts to decode bytes using different encodings common in Spanish text files.
+    Priority: UTF-8-SIG (handles BOM), CP1252 (Windows), Latin-1.
+    """
+    for encoding in ["utf-8-sig", "cp1252", "latin-1"]:
+        try:
+            return raw_bytes.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    # Fallback to utf-8 with ignore if everything fails
+    return raw_bytes.decode("utf-8", errors="ignore")
 
 router = APIRouter(
     prefix="/reading",
@@ -207,13 +219,13 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
     if not text:
         raise HTTPException(status_code=404, detail="Text not found")
         
-    import os
-    
     # 1. Update Metadata
     text.title = request.title
     text.course_level = request.course_level
     text.language = request.language
     if request.audio_path:
+        # If it doesn't have leading 'audio/' or '/static/audio/', normalize it safely if needed.
+        # But usually coming from upload-audio it returns 'audio/filename.mp3'
         text.audio_path = request.audio_path
     if request.image_path:
         text.image_path = request.image_path
@@ -251,6 +263,36 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
     db.refresh(text)
     return text
 
+@router.post("/admin/upload-audio")
+def upload_audio(
+    file: UploadFile = File(...),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    import shutil
+    import uuid
+
+    # 1. Setup Directory
+    save_dir = config.AUDIO_DIR
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # 2. Save File
+    try:
+        # Generate unique name to avoid conflicts
+        ext = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{ext}"
+        file_path = f"{save_dir}/{unique_filename}"
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        print(f"Error saving uploaded audio: {e}")
+        raise HTTPException(status_code=500, detail=f"Error saving audio: {str(e)}")
+        
+    return {"path": f"audio/{unique_filename}"}
+
 @router.post("/admin/upload", response_model=schemas.TextResponse)
 def upload_text(
     title: str = Form(...),
@@ -279,16 +321,12 @@ def upload_text(
         shutil.copyfileobj(text_file.file, buffer)
         
     # FORCE UTF-8 NORMALIZATION
-    # Attempts to read as UTF-8, falls back to Latin-1, then saves as UTF-8.
+    # Attempts to read with multiple encodings and save as pure UTF-8
     try:
         with open(content_path, "rb") as f:
             raw_bytes = f.read()
         
-        try:
-            content_str = raw_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            # Fallback to latin-1 (covers Windows-1252 mostly)
-            content_str = raw_bytes.decode("latin-1")
+        content_str = robust_decode(raw_bytes)
             
         # Rewrite as pure UTF-8
         with open(content_path, "w", encoding="utf-8") as f:
@@ -502,10 +540,7 @@ def analyze_upload_text(
     content = ""
     try:
         raw_bytes = text_file.file.read()
-        try:
-            content = raw_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            content = raw_bytes.decode("latin-1")
+        content = robust_decode(raw_bytes)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
 

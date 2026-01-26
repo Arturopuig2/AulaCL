@@ -49,16 +49,6 @@
                             <option value="5P">5º Primaria</option>
                             <option value="6P">6º Primaria</option>
                         </optgroup>
-                        <optgroup label="ESO">
-                            <option value="1ESO">1º ESO</option>
-                            <option value="2ESO">2º ESO</option>
-                            <option value="3ESO">3º ESO</option>
-                            <option value="4ESO">4º ESO</option>
-                        </optgroup>
-                        <optgroup label="Bachillerato">
-                            <option value="1BAT">1º Bachillerato</option>
-                            <option value="2BAT">2º Bachillerato</option>
-                        </optgroup>
                     </select>
                 </div>
 
@@ -95,6 +85,27 @@
                         📤 Subir/Cambiar Imagen
                     </button>
                     <span id="upload-status" style="font-size: 0.85rem; color: #64748b;">Ningún archivo
+                        seleccionado</span>
+                </div>
+            </div>
+
+            <!-- AUDIO UPLOAD (NEW) -->
+            <div class="form-group"
+                style="margin-bottom: 2rem; background: #fefce8; padding: 1rem; border-radius: 0.5rem; border: 1px dashed #fcd34d;">
+                <label style="font-weight: bold; color: #854d0e; display: block; margin-bottom: 0.5rem;">🎵 Audio (.mp3)
+                    (Opcional)</label>
+
+                <audio id="draft-audio-preview" controls
+                    style="width: 100%; margin-bottom: 1rem; display: none;"></audio>
+
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="file" id="audio-upload-input" accept=".mp3" style="display: none;"
+                        onchange="handleAudioUpload(this)">
+                    <button onclick="document.getElementById('audio-upload-input').click()" class="btn btn-outline"
+                        style="font-size: 0.9rem; border-color: #fcd34d; color: #854d0e;">
+                        📤 Subir/Cambiar Audio
+                    </button>
+                    <span id="audio-upload-status" style="font-size: 0.85rem; color: #64748b;">Ningún archivo
                         seleccionado</span>
                 </div>
             </div>
@@ -157,7 +168,8 @@
         course: "ALL",
         language: "es",
         questions: [],
-        image_path: null
+        image_path: null,
+        audio_path: null
     };
 
     // Check Auth on Load
@@ -190,6 +202,7 @@
             currentDraft.course = text.course_level;
             currentDraft.language = text.language;
             currentDraft.image_path = text.image_path;
+            currentDraft.audio_path = text.audio_path;
 
             // Map questions to draft format
             currentDraft.questions = qList.map(q => ({
@@ -225,6 +238,20 @@
             document.getElementById('upload-status').innerText = "Imagen actual cargada ✅";
         } else {
             imgPreview.style.display = 'none';
+        }
+
+        // Audio Preview
+        const audioPreview = document.getElementById('draft-audio-preview');
+        if (currentDraft.audio_path) {
+            // Audio path in DB might be 'audio/filename.mp3' or '/static/audio/...'
+            const fullPath = currentDraft.audio_path.startsWith('http') || currentDraft.audio_path.startsWith('/')
+                ? currentDraft.audio_path
+                : `/static/${currentDraft.audio_path}`;
+            audioPreview.src = fullPath;
+            audioPreview.style.display = 'block';
+            document.getElementById('audio-upload-status').innerText = "Audio actual cargado ✅";
+        } else {
+            audioPreview.style.display = 'none';
         }
 
         // Questions
@@ -319,15 +346,29 @@
             const card = qContainer.children[i];
             const qText = card.querySelector('.q-input').value;
             const optInputs = card.querySelectorAll('.q-opt-input');
-            const options = Array.from(optInputs).map(input => input.value);
             const checkedRadio = card.querySelector(`input[name="q-correct-${i}"]:checked`);
-            const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+            const originalCorrectIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+            // Get text of selected correct option BEFORE filtering
+            const selectedCorrectText = optInputs[originalCorrectIndex] ? optInputs[originalCorrectIndex].value.trim() : "";
+
+            // Filter options
+            const filteredOptions = Array.from(optInputs)
+                .map(input => input.value.trim())
+                .filter(val => val !== "");
+
+            // Find NEW correct index
+            let newCorrectIndex = filteredOptions.indexOf(selectedCorrectText);
+            if (newCorrectIndex === -1 && filteredOptions.length > 0) {
+                newCorrectIndex = 0;
+            }
+
             const category = card.querySelector('.q-category').value;
 
             updatedQuestions.push({
                 question: qText,
-                options: options,
-                correct_index: correctIndex,
+                options: filteredOptions,
+                correct_index: newCorrectIndex,
                 category: category
             });
         }
@@ -377,7 +418,20 @@
             });
 
             // Replace questions but keep text
-            currentDraft.questions = response.data.questions;
+            // Filter out empty options from AI response
+            const cleanedQuestions = response.data.questions.map(q => {
+                const correctOptionText = q.options[q.correct_index] || "";
+                const filteredOptions = q.options.filter(opt => opt && opt.trim() !== "");
+                let newCorrectIndex = filteredOptions.indexOf(correctOptionText);
+                if (newCorrectIndex === -1 && filteredOptions.length > 0) newCorrectIndex = 0;
+
+                return {
+                    ...q,
+                    options: filteredOptions,
+                    correct_index: newCorrectIndex
+                };
+            });
+            currentDraft.questions = cleanedQuestions;
             renderEditor();
             alert("¡Preguntas regeneradas! Revisa los resultados abajo.");
 
@@ -405,7 +459,7 @@
                 language: currentDraft.language,
                 questions: currentDraft.questions,
                 image_path: currentDraft.image_path,
-                audio_path: null // Not updating audio for now in this screen
+                audio_path: currentDraft.audio_path
             });
 
             alert("¡Cambios guardados correctamente!");
@@ -427,9 +481,7 @@
             document.getElementById('upload-status').innerText = "Subiendo...";
 
             try {
-                const response = await axios.post('/reading/admin/upload-image', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                const response = await axios.post('/reading/admin/upload-image', formData);
 
                 const imagePath = response.data.path; // Already has leading slash from backend
 
@@ -446,6 +498,34 @@
                 console.error(error);
                 alert("Error subiendo imagen: " + (error.response?.data?.detail || error.message));
                 document.getElementById('upload-status').innerText = "Error ❌";
+            }
+        }
+    }
+    async function handleAudioUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('audio-upload-status').innerText = "Subiendo...";
+
+            try {
+                const response = await axios.post('/reading/admin/upload-audio', formData);
+                const audioPath = response.data.path;
+
+                // Update State
+                currentDraft.audio_path = audioPath;
+
+                // Update UI
+                const preview = document.getElementById('draft-audio-preview');
+                preview.src = `/static/${audioPath}`;
+                preview.style.display = 'block';
+                document.getElementById('audio-upload-status').innerText = "Audio subido ✅";
+
+            } catch (error) {
+                console.error(error);
+                alert("Error subiendo audio: " + (error.response?.data?.detail || error.message));
+                document.getElementById('audio-upload-status').innerText = "Error ❌";
             }
         }
     }

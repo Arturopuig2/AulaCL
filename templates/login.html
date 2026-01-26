@@ -65,6 +65,10 @@
             localStorage.setItem('token', googleToken);
             localStorage.setItem('username', username);
             localStorage.setItem('is_subuser', 'false');
+
+            // Set Cookie for server-side auth (30 days)
+            document.cookie = `access_token=${googleToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+
             // Clear URL to hide token
             window.history.replaceState({}, document.title, "/login");
             // Redirect

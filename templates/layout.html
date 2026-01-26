@@ -11,10 +11,110 @@
     <link rel="stylesheet" href="/static/css/styles.css?v=17">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Global Loading Overlay */
+        #magic-loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 999999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .magic-spinner-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 2rem;
+        }
+
+        .magic-spinner {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            animation: magic-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+
+        .magic-pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #2563eb1a;
+            border-radius: 50%;
+            animation: magic-pulse 2s infinite;
+        }
+
+        @keyframes magic-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes magic-pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+
+        .loading-text {
+            font-size: 1.5rem;
+            color: #1e293b;
+            font-weight: 600;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .loading-subtext {
+            font-size: 1rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            font-weight: 400;
+        }
+    </style>
     {% block head %}{% endblock %}
 </head>
 
 <body>
+    <!-- Global Loading Overlay -->
+    <div id="magic-loading">
+        <div class="magic-spinner-container">
+            <div class="magic-spinner"></div>
+            <div class="magic-pulse"></div>
+        </div>
+        <div class="loading-text" id="loading-msg">Generando magia...</div>
+        <div class="loading-subtext">Esto puede tardar unos segundos mientras la IA procesa tu solicitud</div>
+    </div>
+
     <nav
         style="background: white; padding: 1rem; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;">
         <div style="display: flex; align-items: center;">

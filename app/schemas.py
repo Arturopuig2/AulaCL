@@ -140,7 +140,6 @@ class MagicSaveRequest(BaseModel):
     title: str
     content: str
     questions: List[QuestionDraft]
-    questions: List[QuestionDraft]
     course_level: str
     language: str
     audio_path: Optional[str] = None

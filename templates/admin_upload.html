@@ -39,16 +39,6 @@
                             <option value="5P">5º Primaria</option>
                             <option value="6P">6º Primaria</option>
                         </optgroup>
-                        <optgroup label="ESO">
-                            <option value="1ESO">1º ESO</option>
-                            <option value="2ESO">2º ESO</option>
-                            <option value="3ESO">3º ESO</option>
-                            <option value="4ESO">4º ESO</option>
-                        </optgroup>
-                        <optgroup label="Bachillerato">
-                            <option value="1BAT">1º Bachillerato</option>
-                            <option value="2BAT">2º Bachillerato</option>
-                        </optgroup>
                         <option value="ALL">Sin Curso / General</option>
                     </select>
                 </div>
@@ -159,16 +149,6 @@
                         <option value="4P">4º Primaria</option>
                         <option value="5P">5º Primaria</option>
                         <option value="6P">6º Primaria</option>
-                    </optgroup>
-                    <optgroup label="ESO">
-                        <option value="1ESO">1º ESO</option>
-                        <option value="2ESO">2º ESO</option>
-                        <option value="3ESO">3º ESO</option>
-                        <option value="4ESO">4º ESO</option>
-                    </optgroup>
-                    <optgroup label="Bachillerato">
-                        <option value="1BAT">1º Bachillerato</option>
-                        <option value="2BAT">2º Bachillerato</option>
                     </optgroup>
                     <option value="ALL">Sin Curso / General</option>
                 </select>
@@ -377,7 +357,7 @@
         syncCurrentState();
         currentUploadData.questions.push({
             question: "Nueva pregunta...",
-            options: ["Opción A", "Opción B"],
+            options: ["Opción A", "Opción B", "Opción C"],
             correct_index: 0,
             category: "LITERAL"
         });
@@ -397,15 +377,29 @@
             const card = container.children[i];
             const qText = card.querySelector('.q-input').value;
             const optInputs = card.querySelectorAll('.q-opt-input');
-            const opts = Array.from(optInputs).map(inp => inp.value);
             const checked = card.querySelector(`input[name="q-correct-${i}"]:checked`);
-            const correctIdx = checked ? parseInt(checked.value) : 0;
+            const originalCorrectIndex = checked ? parseInt(checked.value) : 0;
+
+            // Get text of selected correct option BEFORE filtering
+            const selectedCorrectText = optInputs[originalCorrectIndex] ? optInputs[originalCorrectIndex].value.trim() : "";
+
+            // Filter options
+            const filteredOptions = Array.from(optInputs)
+                .map(input => input.value.trim())
+                .filter(val => val !== "");
+
+            // Find NEW correct index
+            let newCorrectIndex = filteredOptions.indexOf(selectedCorrectText);
+            if (newCorrectIndex === -1 && filteredOptions.length > 0) {
+                newCorrectIndex = 0;
+            }
+
             const category = card.querySelector('.q-category').value; // Retrieve category
 
             newQuestions.push({
                 question: qText,
-                options: opts,
-                correct_index: correctIdx,
+                options: filteredOptions,
+                correct_index: newCorrectIndex,
                 category: category
             });
         }
@@ -458,7 +452,20 @@
             const res = await axios.post('/reading/admin/magic/questions', { content: content }, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-            currentUploadData.questions = res.data.questions;
+            // Filter out empty options from AI response
+            const cleanedQuestions = res.data.questions.map(q => {
+                const correctOptionText = q.options[q.correct_index] || "";
+                const filteredOptions = q.options.filter(opt => opt && opt.trim() !== "");
+                let newCorrectIndex = filteredOptions.indexOf(correctOptionText);
+                if (newCorrectIndex === -1 && filteredOptions.length > 0) newCorrectIndex = 0;
+
+                return {
+                    ...q,
+                    options: filteredOptions,
+                    correct_index: newCorrectIndex
+                };
+            });
+            currentUploadData.questions = cleanedQuestions;
             renderQuestions(currentUploadData.questions);
         } catch (e) {
             alert("Error: " + e.message);
@@ -497,7 +504,6 @@
                 const token = localStorage.getItem('token');
                 const response = await axios.post('/reading/admin/upload-image', formData, {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
                         'Authorization': 'Bearer ' + token
                     }
                 });
