@@ -423,8 +423,8 @@
                     }
 
                     if (textData.audio_path) {
-                        // Use /static/ because DB stores 'audio/filename.mp3'
-                        document.getElementById('audio-source').src = "/static/" + textData.audio_path;
+                        // Use dedicated /audio mount point as it handles persistent disks better than /static
+                        document.getElementById('audio-source').src = textData.audio_path.startsWith('/') ? textData.audio_path : "/" + textData.audio_path;
                         audioPlayer.load();
                         audioPlayer.style.display = 'block';
                         showContainer = true;

@@ -291,7 +291,7 @@ def upload_audio(
         print(f"Error saving uploaded audio: {e}")
         raise HTTPException(status_code=500, detail=f"Error saving audio: {str(e)}")
         
-    return {"path": f"audio/{unique_filename}"}
+    return {"path": f"/audio/{unique_filename}"}
 
 @router.post("/admin/upload", response_model=schemas.TextResponse)
 def upload_text(
@@ -347,8 +347,8 @@ def upload_text(
         with open(audio_path_full, "wb") as buffer:
             shutil.copyfileobj(audio_file.file, buffer)
         
-        # Store relative path for DB
-        audio_path = f"audio/{audio_filename}"
+        # Store relative path for DB with leading slash for mount point consistency
+        audio_path = f"/audio/{audio_filename}"
 
     # 3. Create DB Entry
     new_text = models.Text(
@@ -555,7 +555,7 @@ def analyze_upload_text(
         with open(audio_path_full, "wb") as buffer:
             shutil.copyfileobj(audio_file.file, buffer)
         
-        audio_path = f"audio/{audio_filename}"
+        audio_path = f"/audio/{audio_filename}"
 
     # 2b. Process Image File
     image_path = None

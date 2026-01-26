@@ -246,7 +246,7 @@
             // Audio path in DB might be 'audio/filename.mp3' or '/static/audio/...'
             const fullPath = currentDraft.audio_path.startsWith('http') || currentDraft.audio_path.startsWith('/')
                 ? currentDraft.audio_path
-                : `/static/${currentDraft.audio_path}`;
+                : `/${currentDraft.audio_path}`;
             audioPreview.src = fullPath;
             audioPreview.style.display = 'block';
             document.getElementById('audio-upload-status').innerText = "Audio actual cargado ✅";
@@ -518,7 +518,7 @@
 
                 // Update UI
                 const preview = document.getElementById('draft-audio-preview');
-                preview.src = `/static/${audioPath}`;
+                preview.src = audioPath.startsWith('/') ? audioPath : `/${audioPath}`;
                 preview.style.display = 'block';
                 document.getElementById('audio-upload-status').innerText = "Audio subido ✅";
 
