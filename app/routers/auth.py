@@ -101,6 +101,9 @@ async def login_google(request: Request):
     # Determine redirect URI dynamically or from env
     # For local: http://127.0.0.1:8000/auth/google/callback
     redirect_uri = request.url_for('auth_google_callback')
+    # Force https if we are not on localhost (Render requirement)
+    if "127.0.0.1" not in str(request.url) and "localhost" not in str(request.url):
+        redirect_uri = str(redirect_uri).replace("http://", "https://")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @router.get("/google/callback")
@@ -109,8 +112,14 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
         try:
             token = await oauth.google.authorize_access_token(request)
         except Exception as e:
+             import traceback
+             error_trace = traceback.format_exc()
              print(f"OAuth Error: {e}")
-             raise HTTPException(status_code=400, detail=f"Google Auth Failed: {str(e)}")
+             print(error_trace)
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Google Auth Failed: {str(e)}. Check server logs for details."
+             )
 
         user_info = token.get('userinfo')
         if not user_info:
@@ -161,14 +170,9 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
             expires_delta=access_token_expires
         )
         
-        # Redirect to dashboard with token in URL (frag or query) 
-        # Better: Redirect to a processing page that saves token to localStorage
-        # return {"access_token": access_token, "token_type": "bearer"} -> This returns JSON, user sees JSON.
-        
-        # We need to redirect to frontend.
-        # Let's redirect to /dashboard?token=... and let dashboard.html handle it?
-        # A bit insecure for query params, but standard for this simple logic without cookies.
-        return RedirectResponse(url=f"/dashboard?token={access_token}&username={user.username}")
+        # Standardize redirect to /login so login.html handles token storage and redirection
+        response = RedirectResponse(url=f"/login?google_token={access_token}&username={user.username}")
+        return response
 
     except Exception as e:
         import traceback
