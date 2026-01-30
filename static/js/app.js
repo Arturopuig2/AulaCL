@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const username = user.username || "Usuario";
             let licenseInfoHTML = '';
 
+            const hasActiveLicense = user.access_expires_at && new Date(user.access_expires_at) > new Date();
+            window.hasActiveLicense = hasActiveLicense;
+
             // Update role flags based on server data
             const isTeacher = !!user.is_teacher;
             const isSubUser = !user.username;
@@ -48,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="dropdown-item" style="cursor: default; pointer-events: none;">
                             <div class="license-info-inactive">Modo Gratuito</div>
                         </div>
-                        <a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>
                         <div class="dropdown-divider"></div>
                     `;
                 }
@@ -175,6 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- GLOBAL UNLOCK MODAL LOGIC ---
 function openUnlockModal() {
+    const desc = document.getElementById('unlock-modal-description');
+    if (desc) {
+        if (window.hasActiveLicense) {
+            desc.innerText = "Añadir una nueva licencia suma 1 año más a tu suscripción actual sin perder los días que te quedan.";
+        } else {
+            desc.innerText = "Introduce tu licencia para acceder a todas las lecturas durante 1 año.";
+        }
+    }
     document.getElementById('unlock-modal').style.display = 'flex';
 }
 
