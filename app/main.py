@@ -41,7 +41,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 # Trust X-Forwarded-Proto headers from Render's Load Balancer
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
-SESSION_SECRET = os.getenv("SESSION_SECRET", "super-secret-session-key-change-me")
+SESSION_SECRET = config.SESSION_SECRET
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 @app.get("/login", response_class=HTMLResponse)

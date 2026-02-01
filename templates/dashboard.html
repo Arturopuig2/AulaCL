@@ -432,6 +432,10 @@
         const selectedLang = document.getElementById('lang-select').value;
         const selectedCourse = document.getElementById('course-select').value;
 
+        // Persist Filters
+        localStorage.setItem('dashboard_filter_lang', selectedLang);
+        localStorage.setItem('dashboard_filter_course', selectedCourse);
+
         const filtered = allTexts.filter(t => {
             const matchLang = selectedLang === 'all' || t.language === selectedLang;
             const matchCourse = selectedCourse === 'all' || t.course_level === selectedCourse;
@@ -502,11 +506,50 @@
         document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
     });
 
+    // --- UI HELPERS ---
+    function syncCustomSelectsFromNative() {
+        const selects = [
+            { id: 'course-select', wrapper: 'wrapper-course' },
+            { id: 'lang-select', wrapper: 'wrapper-lang' }
+        ];
+
+        selects.forEach(item => {
+            const select = document.getElementById(item.id);
+            const wrapper = document.getElementById(item.wrapper);
+            if (!select || !wrapper) return;
+
+            const val = select.value;
+            const options = wrapper.querySelectorAll('.custom-option');
+            const trigger = wrapper.querySelector('.custom-select-trigger span');
+
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === val) {
+                    opt.classList.add('selected');
+                    if (trigger) trigger.innerText = opt.innerText;
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        });
+    }
+
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         setupCustomSelect('wrapper-course', 'course-select');
         setupCustomSelect('wrapper-lang', 'lang-select');
-        loadDashboard();
+
+        // Restore Filters from localStorage
+        const savedCourse = localStorage.getItem('dashboard_filter_course');
+        const savedLang = localStorage.getItem('dashboard_filter_lang');
+
+        if (savedCourse) document.getElementById('course-select').value = savedCourse;
+        if (savedLang) document.getElementById('lang-select').value = savedLang;
+
+        syncCustomSelectsFromNative();
+        loadDashboard().then(() => {
+            // Re-apply filters once texts are loaded
+            applyFilters();
+        });
     });
 </script>
 {% endblock %}

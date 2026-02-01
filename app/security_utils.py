@@ -3,9 +3,10 @@ import string
 import hmac
 import hashlib
 from passlib.context import CryptContext
+from . import config
 
 # Configuration
-SECRET_KEY = "CHANGE_THIS_TO_ENV_VARIABLE_IN_PROD_BUT_OK_FOR_NOW" # Ideally from env
+SECRET_KEY = config.SECRET_KEY
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Exclusion list for legibility (I, L, O)

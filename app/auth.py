@@ -5,9 +5,9 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-from . import database, models, schemas
+from . import database, models, schemas, config
 
-SECRET_KEY = "SECRET_KEY_AULA_CL_CHANGE_ME_IN_PROD" # TODO: usage env
+SECRET_KEY = config.SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

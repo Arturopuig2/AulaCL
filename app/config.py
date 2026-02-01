@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Base directory for the application
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,3 +26,7 @@ IMAGES_DIR = os.getenv("IMAGES_DIR", os.path.join(BASE_DIR, "static", "images", 
 os.makedirs(TEXTS_DIR, exist_ok=True)
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
+
+# Security
+SECRET_KEY = os.getenv("SECRET_KEY", "HARDCODED_FALLBACK_ONLY_FOR_DEV")
+SESSION_SECRET = os.getenv("SESSION_SECRET", "SESSION_FALLBACK_ONLY_FOR_DEV")
