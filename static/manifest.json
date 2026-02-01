@@ -1,10 +1,10 @@
 {
     "name": "Aula CL - Comprensión Lectora",
     "short_name": "Aula CL",
-    "description": "Plataforma de Comprensión Lectora para alumnos",
+    "description": "Plataforma de Comprensión Lectora",
     "start_url": "/",
     "scope": "/",
-    "display": "standalone",
+    "display": "fullscreen",
     "background_color": "#ffffff",
     "theme_color": "#2563eb",
     "icons": [
