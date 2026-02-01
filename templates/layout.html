@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
     <title>Aula CL - Comprensión Lectora</title>
     <link rel="manifest" href="/static/manifest.json">
     <link rel="icon" type="image/png" href="/static/favicon.png">
@@ -120,6 +123,7 @@
         <div class="loading-subtext">Esto puede tardar unos segundos mientras la IA procesa tu solicitud</div>
     </div>
 
+    {% block navbar %}
     <nav
         style="background: white; padding: 1rem; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;">
         <div style="display: flex; align-items: center; flex: 1;">
@@ -141,6 +145,7 @@
             <!-- JS will populate this based on auth status -->
         </div>
     </nav>
+    {% endblock %}
 
     <div class="container" style="margin-top: 0.5rem;">
         {% block content %}{% endblock %}
@@ -238,7 +243,7 @@
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     </script>
-    <script src="/static/js/app.js?v=16"></script>
+    <script src="/static/js/app.js?v=17"></script>
 </body>
 
 </html>
