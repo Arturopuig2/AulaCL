@@ -398,17 +398,17 @@
 
                     <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: auto; align-items: center;">
                         ${getCourseBadge(text.course_level)}
-                        <span style="background: white; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; color: var(--primary-color); border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${getLangLabel(text.language)}</span>
+                        <span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: var(--primary-color); border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${getLangLabel(text.language)}</span>
                         
                         ${text.audio_path ? `
-                        <div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.6rem; border-radius: 50px; border: 1px solid white; height: 26px;" title="Tiene audio">
+                        <div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.55rem; border-radius: 50px; border: 1px solid white; height: 26px;" title="Tiene audio">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
                                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                             </svg>
                         </div>` : ''}
                         
-                        ${text.is_completed ? `<div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.8rem; border-radius: 50px; border: 1px solid white; height: 26px; margin-left: auto;"><span style="font-size: 0.85rem; color: #15803D; font-weight: 600; line-height: 1;">${Math.round(text.score / 10)}/10</span></div>` : ''}
+                        ${text.is_completed ? `<div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.7rem; border-radius: 50px; border: 1px solid white; height: 26px; margin-left: auto;"><span style="font-size: 0.85rem; color: #15803D; font-weight: 600; line-height: 1;">${Math.round(text.score / 10)}/10</span></div>` : ''}
                     </div>
                 </div>
             `;
@@ -457,7 +457,7 @@
             'ALL': 'Sin Curso'
         };
         const label = map[code] || code;
-        return `<span style="background: white; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; color: var(--primary-color); border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${label}</span>`;
+        return `<span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: var(--primary-color); border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${label}</span>`;
     }
 
     // --- Navigation Logic removed (moved to Global app.js)
