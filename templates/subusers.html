@@ -158,7 +158,7 @@
                     <div id="edit-license-status" style="margin-bottom: 1.5rem; font-size: 0.9rem;"></div>
                     <button id="edit-license-btn" class="btn-bubble btn-bubble-blue"
                         style="width: 100%; padding: 0.8rem;">
-                        Activar / Extender Licencia
+                        Añadir / Extender Licencia
                     </button>
                 </div>
 
@@ -183,7 +183,7 @@
             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
             <div class="glass-panel" onclick="event.stopPropagation()"
                 style="background: white; padding: 2rem; max-width: 400px; width: 90%;">
-                <h2 style="margin-bottom: 1rem; text-align: center;">Activar Licencia</h2>
+                <h2 style="margin-bottom: 1rem; text-align: center;">Añadir Licencia</h2>
                 <p id="subuser-target-name"
                     style="text-align: center; color: var(--text-secondary); margin-bottom: 1rem;"></p>
                 <form id="subuser-license-form">
@@ -192,7 +192,7 @@
                         onblur="this.placeholder='XXXXXXXXX'" required
                         style="width: 100%; padding: 0.8rem; border: 2px solid #E2E8F0; border-radius: 50px; margin-bottom: 1.5rem; text-align: center; text-transform: uppercase; letter-spacing: 2px; font-family: 'Fredoka';">
                     <button type="submit" class="btn-bubble btn-bubble-green"
-                        style="width: 100%; margin-bottom: 0.8rem; padding: 0.8rem;">Activar y Generar Código</button>
+                        style="width: 100%; margin-bottom: 0.8rem; padding: 0.8rem;">Añadir y Generar Código</button>
                     <button type="button" onclick="closeSubUserLicenseModal()" class="btn-bubble btn-bubble-pink"
                         style="width: 100%; padding: 0.8rem;">Cancelar</button>
                 </form>
@@ -204,7 +204,7 @@
             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
             <div class="glass-panel" onclick="event.stopPropagation()"
                 style="background: white; padding: 2rem; max-width: 400px; width: 90%; text-align: center;">
-                <h2 style="margin-bottom: 0.5rem; color: #22c55e;">¡Licencia Activada!</h2>
+                <h2 style="margin-bottom: 0.5rem; color: #22c55e;">¡Licencia Añadida!</h2>
                 <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Guarda este código. Es la
                     <strong>ÚNICA</strong>
                     forma de acceso para este usuario.
@@ -338,7 +338,7 @@
                 if (isActive) {
                     btn.innerText = "Extender";
                 } else {
-                    btn.innerText = "Activar y Generar Código";
+                    btn.innerText = "Añadir y Generar Código";
                 }
 
                 document.getElementById('subuser-license-modal').style.display = 'flex';
@@ -399,7 +399,7 @@
                 const id = document.getElementById('target-subuser-id').value;
                 const key = document.getElementById('subuser-license-key').value.trim();
                 const btn = e.target.querySelector('button[type="submit"]');
-                btn.innerText = "Activando...";
+                btn.innerText = "Añadiendo...";
 
                 try {
                     const response = await axios.post(`/subusers/${id}/license`, { license_key: key });
@@ -413,8 +413,8 @@
                 } catch (error) {
                     alert('Error: ' + (error.response?.data?.detail || "Error al activar licencia"));
                 } finally {
-                    if (btn.innerText === "Activando...") {
-                        btn.innerText = "Activar / Extender";
+                    if (btn.innerText === "Añadiendo...") {
+                        btn.innerText = "Añadir / Extender";
                     }
                 }
             });
@@ -435,7 +435,7 @@
                     document.getElementById('edit-license-btn').innerText = "Extender Licencia";
                 } else {
                     statusDiv.innerHTML = `<span style="color: #f59e0b;">⚠️ Acceso Limitado (Sin Licencia)</span>`;
-                    document.getElementById('edit-license-btn').innerText = "Activar Licencia";
+                    document.getElementById('edit-license-btn').innerText = "Añadir Licencia";
                 }
 
                 // Bind Buttons

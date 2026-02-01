@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="license-info-active">Premium Activo</div>
                             <div style="font-size: 0.8rem; color: var(--text-secondary);">Caduca: ${date}</div>
                         </div>
-                        <div class="dropdown-divider"></div>
                     `;
                 } else {
                     licenseInfoHTML = `
@@ -51,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="dropdown-item" style="cursor: default; pointer-events: none;">
                             <div class="license-info-inactive">Modo Gratuito</div>
                         </div>
-                        <div class="dropdown-divider"></div>
                     `;
                 }
             }
@@ -61,12 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // "Añadir Licencia" is for everyone EXCEPT admin
             if (user.username !== 'admin') {
-                menuItemsHTML += `<a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>`;
+                menuItemsHTML += `
+                    <a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>
+                    <div class="dropdown-divider"></div>
+                `;
             }
 
             // "Mis alumnos" is ONLY for Teachers
             if (user.is_teacher) {
-                menuItemsHTML += `<a href="/my-subusers" class="dropdown-item">Mis Alumnos/as</a>`;
+                menuItemsHTML += `
+                    <a href="/my-subusers" class="dropdown-item">Mis Alumnos/as</a>
+                    <div class="dropdown-divider"></div>
+                `;
             }
 
             // "Cambiar Contraseña" and "Cerrar Sesión" for everyone
@@ -161,8 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error fetching user info for navbar", err);
             // Fallback to simple logout if API fails
             navLinks.innerHTML = `
-                <button id="logout-btn" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Cerrar Sesión</button>
-            `;
+                        < button id = "logout-btn" class="btn btn-outline" style = "padding: 0.4rem 0.8rem; font-size: 0.8rem;" > Cerrar Sesión</button >
+                            `;
             document.getElementById('logout-btn').addEventListener('click', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
