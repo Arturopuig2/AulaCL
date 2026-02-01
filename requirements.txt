@@ -20,3 +20,4 @@ python-dotenv
 authlib
 itsdangerous
 httpx
+slowapi

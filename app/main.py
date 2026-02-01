@@ -7,11 +7,19 @@ from .routers import auth as auth_router, reading, subusers, analytics
 from . import auth, models, schemas, config # Import config
 from fastapi import Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
+from .limiter import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
 
+# Initialize Rate Limiter
 app = FastAPI(title="Aula CL")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Mount specific paths first to avoid masking
 app.mount("/static/images/uploads", StaticFiles(directory=config.IMAGES_DIR), name="uploads") # Persistent images

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import List
 import os
 from app import schemas, models, security_utils
+from app.limiter import limiter
 from app.database import get_db
 from app.auth import authenticate_user, create_access_token, get_current_user, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, verify_password
 
@@ -19,6 +20,7 @@ def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 @router.post("/login-code", response_model=schemas.Token)
+@limiter.limit("5/minute")
 def login_with_code(
     login_req: schemas.LoginCodeRequest,
     request: Request,
@@ -185,7 +187,8 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
     return response
 
 @router.post("/register", response_model=schemas.User)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def register(request: Request, user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -232,7 +235,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @router.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -247,8 +251,9 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/forgot-password")
-def forgot_password(request: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == request.email).first()
+@limiter.limit("3/minute")
+def forgot_password(request_data: schemas.PasswordResetRequest, request: Request, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request_data.email).first()
     if not user:
         # Don't reveal that the user does not exist (security best practice), or do it for UX in this MVP?
         # User asked for "pon tu correo y te enviamos un enlace". 
