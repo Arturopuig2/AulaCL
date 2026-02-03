@@ -83,7 +83,11 @@
         currentText = res.data;
 
         document.getElementById('text-title').innerText = currentText.title;
-        document.getElementById('audio-player').src = "/static/" + currentText.audio_path;
+        let aPath = currentText.audio_path;
+        if (!aPath.startsWith('/') && !aPath.startsWith('http')) {
+            aPath = "/static/" + aPath;
+        }
+        document.getElementById('audio-player').src = aPath;
 
         // Split sentences (same logic as reading.html)
         const rawLines = currentText.content.split(/\r?\n/).filter(line => line.trim() !== '');
