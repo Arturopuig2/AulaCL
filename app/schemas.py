@@ -97,6 +97,7 @@ class UnlockRequest(BaseModel):
 
 class SubUserCreate(BaseModel):
     name: str
+    license_key: Optional[str] = None
 
 class SubUserUpdate(BaseModel):
     name: str

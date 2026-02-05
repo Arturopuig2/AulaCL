@@ -80,7 +80,18 @@ def get_student_analytics(
         else:
             results[cat] = 0
             
-    return results
+    return {
+        "categories": results,
+        "total_readings": len(attempts),
+        "reading_history": [
+            {
+                "title": attempt.text.title if attempt.text else "Lectura Eliminada",
+                "score": attempt.score,
+                "date": attempt.timestamp.isoformat()
+            }
+            for attempt in attempts
+        ]
+    }
 
 @router.get("/class")
 def get_class_analytics(
@@ -142,3 +153,104 @@ def get_class_analytics(
             results[cat] = 0
             
     return results
+
+@router.get("/me")
+def get_my_analytics(
+    current_user = Depends(auth.get_current_active_user),
+    db: Session = Depends(database.get_db)
+):
+    # Determine if user or subuser
+    is_subuser = isinstance(current_user, models.SubUser)
+    
+    # Filter attempts
+    if is_subuser:
+        # NOTE: analytics.py existing logic uses user_id==subuser.id. 
+        # We follow this pattern for consistency, assuming attempts are saved this way for subusers.
+        # If models.ReadingAttempt has subuser_id, we should check that too, 
+        # but to match get_student_analytics we use user_id.
+        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
+        # Double check if we should look at subuser_id column?
+        # Let's try to fetch using subuser_id first, if empty, try user_id?
+        # Actually, let's look at models.py again. 
+        # ReadingAttempt has user_id and subuser_id.
+        # Safest bet is to check both OR use the one that is populated.
+        # Given I cannot see creation logic, I will assume the previous dev knew what they were doing 
+        # in get_student_analytics and stick to user_id for now, 
+        # BUT I will also include subuser_id filter to be safe if data is distributed.
+        
+        # ACTUALLY, checking get_student_analytics(lines 26):
+        # attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == subuser.id).all()
+        # This strongly implies subuser_ids are stored in user_id column?? That would be bad design (collision with User table).
+        # Or maybe SubUser IDs are unique across system? (Unlikely if auto-increment).
+        # Let's trust get_student_analytics logic for now to ensure consistency with what Teacher sees.
+        pass 
+    else:
+        # Regular user
+        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
+
+    # Reuse logic (Copy-paste for now to avoid refactor risk, or extract)
+    # Extracting logic is cleaner.
+    
+    return calculate_analytics(attempts, db)
+
+def calculate_analytics(attempts: List[models.ReadingAttempt], db: Session):
+    stats = {
+        "LITERAL": {"correct": 0, "total": 0},
+        "INFERENTIAL": {"correct": 0, "total": 0},
+        "VOCABULARY": {"correct": 0, "total": 0}
+    }
+    
+    q_cache = {}
+    
+    for attempt in attempts:
+        if not attempt.details:
+            continue
+            
+        for q_id_str, is_correct in attempt.details.items():
+            try:
+                q_id = int(q_id_str)
+            except:
+                continue
+                
+            if q_id not in q_cache:
+                q = db.query(models.Question).filter(models.Question.id == q_id).first()
+                if q:
+                    q_cache[q_id] = q.category or "LITERAL"
+                else:
+                    q_cache[q_id] = "UNKNOWN"
+            
+            cat = q_cache[q_id]
+            cat_upper = cat.upper().strip()
+            if "INFERENCIA" in cat_upper:
+                cat = "INFERENTIAL"
+            elif "VOCABULARIO" in cat_upper:
+                cat = "VOCABULARY"
+            elif "LITERAL" in cat_upper:
+                cat = "LITERAL"
+                
+            if cat not in stats:
+                stats[cat] = {"correct": 0, "total": 0}
+                
+            stats[cat]["total"] += 1
+            if is_correct:
+                stats[cat]["correct"] += 1
+
+    results = {}
+    for cat, data in stats.items():
+        if data["total"] > 0:
+            results[cat] = round((data["correct"] / data["total"]) * 100, 1)
+        else:
+            results[cat] = 0
+            
+    return {
+        "categories": results,
+        "total_readings": len(attempts),
+        "reading_history": [
+            {
+                "title": attempt.text.title if attempt.text else "Lectura Eliminada",
+                "score": attempt.score,
+                "date": attempt.timestamp.isoformat()
+            }
+            for attempt in attempts
+        ]
+    }

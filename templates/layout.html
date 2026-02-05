@@ -232,6 +232,43 @@
                 </div>
             </form>
         </div>
+        </form>
+    </div>
+    </div>
+
+    <!-- Student Self-Progress Modal (Global) -->
+    <div id="my-analytics-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div class="glass-panel" onclick="event.stopPropagation()"
+            style="background: white; padding: 2rem; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h2 style="margin: 0; font-family: 'Fredoka', sans-serif; color: #1e293b;">Mi Progreso</h2>
+                    <p id="my-analytics-total-readings" style="margin: 0; color: #64748B; font-size: 0.9rem;">Lecturas:
+                        0</p>
+                </div>
+                <button onclick="closeMyAnalyticsModal()" class="btn-bubble btn-bubble-pink"
+                    style="padding: 0.2rem 0.6rem; min-width: 32px;">&times;</button>
+            </div>
+
+            <div style="position: relative; height: 300px; width: 100%; margin-bottom: 2rem;">
+                <canvas id="myStudentChart"></canvas>
+            </div>
+
+            <!-- Reading History -->
+            <div>
+                <button class="btn-bubble btn-bubble-blue" onclick="toggleMyReadingHistory()"
+                    style="width: 100%; padding: 0.8rem; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>📜 Historial de Lecturas</span>
+                    <span id="my-history-toggle-icon">▼</span>
+                </button>
+                <div id="my-reading-history-list"
+                    style="display: none; max-height: 200px; overflow-y: auto; flex-direction: column; gap: 0.5rem; padding: 0.5rem; border: 2px solid #E2E8F0; border-radius: 15px;">
+                    <!-- History items populated here -->
+                    <p style="text-align: center; color: var(--text-secondary);">Cargando...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -243,7 +280,7 @@
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     </script>
-    <script src="/static/js/app.js?v=17"></script>
+    <script src="/static/js/app.js?v=21"></script>
 </body>
 
 </html>

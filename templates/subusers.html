@@ -119,7 +119,9 @@
                 <h2 style="margin-bottom: 1rem; text-align: center;">Crear Alumno/a</h2>
                 <form id="add-subuser-form">
                     <input type="text" id="subuser-name" placeholder="Nombre (Ej: Pepito)" required
-                        style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; margin-bottom: 1.5rem; font-family: 'Fredoka';">
+                        style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; margin-bottom: 1rem; font-family: 'Fredoka';">
+                    <input type="text" id="subuser-license-key-create" placeholder="Licencia (Opcional)"
+                        style="width: 100%; padding: 0.8rem 1.2rem; border: 2px solid #E2E8F0; border-radius: 50px; margin-bottom: 1.5rem; font-family: 'Fredoka'; text-transform: uppercase;">
                     <button type="submit" class="btn-bubble btn-bubble-green"
                         style="width: 100%; margin-bottom: 0.8rem; padding: 0.8rem;">Crear</button>
                     <button type="button" onclick="closeAddSubUserModal()" class="btn-bubble btn-bubble-pink"
@@ -257,12 +259,30 @@
             <div class="glass-panel" onclick="event.stopPropagation()"
                 style="background: white; padding: 2rem; max-width: 600px; width: 95%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 id="analytics-student-name" style="margin: 0;">Progreso</h2>
+                    <div>
+                        <h2 id="analytics-student-name" style="margin: 0;">Progreso</h2>
+                        <p id="analytics-total-readings" style="margin: 0; color: #64748B; font-size: 0.9rem;">Lecturas:
+                            0</p>
+                    </div>
                     <button onclick="closeAnalyticsModal()" class="btn-bubble btn-bubble-pink"
                         style="padding: 0.2rem 0.6rem; min-width: 32px;">&times;</button>
                 </div>
-                <div style="position: relative; height: 300px; width: 100%;">
+                <div style="position: relative; height: 300px; width: 100%; margin-bottom: 2rem;">
                     <canvas id="studentChart"></canvas>
+                </div>
+
+                <!-- Reading History -->
+                <div>
+                    <button class="btn-bubble btn-bubble-blue" onclick="toggleReadingHistory()"
+                        style="width: 100%; padding: 0.8rem; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>📜 Historial de Lecturas</span>
+                        <span id="history-toggle-icon">▼</span>
+                    </button>
+                    <div id="reading-history-list"
+                        style="display: none; max-height: 200px; overflow-y: auto; flex-direction: column; gap: 0.5rem; padding: 0.5rem; border: 2px solid #E2E8F0; border-radius: 15px;">
+                        <!-- History items populated here -->
+                        <p style="text-align: center; color: var(--text-secondary);">Cargando...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -384,13 +404,31 @@
             document.getElementById('add-subuser-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('subuser-name').value;
+                const license = document.getElementById('subuser-license-key-create').value;
+
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerText;
+                submitBtn.innerText = "Creando...";
+                submitBtn.disabled = true;
+
                 try {
-                    await axios.post('/subusers/', { name: name });
+                    const response = await axios.post('/subusers/', { name: name, license_key: license });
                     closeAddSubUserModal();
                     loadSubUsers();
-                    document.getElementById('subuser-name').value = ''; // Reset
+                    document.getElementById('subuser-name').value = '';
+                    document.getElementById('subuser-license-key-create').value = '';
+
+                    // Show code if license was applied
+                    if (response.data.login_code_display) {
+                        document.getElementById('generated-code-display').innerText = response.data.login_code_display;
+                        document.getElementById('show-code-modal').style.display = 'flex';
+                    }
+
                 } catch (error) {
                     alert('Error: ' + (error.response?.data?.detail || "Error al crear alumno/a"));
+                } finally {
+                    submitBtn.innerText = originalText;
+                    submitBtn.disabled = false;
                 }
             });
 
@@ -517,13 +555,64 @@
                 }
             }
 
+            // History Toggle Logic
+            function toggleReadingHistory() {
+                const list = document.getElementById('reading-history-list');
+                const icon = document.getElementById('history-toggle-icon');
+                if (list.style.display === 'none') {
+                    list.style.display = 'flex';
+                    icon.innerText = '▲';
+                } else {
+                    list.style.display = 'none';
+                    icon.innerText = '▼';
+                }
+            }
+
+            // Update OpenAnalyticsModal to populate history
             async function openAnalyticsModal(subuser) {
                 document.getElementById('analytics-modal').style.display = 'flex';
                 document.getElementById('analytics-student-name').innerText = subuser.name;
+                document.getElementById('analytics-total-readings').innerText = 'Cargando...';
+
+                // Reset history
+                const historyList = document.getElementById('reading-history-list');
+                historyList.style.display = 'none'; // closed by default
+                document.getElementById('history-toggle-icon').innerText = '▼';
+                historyList.innerHTML = '<p style="text-align: center; padding: 1rem; color: #94a3b8;">Cargando...</p>';
 
                 try {
                     const response = await axios.get(`/analytics/student/${subuser.id}`);
-                    const data = response.data;
+                    const data = response.data.categories || response.data;
+                    const totalReadings = response.data.total_readings || 0;
+                    const history = response.data.reading_history || [];
+
+                    document.getElementById('analytics-total-readings').innerText = `Lecturas completadas: ${totalReadings}`;
+
+                    // Populate History
+                    historyList.innerHTML = '';
+                    if (history.length === 0) {
+                        historyList.innerHTML = '<p style="text-align: center; padding: 1rem; color: #94a3b8;">Sin lecturas registradas</p>';
+                    } else {
+                        // Sort by date desc
+                        history.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        history.forEach(item => {
+                            const dateStr = new Date(item.date).toLocaleDateString();
+                            const scoreColor = item.score >= 80 ? '#22c55e' : (item.score >= 50 ? '#f59e0b' : '#ef4444');
+
+                            const row = document.createElement('div');
+                            row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;';
+                            row.innerHTML = `
+                                <div>
+                                    <div style="font-weight: 500; font-size: 0.95rem; color: #334155;">${item.title}</div>
+                                    <div style="font-size: 0.8rem; color: #94a3b8;">${dateStr}</div>
+                                </div>
+                                <div style="font-weight: bold; color: ${scoreColor}; font-size: 1.1rem;">
+                                    ${item.score}%
+                                </div>
+                            `;
+                            historyList.appendChild(row);
+                        });
+                    }
 
                     const ctx = document.getElementById('studentChart').getContext('2d');
                     if (studentChartInstance) studentChartInstance.destroy();

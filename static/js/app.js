@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         axios.get('/auth/me').then(response => {
             const user = response.data;
-            const username = user.username || "Usuario";
+            // SubUsers use 'name', Users use 'username' (or name if set)
+            const username = user.name || user.username || "Usuario";
             let licenseInfoHTML = '';
 
             const hasActiveLicense = user.access_expires_at && new Date(user.access_expires_at) > new Date();
@@ -62,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuItemsHTML += `
                     <a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>
                     <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" id="my-progress-action">Mi Progreso</a>
+                    <div class="dropdown-divider"></div>
                 `;
             }
 
@@ -96,22 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const isStudent = localStorage.getItem('is_subuser') === 'true';
 
-            if (isStudent) {
-                navLinks.innerHTML = `
-                    <button id="logout-btn-simple" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
-                        Cerrar Sesión
-                    </button>
-                `;
-                document.getElementById('logout-btn-simple').onclick = () => {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('is_subuser');
-                    // Clear Cookie
-                    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
-                    window.location.href = '/login';
-                };
-                return; // Stop here for students
-            }
+            // Add "Mi Progreso" for Students
+            // Removed student-specific block as it is now general
 
             navLinks.innerHTML = dropdownHTML;
 
@@ -157,6 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.stopPropagation();
                     openUnlockModal();
                     // Close dropdown
+                    dropdown.classList.remove('active');
+                });
+            }
+
+            // Student Progress Logic
+            const myProgressBtn = document.getElementById('my-progress-action');
+            if (myProgressBtn) {
+                myProgressBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openMyAnalyticsModal();
                     dropdown.classList.remove('active');
                 });
             }
@@ -303,5 +303,106 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    }
+});
+
+// --- STUDENT ANALYTICS MODAL LOGIC ---
+let myStudentChartInstance = null;
+
+function toggleMyReadingHistory() {
+    const list = document.getElementById('my-reading-history-list');
+    const icon = document.getElementById('my-history-toggle-icon');
+    if (list.style.display === 'none') {
+        list.style.display = 'flex';
+        icon.innerText = '▲';
+    } else {
+        list.style.display = 'none';
+        icon.innerText = '▼';
+    }
+}
+
+async function openMyAnalyticsModal() {
+    document.getElementById('my-analytics-modal').style.display = 'flex';
+    document.getElementById('my-analytics-total-readings').innerText = 'Cargando...';
+
+    // Reset history
+    const historyList = document.getElementById('my-reading-history-list');
+    historyList.style.display = 'none';
+    document.getElementById('my-history-toggle-icon').innerText = '▼';
+    historyList.innerHTML = '<p style="text-align: center; padding: 1rem; color: #94a3b8;">Cargando...</p>';
+
+    try {
+        const response = await axios.get('/analytics/me');
+
+        const data = response.data.categories || response.data;
+        const totalReadings = response.data.total_readings || 0;
+        const history = response.data.reading_history || [];
+
+        document.getElementById('my-analytics-total-readings').innerText = `Lecturas completadas: ${totalReadings}`;
+
+        // Populate History
+        historyList.innerHTML = '';
+        if (history.length === 0) {
+            historyList.innerHTML = '<p style="text-align: center; padding: 1rem; color: #94a3b8;">Sin lecturas registradas</p>';
+        } else {
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            history.forEach(item => {
+                const dateStr = new Date(item.date).toLocaleDateString();
+                const scoreColor = item.score >= 80 ? '#22c55e' : (item.score >= 50 ? '#f59e0b' : '#ef4444');
+
+                const row = document.createElement('div');
+                row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;';
+                row.innerHTML = `
+                     <div>
+                         <div style="font-weight: 500; font-size: 0.95rem; color: #334155;">${item.title}</div>
+                         <div style="font-size: 0.8rem; color: #94a3b8;">${dateStr}</div>
+                     </div>
+                     <div style="font-weight: bold; color: ${scoreColor}; font-size: 1.1rem;">
+                         ${item.score}%
+                     </div>
+                 `;
+                historyList.appendChild(row);
+            });
+        }
+
+        const ctx = document.getElementById('myStudentChart').getContext('2d');
+        if (myStudentChartInstance) myStudentChartInstance.destroy();
+
+        myStudentChartInstance = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: ['Literal', 'Inferencial', 'Vocabulario'],
+                datasets: [{
+                    label: '% Aciertos',
+                    data: [data.LITERAL, data.INFERENTIAL, data.VOCABULARY],
+                    backgroundColor: ['rgba(59, 130, 246, 0.5)', 'rgba(139, 92, 246, 0.5)', 'rgba(16, 185, 129, 0.5)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        alert("Error cargando perfil: " + (error.response?.data?.detail || error.message));
+    }
+}
+
+function closeMyAnalyticsModal() {
+    document.getElementById('my-analytics-modal').style.display = 'none';
+}
+
+// Global Listener for Modal Outside Click
+document.addEventListener('DOMContentLoaded', () => {
+    const myModal = document.getElementById('my-analytics-modal');
+    if (myModal) {
+        myModal.addEventListener('click', (e) => {
+            if (e.target === myModal) closeMyAnalyticsModal();
+        });
     }
 });
