@@ -23,7 +23,7 @@ def get_student_analytics(
     if not subuser:
         raise HTTPException(status_code=404, detail="Student not found")
         
-    attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == subuser.id).all()
+    attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.subuser_id == subuser.id).all()
     
     stats = {
         "LITERAL": {"correct": 0, "total": 0},
@@ -87,6 +87,8 @@ def get_student_analytics(
             {
                 "title": attempt.text.title if attempt.text else "Lectura Eliminada",
                 "score": attempt.score,
+                "correct_count": sum(1 for v in attempt.details.values() if v) if attempt.details else 0,
+                "total_count": len(attempt.details) if attempt.details else 0,
                 "date": attempt.timestamp.isoformat()
             }
             for attempt in attempts
@@ -109,7 +111,7 @@ def get_class_analytics(
     q_cache = {}
     
     for sub in subusers:
-        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == sub.id).all()
+        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.subuser_id == sub.id).all()
         for attempt in attempts:
             if not attempt.details:
                 continue
@@ -164,29 +166,18 @@ def get_my_analytics(
     
     # Filter attempts
     if is_subuser:
-        # NOTE: analytics.py existing logic uses user_id==subuser.id. 
-        # We follow this pattern for consistency, assuming attempts are saved this way for subusers.
-        # If models.ReadingAttempt has subuser_id, we should check that too, 
-        # but to match get_student_analytics we use user_id.
-        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
-        # Double check if we should look at subuser_id column?
-        # Let's try to fetch using subuser_id first, if empty, try user_id?
-        # Actually, let's look at models.py again. 
-        # ReadingAttempt has user_id and subuser_id.
-        # Safest bet is to check both OR use the one that is populated.
-        # Given I cannot see creation logic, I will assume the previous dev knew what they were doing 
-        # in get_student_analytics and stick to user_id for now, 
-        # BUT I will also include subuser_id filter to be safe if data is distributed.
+        # Check attempts where subuser_id matches current subuser ID
+        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.subuser_id == current_user.id).all()
         
-        # ACTUALLY, checking get_student_analytics(lines 26):
-        # attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == subuser.id).all()
-        # This strongly implies subuser_ids are stored in user_id column?? That would be bad design (collision with User table).
-        # Or maybe SubUser IDs are unique across system? (Unlikely if auto-increment).
-        # Let's trust get_student_analytics logic for now to ensure consistency with what Teacher sees.
-        pass 
+        # Fallback: Check user_id as well in case of legacy data mixed up (just to be safe), 
+        # but STRICTLY avoid mixing with main User IDs if possible.
+        # Since SubUser ID 1 and User ID 1 are different entities, we must rely on the column structure.
+        # models.ReadingAttempt has separate columns: user_id (ForeignKey users.id) and subuser_id (ForeignKey subusers.id).
+        # We should only query subuser_id.
     else:
         # Regular user
-        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all()
+        attempts = db.query(models.ReadingAttempt).filter(models.ReadingAttempt.user_id == current_user.id).all() 
+
 
     # Reuse logic (Copy-paste for now to avoid refactor risk, or extract)
     # Extracting logic is cleaner.
@@ -249,6 +240,8 @@ def calculate_analytics(attempts: List[models.ReadingAttempt], db: Session):
             {
                 "title": attempt.text.title if attempt.text else "Lectura Eliminada",
                 "score": attempt.score,
+                "correct_count": sum(1 for v in attempt.details.values() if v) if attempt.details else 0,
+                "total_count": len(attempt.details) if attempt.details else 0,
                 "date": attempt.timestamp.isoformat()
             }
             for attempt in attempts

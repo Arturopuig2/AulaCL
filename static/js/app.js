@@ -357,8 +357,8 @@ async function openMyAnalyticsModal() {
                          <div style="font-weight: 500; font-size: 0.95rem; color: #334155;">${item.title}</div>
                          <div style="font-size: 0.8rem; color: #94a3b8;">${dateStr}</div>
                      </div>
-                     <div style="font-weight: bold; color: ${scoreColor}; font-size: 1.1rem;">
-                         ${item.score}%
+                     <div style="font-weight: 400; color: ${scoreColor}; font-size: 1.1rem;">
+                         ${item.correct_count}/${item.total_count}
                      </div>
                  `;
                 historyList.appendChild(row);
@@ -369,21 +369,25 @@ async function openMyAnalyticsModal() {
         if (myStudentChartInstance) myStudentChartInstance.destroy();
 
         myStudentChartInstance = new Chart(ctx, {
-            type: 'polarArea',
+            type: 'bar',
             data: {
-                labels: ['Literal', 'Inferencial', 'Vocabulario'],
+                labels: ['C. Literal', 'C. Inferencial', 'Vocabulario'],
                 datasets: [{
                     label: '% Aciertos',
                     data: [data.LITERAL, data.INFERENTIAL, data.VOCABULARY],
-                    backgroundColor: ['rgba(59, 130, 246, 0.5)', 'rgba(139, 92, 246, 0.5)', 'rgba(16, 185, 129, 0.5)'],
-                    borderWidth: 1
+                    backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(16, 185, 129, 0.7)'],
+                    borderWidth: 1,
+                    borderRadius: 5
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    r: { beginAtZero: true, max: 100 }
+                    y: { beginAtZero: true, max: 100 }
+                },
+                plugins: {
+                    legend: { display: false }
                 }
             }
         });

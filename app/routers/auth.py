@@ -192,6 +192,21 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
+        
+    # VALIDATION: Strict format
+    import re
+    # 1. Email Format (Username must be email)
+    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    if not re.match(email_regex, user.username):
+         raise HTTPException(status_code=400, detail="El nombre de usuario debe ser un correo electrónico válido")
+         
+    # 2. Password Complexity
+    # At least 8 chars, 1 letter, 1 number
+    if len(user.password) < 8:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres")
+        
+    if not re.search(r'[A-Za-z]', user.password) or not re.search(r'\d', user.password):
+        raise HTTPException(status_code=400, detail="La contraseña debe contener al menos una letra y un número")
     
     # Check if email is already taken (if provided)
     if user.email:

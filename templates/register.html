@@ -76,6 +76,20 @@
         const isTeacher = document.getElementById('is_teacher').checked;
 
 
+        // Regex Validations
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+
+        if (!emailRegex.test(email)) {
+            alert('Por favor, introduce un correo electrónico válido.');
+            return;
+        }
+
+        if (!passwordRegex.test(password)) {
+            alert('La contraseña debe tener al menos 8 caracteres y contener letras y números.');
+            return;
+        }
+
         if (email !== confirmEmail) {
             alert('Los correos electrónicos no coinciden.');
             return;
