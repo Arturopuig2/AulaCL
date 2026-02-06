@@ -3,7 +3,7 @@ import secrets
 import string
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models import InvitationCode, User
+from app.models import License, User
 from app import database
 
 # Setup DB Connection
@@ -20,25 +20,24 @@ SessionLocal = sessionmaker(bind=engine)
 db = SessionLocal()
 
 def generate_licenses(count=5):
-    print(f"Generating {count} new licenses...")
+    print(f"Generating {count} new student licenses...")
     
-    # Check for admin user to assign as creator (optional, usually null is fine or admin id)
-    admin = db.query(User).filter(User.username == "admin").first()
-    creator_id = admin.id if admin else None
-
     new_codes = []
     for _ in range(count):
         # Format: LIC-XXXXXXXX
         random_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
         code_str = f"LIC-{random_part}"
         
-        invitation = InvitationCode(
-            code=code_str,
-            is_used=False,
-            created_by_user_id=creator_id
+        # Create License object
+        new_license = License(
+            key=code_str,
+            status="ACTIVE",
+            duration_days=365
         )
-        db.add(invitation)
+        db.add(new_license)
         new_codes.append(code_str)
+    
+    db.commit()
     
     db.commit()
     
