@@ -28,9 +28,14 @@ def update_schema():
     
     # READING ATTEMPTS
     verify_column(connection, "reading_attempts", "subuser_id", "INTEGER")
-    # Make user_id nullable if it wasn't? Standard SQL for ALTER TABLE nullable is complex across DBs, 
-    # but in SQLite/PG usually null is default. 
-    # For now just ensuring subuser_id exists.
+    
+    # LICENSES TABLE
+    verify_column(connection, "licenses", "used_by_subuser_id", "INTEGER")
+    verify_column(connection, "licenses", "used_by_user_id", "INTEGER")
+    # Postgres needs explicit foreign key? Usually integer is enough for code-level logic, 
+    # but database integrity relies on Constraints. verify_column only adds column.
+    
+    # (Add other missing columns here if any found later)
 
     # (Add other missing columns here if any found later)
     

@@ -125,7 +125,7 @@
             alert(`¡${count} licencias generadas!`);
         } catch (error) {
             console.error(error);
-            alert('Error generando licencias');
+            alert('Error generando licencias: ' + (error.response?.data?.detail || error.message));
         }
     }
 
