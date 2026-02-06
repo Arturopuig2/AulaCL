@@ -42,6 +42,18 @@
                 </div>
             </div>
 
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <div style="position: relative;">
+                    <input type="text" id="license_key" placeholder="Licencia / Código (Opcional)"
+                        onfocus="this.placeholder=''" onblur="this.placeholder='Licencia / Código (Opcional)'"
+                        style="width: 100%; padding: 0.6rem 1rem; border: 2px solid #E2E8F0; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-size: 0.9rem; letter-spacing: 1px;">
+                </div>
+                <div
+                    style="font-size: 0.75rem; color: #64748b; margin-top: 0.4rem; padding-left: 0.5rem; font-family: 'Fredoka';">
+                    Si tienes una licencia, introdúcela para activar tu cuenta Premium al instante.
+                </div>
+            </div>
+
             <div class="form-group"
                 style="margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.8rem; padding: 0 0.5rem;">
                 <input type="checkbox" id="is_teacher"
@@ -108,7 +120,8 @@
                 name: name,
                 email: email,
                 password: password,
-                is_teacher: isTeacher
+                is_teacher: isTeacher,
+                license_key: document.getElementById('license_key').value
             });
 
             // 2. Auto-Login

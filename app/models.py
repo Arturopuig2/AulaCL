@@ -111,7 +111,10 @@ class License(Base):
     activated_at = Column(DateTime, nullable=True)
     
     used_by_subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True)
+    used_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
     subuser = relationship("SubUser", back_populates="licenses")
+    user = relationship("User")
 
 class LoginAttempt(Base):
     __tablename__ = "login_attempts"

@@ -245,8 +245,22 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
     db.commit()
     db.refresh(db_user)
     
-    # Mark Invitation as Used - REMOVED here, moved to /unlock
-    
+    # Process License Key if provided (Anonymous -> Registered User with License)
+    if user.license_key and user.license_key.strip():
+        lic_key = user.license_key.strip().upper()
+        license_entry = db.query(models.License).filter(models.License.key == lic_key).first()
+        
+        if license_entry and license_entry.status == "ACTIVE":
+            license_entry.status = "USED"
+            license_entry.activated_at = datetime.utcnow()
+            license_entry.used_by_user_id = db_user.id
+            
+            # Set Expiry
+            now = datetime.utcnow()
+            db_user.access_expires_at = now + timedelta(days=license_entry.duration_days)
+            db.commit()
+            db.refresh(db_user)
+
     return db_user
 
 @router.post("/token", response_model=schemas.Token)
@@ -334,31 +348,48 @@ def change_password(request: schemas.ChangePasswordRequest, current_user: schema
 def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Validate Code (Force Uppercase)
     code_input = request.access_code.upper().strip()
-    invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
     
-    if not invitation:
-        raise HTTPException(status_code=403, detail="Código de acceso inválido")
+    # 1. TRY LICENSE TABLE (Standard Format: LIC-XXXXXXXX)
+    license_entry = db.query(models.License).filter(models.License.key == code_input).first()
     
-    if invitation.is_used:
-        raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
+    invitation = None
+    used_license = False
+    duration_days = 365
+    
+    if license_entry:
+        if license_entry.status != "ACTIVE":
+             raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o no es válida")
+        used_license = True
+    else:
+        # 2. TRY INVITATION CODE (Legacy)
+        invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
+        if not invitation:
+            raise HTTPException(status_code=403, detail="Código de acceso inválido")
+        
+        if invitation.is_used:
+            raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
 
-    # Grant 1 Year Access (Cumulative)
+    # Grant Access (Cumulative)
     now = datetime.utcnow()
-    one_year = timedelta(days=365)
     
     if current_user.access_expires_at and current_user.access_expires_at > now:
         # Extend existing time
-        current_user.access_expires_at += one_year
+        current_user.access_expires_at += timedelta(days=duration_days)
         message = "¡Suscripción extendida 1 año!"
     else:
         # Start new subscription
-        current_user.access_expires_at = now + one_year
+        current_user.access_expires_at = now + timedelta(days=duration_days)
         message = "¡Contenido desbloqueado por 1 año!"
     
     # Mark code as used
-    invitation.is_used = True
-    invitation.used_at = now
-    invitation.used_by_user_id = current_user.id
+    if used_license:
+        license_entry.status = "USED"
+        license_entry.activated_at = now
+        license_entry.used_by_user_id = current_user.id
+    else:
+        invitation.is_used = True
+        invitation.used_at = now
+        invitation.used_by_user_id = current_user.id
     
     db.commit()
     

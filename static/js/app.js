@@ -76,10 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
-            // "Cambiar Contraseña" and "Cerrar Sesión" for everyone
+            // "Cambiar Contraseña" ONLY for main users (not SubUsers)
+            if (!isSubUser) {
+                menuItemsHTML += `
+                    <a href="#" class="dropdown-item" id="change-password-action">Cambiar Contraseña</a>
+                    <div class="dropdown-divider"></div>
+                `;
+            }
+
             menuItemsHTML += `
-                <a href="#" class="dropdown-item" id="change-password-action">Cambiar Contraseña</a>
-                <div class="dropdown-divider"></div>
                 <div class="dropdown-item" id="logout-action" style="color: var(--danger);">Cerrar Sesión</div>
             `;
 
@@ -132,11 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Change Password Logic
-            document.getElementById('change-password-action').addEventListener('click', (e) => {
-                e.preventDefault();
-                openChangePasswordModal();
-                dropdown.classList.remove('active');
-            });
+            const changePwBtn = document.getElementById('change-password-action');
+            if (changePwBtn) {
+                changePwBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openChangePasswordModal();
+                    dropdown.classList.remove('active');
+                });
+            }
 
             // Add License Logic
             const addLicBtn = document.getElementById('add-license-action');

@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     access_code: Optional[str] = None
+    license_key: Optional[str] = None
     is_teacher: Optional[bool] = False
 
 class User(UserBase):
