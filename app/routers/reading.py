@@ -171,15 +171,32 @@ def get_questions(text_id: int, current_user: schemas.User = Depends(auth.get_cu
 def submit_attempt(attempt: schemas.AttemptCreate, current_user = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     is_subuser = not hasattr(current_user, "username")
     
-    db_attempt = models.ReadingAttempt(
-        user_id=current_user.id if not is_subuser else None,
-        subuser_id=current_user.id if is_subuser else None,
-        text_id=attempt.text_id,
-        time_spent_seconds=attempt.time_spent_seconds,
-        score=attempt.score,
-        details=attempt.details
-    )
-    db.add(db_attempt)
+    # UPSERT LOGIC: Check if attempt exists
+    existing_attempt = db.query(models.ReadingAttempt).filter(
+        models.ReadingAttempt.text_id == attempt.text_id,
+        models.ReadingAttempt.user_id == (current_user.id if not is_subuser else None),
+        models.ReadingAttempt.subuser_id == (current_user.id if is_subuser else None)
+    ).first()
+
+    if existing_attempt:
+        # Update existing
+        existing_attempt.score = attempt.score
+        existing_attempt.time_spent_seconds = attempt.time_spent_seconds
+        existing_attempt.details = attempt.details
+        existing_attempt.timestamp = datetime.utcnow()
+        db_attempt = existing_attempt
+    else:
+        # Create new
+        db_attempt = models.ReadingAttempt(
+            user_id=current_user.id if not is_subuser else None,
+            subuser_id=current_user.id if is_subuser else None,
+            text_id=attempt.text_id,
+            time_spent_seconds=attempt.time_spent_seconds,
+            score=attempt.score,
+            details=attempt.details
+        )
+        db.add(db_attempt)
+    
     db.commit()
     db.refresh(db_attempt)
     return db_attempt

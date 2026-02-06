@@ -39,6 +39,9 @@ def update_schema():
 
     # (Add other missing columns here if any found later)
     
+    # 3. DATA FIXES
+    fix_audio_paths(connection)
+    
     connection.close()
     print("Schema check complete.")
 
@@ -78,6 +81,36 @@ def verify_column(connection, table_name, column_name, column_type):
 
     except Exception as e:
         print(f"Error checking/adding column {column_name}: {e}")
+
+def fix_audio_paths(connection):
+    """
+    Ensures all audio paths start with '/' to work with mounts correctly.
+    """
+    try:
+        print("Checking audio paths...")
+        # Get all texts with audio
+        query = text("SELECT id, audio_path FROM texts WHERE audio_path IS NOT NULL")
+        texts = connection.execute(query).fetchall()
+        
+        count = 0
+        for t in texts:
+            t_id = t[0]
+            path = t[1]
+            if path and not path.startswith("/") and not path.startswith("http"):
+                new_path = "/" + path
+                print(f"Fixing ID {t_id}: {path} -> {new_path}")
+                update_query = text("UPDATE texts SET audio_path = :path WHERE id = :id")
+                connection.execute(update_query, {"path": new_path, "id": t_id})
+                count += 1
+                
+        if count > 0:
+            try:
+                connection.commit()
+                print(f"Fixed {count} audio paths.")
+            except:
+                pass
+    except Exception as e:
+        print(f"Error fixing audio paths: {e}")
 
 if __name__ == "__main__":
     update_schema()

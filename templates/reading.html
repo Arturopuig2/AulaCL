@@ -476,8 +476,10 @@
                 };
 
                 audioPlayer.onended = () => {
-                    bgMusic.pause();
-                    bgMusic.currentTime = 0;
+                    setTimeout(() => {
+                        bgMusic.pause();
+                        bgMusic.currentTime = 0;
+                    }, 1000); // 1 second delay
                 };
 
                 // Karaoke Sync Listener

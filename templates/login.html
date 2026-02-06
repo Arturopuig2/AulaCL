@@ -3,11 +3,11 @@
 {% block navbar %}{% endblock %}
 
 {% block content %}
-<div style="max-width: 320px; margin: 0 auto; padding-top: 1.5rem; font-family: 'Fredoka', sans-serif;">
+<div style="max-width: 320px; margin: 0 auto; padding-top: 0.5rem; font-family: 'Fredoka', sans-serif;">
     <div class="glass-panel"
         style="padding: 1.2rem; border-radius: 30px; border: 3px solid #E2E8F0; background: white;">
         <h2
-            style="text-align: center; font-family: 'Fredoka', sans-serif; margin-bottom: 1.2rem; font-size: 1.8rem; letter-spacing: -1px; color: #1e293b; font-weight: 500;">
+            style="text-align: center; font-family: 'Fredoka', sans-serif; margin-top: 0; margin-bottom: 1.2rem; font-size: 1.8rem; letter-spacing: -1px; color: #1e293b; font-weight: 500;">
             Iniciar Sesión</h2>
         <form id="login-form">
             <div class="form-group" style="margin-bottom: 0.8rem;">
@@ -37,22 +37,27 @@
             </a>
 
         </form>
-        <div style="margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center;">
-            <p style="margin-bottom: 0.5rem; font-weight: 600; font-family: 'Fredoka'; font-size: 0.85rem;">¿Eres
+        <div style="margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p style="margin-bottom: 0; font-size: 0.85rem; font-family: 'Fredoka';">
+                ¿No tienes cuenta? <a href="/register"
+                    style="color: #2563eb; font-weight: 600; text-decoration: none;">Regístrate</a>
+                <br><br>
+                <a href="/forgot-password" style="font-size: 0.8rem; color: #64748b; text-decoration: none;">¿Olvidaste
+                    tu
+                    contraseña?</a>
+            </p>
+        </div>
+
+        <div style="margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p
+                style="margin-bottom: 0.5rem; font-weight: 600; font-family: 'Fredoka'; font-size: 0.85rem; color: #64748b;">
+                ¿Eres
                 estudiante?</p>
             <a href="/login-code" class="btn-bubble btn-bubble-orange"
                 style="display: block; width: 100%; padding: 0.6rem; text-decoration: none; font-size: 0.9rem;">
                 Entrar con Código
             </a>
         </div>
-
-        <p style="margin-top: 1.2rem; text-align: center; font-size: 0.85rem; font-family: 'Fredoka';">
-            ¿No tienes cuenta? <a href="/register"
-                style="color: #2563eb; font-weight: 600; text-decoration: none;">Regístrate</a>
-            <br><br>
-            <a href="/forgot-password" style="font-size: 0.8rem; color: #64748b; text-decoration: none;">¿Olvidaste tu
-                contraseña?</a>
-        </p>
     </div>
 </div>
 
