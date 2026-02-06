@@ -434,18 +434,18 @@ def generate_licenses(count: int = 1, duration_days: int = 365, current_user: sc
         rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
         key = f"LIC-{rand_part}"
         
-        # Check uniqueness in InvitationCode table
-        while db.query(models.InvitationCode).filter(models.InvitationCode.code == key).first():
+        # Check uniqueness in License table
+        while db.query(models.License).filter(models.License.key == key).first():
              rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
              key = f"LIC-{rand_part}"
              
-        # Create InvitationCode (compatible with /unlock endpoint)
-        db_invitation = models.InvitationCode(
-            code=key,
-            is_used=False
-            # created_by_user_id not in model
+        # Create License (Student License)
+        db_license = models.License(
+            key=key,
+            status="ACTIVE",
+            duration_days=duration_days
         )
-        db.add(db_invitation)
+        db.add(db_license)
         new_keys.append(key)
     
     db.commit()
