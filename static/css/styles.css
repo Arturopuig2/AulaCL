@@ -40,6 +40,11 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.5;
+    overscroll-behavior-x: none;
+}
+
+html {
+    overscroll-behavior-x: none;
 }
 
 /* Glassmorphism Logic */
