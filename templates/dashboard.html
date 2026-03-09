@@ -47,14 +47,14 @@
     }
 
     .trigger-course {
-        border: 3px solid #7DD3FC;
-        color: #0369A1;
+        border: 3px solid #FED7AA;
+        color: #EA580C;
     }
 
     .trigger-lang {
-        border: 3px solid #7DD3FC;
-        background: #F0F9FF;
-        color: #0369A1;
+        border: 3px solid #FED7AA;
+        background: #FFF7ED;
+        color: #EA580C;
     }
 
     .custom-select-trigger:after {
@@ -90,11 +90,11 @@
     }
 
     .options-course {
-        border: 3px solid #7DD3FC;
+        border: 3px solid #FED7AA;
     }
 
     .options-lang {
-        border: 3px solid #7DD3FC;
+        border: 3px solid #FED7AA;
     }
 
     .custom-select-wrapper.open .custom-options {
@@ -130,14 +130,14 @@
     }
 
     .custom-option.selected {
-        background: #F0F9FF;
-        color: #0369A1;
+        background: #FFF7ED;
+        color: #EA580C;
         font-weight: 600;
     }
 
     .opt-lang.selected {
-        background: #F0F9FF;
-        color: #0369A1;
+        background: #FFF7ED;
+        color: #EA580C;
     }
 
     /* Hide Scrollbar */
@@ -391,18 +391,18 @@
                     ${text.image_path ? `<div style="width: 100%; height: 220px; background-image: url('${text.image_path}'); background-size: contain; background-repeat: no-repeat; background-position: center;"></div>` : ''}
                 </div>
 
-                <div style="background: #fb923c; padding: 0.5rem 1rem 1rem 1rem; flex-grow: 1; display: flex; flex-direction: column; opacity: ${opacity};">
+                <div style="background: #fdba74; padding: 0.5rem 1rem 1rem 1rem; flex-grow: 1; display: flex; flex-direction: column; opacity: ${opacity};">
                     <h3 style="font-size: 1.4rem; margin: 0 0 0.5rem 0; font-weight: 500; color: #1e293b;">${text.title}</h3>
                     
                     <div style="flex-grow: 1;"></div> 
 
                     <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: auto; align-items: center;">
                         ${getCourseBadge(text.course_level)}
-                        <span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: #C2410C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${getLangLabel(text.language)}</span>
+                        <span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: #EA580C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${getLangLabel(text.language)}</span>
                         
                         ${text.audio_path ? `
                         <div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.55rem; border-radius: 50px; border: 1px solid white; height: 26px;" title="Tiene audio">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
                                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                             </svg>
@@ -457,7 +457,7 @@
             'ALL': 'Sin Curso'
         };
         const label = map[code] || code;
-        return `<span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: #C2410C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${label}</span>`;
+        return `<span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: #EA580C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${label}</span>`;
     }
 
     // --- Navigation Logic removed (moved to Global app.js)
