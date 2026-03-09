@@ -632,9 +632,10 @@ def analyze_upload_text(
 
         prompt = f"""
         Analiza el siguiente texto y genera:
-        1. 3 preguntas de tipo LITERAL con 4 opciones.
-        2. 3 preguntas de tipo INFERENTIAL con 4 opciones.
-        3. 3 preguntas de tipo VOCABULARY con 4 opciones.
+        1. 2 preguntas de tipo LITERAL con 4 opciones.
+        2. 2 preguntas de tipo INFERENTIAL con 4 opciones.
+        3. 2 preguntas de tipo VOCABULARY con 4 opciones.
+        4. 2 preguntas de tipo DECODIFICACION (sonido-letra, rimas, sílabas) con 4 opciones.
         
         TEXTO:
         {content[:3000]}
@@ -1124,6 +1125,9 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
     
     G) ACTIVIDAD REFLEXIVA (Valores/Crítico):
        - Relación con valores, emociones o pensamiento crítico (ODS).
+    
+    H) DECODIFICACIÓN (Sonido-Letra):
+       - Relación fonema-grafema, conciencia fonológica, sílabas, rimas y reconocimiento de palabras.
 
     REQUISITOS (Total 14 preguntas/actividades):
 
@@ -1163,6 +1167,10 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
        - Ej: "¿Qué harías tú...?", "¿Por qué es importante...?".
        - Options: [] (Array vacío).
 
+    10. 2 PREGUNTAS DE DECODIFICACIÓN.
+        - Ej: Rimas, contar sílabas, identificar letras o sonidos.
+        - Si es tipo test, 3 opciones. Si es abierta, [].
+
     IMPORTANTE: El campo 'options' debe ser una lista de textos. Si es una actividad abierta, usa [].
 
     FORMATO JSON OBLIGATORIO:
@@ -1172,7 +1180,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
                 "question": "Texto de la pregunta/actividad...",
                 "options": ["Opción A", "Opción B"] o [],
                 "correct_index": 0,
-                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "ORAL" | "ESCRITA" | "LUDICA" | "REFLEXIVA",
+                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "ORAL" | "ESCRITA" | "LUDICA" | "REFLEXIVA" | "DECODIFICACION",
                 "reasoning": "Explicación de la clasificación"
             }}
         ]
@@ -1219,7 +1227,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
             q["options"] = [str(opt) for opt in q["options"] if opt is not None]
             
             # Use strict option count only for Test types
-            is_open_activity = any(x in q_type for x in ["ORAL", "ESCRITA", "LUDICA", "LÚDICA", "REFLEXIVA"])
+            is_open_activity = any(x in q_type for x in ["ORAL", "ESCRITA", "LUDICA", "LÚDICA", "REFLEXIVA", "DECODIFICACION"])
             
             # For standard test types, ensure at least 2 options
             if not is_open_activity:

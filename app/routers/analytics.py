@@ -188,7 +188,8 @@ def calculate_analytics(attempts: List[models.ReadingAttempt], db: Session):
     stats = {
         "LITERAL": {"correct": 0, "total": 0},
         "INFERENTIAL": {"correct": 0, "total": 0},
-        "VOCABULARY": {"correct": 0, "total": 0}
+        "VOCABULARY": {"correct": 0, "total": 0},
+        "DECODING": {"correct": 0, "total": 0}
     }
     
     q_cache = {}
@@ -218,6 +219,8 @@ def calculate_analytics(attempts: List[models.ReadingAttempt], db: Session):
                 cat = "VOCABULARY"
             elif "LITERAL" in cat_upper:
                 cat = "LITERAL"
+            elif "DECODIF" in cat_upper:
+                cat = "DECODING"
                 
             if cat not in stats:
                 stats[cat] = {"correct": 0, "total": 0}

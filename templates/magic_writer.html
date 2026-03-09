@@ -64,8 +64,12 @@
             </div>
 
             <button onclick="generateMagicStory()" id="btn-magic-gen" class="btn btn-primary"
-                style="width: 100%; height: 42px; background: #2563eb; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                🪄 Generar Cuento
+                style="width: 100%; height: 42px; background: #2563eb; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.8rem;">
+                🪄 Generar Cuento con IA
+            </button>
+            <button onclick="createBlankStory()" id="btn-magic-blank" class="btn btn-outline"
+                style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-color: #64748b; color: #475569;">
+                📝 Crear Lectura Vacía (Escribir yo mismo)
             </button>
         </div>
 
@@ -227,7 +231,22 @@
             btn.innerText = originalText;
             btn.disabled = false;
         }
+    }
 
+    function createBlankStory() {
+        // Initialize an empty draft
+        currentMagicDraft = {
+            title: "",
+            content: "",
+            questions: [],
+            image_path: null
+        };
+
+        renderMagicEditor(currentMagicDraft);
+
+        // UI Switch
+        document.getElementById('magic-config').style.display = 'none';
+        document.getElementById('magic-editor').style.display = 'block';
     }
 
     function renderMagicEditor(draft) {
@@ -279,6 +298,7 @@
                     <option value="LITERAL" ${q.category === 'LITERAL' ? 'selected' : ''}>LITERAL (Comprensión)</option>
                     <option value="INFERENCIAL" ${q.category === 'INFERENCIAL' ? 'selected' : ''}>INFERENCIAL (Deducción)</option>
                     <option value="VOCABULARIO" ${q.category === 'VOCABULARIO' ? 'selected' : ''}>VOCABULARIO (Léxico)</option>
+                    <option value="DECODIFICACION" ${q.category === 'DECODIFICACION' ? 'selected' : ''}>DECODIFICACIÓN (Sonido-Letra)</option>
                     <option value="REFLEXIVA" ${q.category === 'REFLEXIVA' ? 'selected' : ''}>REFLEXIVA (Valores)</option>
                     <option value="LUDICA" ${q.category === 'LUDICA' || q.category === 'LÚDICA' ? 'selected' : ''}>LÚDICA (Juego/Creatividad)</option>
                     <option value="ESCRITA" ${q.category === 'ESCRITA' ? 'selected' : ''}>EXPRESIÓN ESCRITA</option>
