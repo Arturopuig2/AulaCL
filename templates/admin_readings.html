@@ -8,6 +8,42 @@
 {% block content %}
 <h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Gestión de Lecturas</h1>
 
+<div style="max-width: 1000px; margin: 0 auto 1.5rem auto; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;">
+        <label for="filter-course"
+            style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.3rem;">Filtrar por Curso</label>
+        <select id="filter-course" onchange="loadTexts()"
+            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white;">
+            <option value="ALL_FILTERS">Todos los cursos</option>
+            <option value="1P">1º Primaria</option>
+            <option value="2P">2º Primaria</option>
+            <option value="3P">3º Primaria</option>
+            <option value="4P">4º Primaria</option>
+            <option value="5P">5º Primaria</option>
+            <option value="6P">6º Primaria</option>
+            <option value="1ESO">1º ESO</option>
+            <option value="2ESO">2º ESO</option>
+            <option value="3ESO">3º ESO</option>
+            <option value="4ESO">4º ESO</option>
+            <option value="1BAT">1º Bachillerato</option>
+            <option value="2BAT">2º Bachillerato</option>
+        </select>
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+        <label for="sort-by" style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.3rem;">Ordenar
+            por</label>
+        <select id="sort-by" onchange="loadTexts()"
+            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white;">
+            <option value="id_desc">Más recientes primero</option>
+            <option value="id_asc">Más antiguos primero</option>
+            <option value="title_asc">Título (A-Z)</option>
+            <option value="title_desc">Título (Z-A)</option>
+            <option value="course_asc">Curso (Ascendente)</option>
+            <option value="course_desc">Curso (Descendente)</option>
+        </select>
+    </div>
+</div>
+
 <div style="max-width: 1000px; margin: 0 auto;">
     <div class="table-container"
         style="overflow-x: auto; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; margin-left: auto; margin-right: auto;">
@@ -60,8 +96,16 @@
     }
 
     async function loadTexts() {
+        const course = document.getElementById('filter-course').value;
+        const sort = document.getElementById('sort-by').value;
+
         try {
-            const response = await axios.get('/reading/admin/texts');
+            const response = await axios.get('/reading/admin/texts', {
+                params: {
+                    course_level: course,
+                    sort_by: sort
+                }
+            });
             renderTable(response.data);
         } catch (error) {
             console.error(error);

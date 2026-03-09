@@ -204,10 +204,37 @@ def submit_attempt(attempt: schemas.AttemptCreate, current_user = Depends(auth.g
 
 
 @router.get("/admin/texts", response_model=List[schemas.TextResponse])
-def get_all_texts_admin(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+def get_all_texts_admin(
+    course_level: Optional[str] = None,
+    sort_by: Optional[str] = "id_desc",
+    current_user: schemas.User = Depends(auth.get_current_user), 
+    db: Session = Depends(database.get_db)
+):
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
-    return db.query(models.Text).all()
+    
+    query = db.query(models.Text)
+    
+    if course_level and course_level != "ALL_FILTERS":
+        query = query.filter(models.Text.course_level == course_level)
+    
+    # Sorting logic
+    if sort_by == "id_asc":
+        query = query.order_by(models.Text.id.asc())
+    elif sort_by == "id_desc":
+        query = query.order_by(models.Text.id.desc())
+    elif sort_by == "title_asc":
+        query = query.order_by(models.Text.title.asc())
+    elif sort_by == "title_desc":
+        query = query.order_by(models.Text.title.desc())
+    elif sort_by == "course_asc":
+        query = query.order_by(models.Text.course_level.asc())
+    elif sort_by == "course_desc":
+        query = query.order_by(models.Text.course_level.desc())
+    else:
+        query = query.order_by(models.Text.id.desc())
+        
+    return query.all()
 
 @router.put("/admin/texts/{text_id}", response_model=schemas.TextResponse)
 def update_text(text_id: int, text_update: schemas.TextUpdate, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
