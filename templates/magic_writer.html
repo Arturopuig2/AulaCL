@@ -115,8 +115,12 @@
             <div id="step-1-actions" style="margin-bottom: 2rem;">
                 <button onclick="showLoading('🧠 Validando contenido...'); validateAndGenerateQuestions()"
                     id="btn-validate" class="btn btn-primary"
-                    style="width: 100%; padding: 1rem; font-size: 1.1rem; background: #16a34a; border-color: #16a34a;">
-                    ✅ Validar Historia y Generar Preguntas
+                    style="width: 100%; padding: 1rem; font-size: 1.1rem; background: #16a34a; border-color: #16a34a; margin-bottom: 0.8rem;">
+                    ✅ Validar Historia y Generar Preguntas con IA
+                </button>
+                <button onclick="validateStoryOnly()" id="btn-validate-manual" class="btn btn-outline"
+                    style="width: 100%; padding: 0.8rem; font-size: 1rem; border-color: #16a34a; color: #16a34a; border-style: dashed;">
+                    📝 Validar Historia y crear preguntas manualmente
                 </button>
             </div>
 
@@ -247,6 +251,30 @@
         // UI Switch
         document.getElementById('magic-config').style.display = 'none';
         document.getElementById('magic-editor').style.display = 'block';
+    }
+
+    function validateStoryOnly() {
+        // Save current editor state
+        const title = document.getElementById('edit-title').value;
+        const content = document.getElementById('edit-content').value;
+
+        if (!content || content.length < 10) {
+            alert("El texto es demasiado corto.");
+            return;
+        }
+
+        currentMagicDraft.title = title;
+        currentMagicDraft.content = content;
+        currentMagicDraft.questions = []; // Start with no questions
+
+        renderMagicEditor(currentMagicDraft);
+
+        // UI Switch to Step 2
+        document.getElementById('magic-step-2').style.display = 'block';
+        document.getElementById('step-1-actions').style.display = 'none';
+
+        // Add one empty question automatically to help the user get started
+        addQuestion();
     }
 
     function renderMagicEditor(draft) {
