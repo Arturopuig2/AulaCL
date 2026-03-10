@@ -563,12 +563,6 @@
         const content = document.getElementById('text-content');
         const currentStyle = content.style.fontFamily.includes('AulaCNova') ? 'ligada' : 'imprenta';
 
-        // Reset buttons
-        document.querySelectorAll('[id^="btn-font-"]').forEach(btn => {
-            btn.style.background = 'transparent';
-            btn.style.color = 'var(--primary-color)';
-        });
-
         // Select active
         const btn = document.getElementById(`btn-font-${currentStyle}`);
         if (btn) selectPdfFont(btn, currentStyle);
@@ -583,12 +577,12 @@
         selectedPdfFont = type;
         // Reset all to unselected bubble (blue)
         document.querySelectorAll('[id^="btn-font-"]').forEach(b => {
-            b.classList.remove('btn-bubble-green');
+            b.classList.remove('btn-bubble-orange');
             b.classList.add('btn-bubble-blue');
         });
-        // Set active to success bubble (green)
+        // Set active to orange bubble
         btn.classList.remove('btn-bubble-blue');
-        btn.classList.add('btn-bubble-green');
+        btn.classList.add('btn-bubble-orange');
     }
 
     async function confirmDownloadPDF() {

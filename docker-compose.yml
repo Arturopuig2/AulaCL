@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    container_name: aulacl_app
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persistent storage for texts, audio and images
+      - ./aulacl_data:/var/lib/aulacl_data
+      # Map the SQLite database to the host for easier backups
+      - ./aula_cl.db:/app/aula_cl.db
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - TEXTS_DIR=/var/lib/aulacl_data/texts
+      - AUDIO_DIR=/var/lib/aulacl_data/audio
+      - IMAGES_DIR=/var/lib/aulacl_data/images
+      - DATABASE_URL=sqlite:///./aula_cl.db
+    # Use the render_start script to handle migrations and directory setups
+    command: bash render_start.sh
+    restart: always
+
+# Note: If you want to use a separate Postgres database, 
+# you can add a 'db' service here and update DATABASE_URL.
