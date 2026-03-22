@@ -28,7 +28,8 @@ def get_student_analytics(
     stats = {
         "LITERAL": {"correct": 0, "total": 0},
         "INFERENTIAL": {"correct": 0, "total": 0},
-        "VOCABULARY": {"correct": 0, "total": 0}
+        "VOCABULARY": {"correct": 0, "total": 0},
+        "ORDERING": {"correct": 0, "total": 0}
     }
     
     # Cache questions to avoid repeated DB hits
@@ -61,6 +62,8 @@ def get_student_analytics(
                 cat = "INFERENTIAL"
             elif "VOCABULARIO" in cat_upper:
                 cat = "VOCABULARY"
+            elif "ORDERING" in cat_upper:
+                cat = "ORDERING"
             elif "LITERAL" in cat_upper:
                 cat = "LITERAL"
                 
@@ -105,7 +108,8 @@ def get_class_analytics(
     global_stats = {
         "LITERAL": {"correct": 0, "total": 0},
         "INFERENTIAL": {"correct": 0, "total": 0},
-        "VOCABULARY": {"correct": 0, "total": 0}
+        "VOCABULARY": {"correct": 0, "total": 0},
+        "ORDERING": {"correct": 0, "total": 0}
     }
     
     q_cache = {}
@@ -137,6 +141,8 @@ def get_class_analytics(
                     cat = "INFERENTIAL"
                 elif "VOCABULARIO" in cat_upper:
                     cat = "VOCABULARY"
+                elif "ORDERING" in cat_upper:
+                    cat = "ORDERING"
                 elif "LITERAL" in cat_upper:
                     cat = "LITERAL"
 
@@ -189,7 +195,8 @@ def calculate_analytics(attempts: List[models.ReadingAttempt], db: Session):
         "LITERAL": {"correct": 0, "total": 0},
         "INFERENTIAL": {"correct": 0, "total": 0},
         "VOCABULARY": {"correct": 0, "total": 0},
-        "DECODING": {"correct": 0, "total": 0}
+        "DECODING": {"correct": 0, "total": 0},
+        "ORDERING": {"correct": 0, "total": 0}
     }
     
     q_cache = {}
@@ -217,6 +224,8 @@ def calculate_analytics(attempts: List[models.ReadingAttempt], db: Session):
                 cat = "INFERENTIAL"
             elif "VOCABULARIO" in cat_upper:
                 cat = "VOCABULARY"
+            elif "ORDERING" in cat_upper:
+                cat = "ORDERING"
             elif "LITERAL" in cat_upper:
                 cat = "LITERAL"
             elif "DECODIF" in cat_upper:

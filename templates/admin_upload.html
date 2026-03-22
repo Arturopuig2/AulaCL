@@ -327,15 +327,17 @@
                 </div>
                 <input type="text" class="q-input" value="${(q.question || "").replace(/"/g, '&quot;')}" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff;">
                 
-                <div style="display: grid; gap: 0.5rem; padding-left: 1rem;">
+                <div class="opts-container" style="display: grid; gap: 0.5rem; padding-left: 1rem;">
                     ${q.options.map((opt, optIndex) => `
                         <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
                             <input type="text" class="q-opt-input" data-opt="${optIndex}" value="${(opt || "").replace(/"/g, '&quot;')}" 
                             placeholder="Opción..." style="flex: 1; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 4px; color: #1e293b; background: #ffffff; min-width: 0; margin-right: 0.5rem;">
                             <input type="radio" name="q-correct-${index}" value="${optIndex}" ${q.correct_index === optIndex ? 'checked' : ''} style="width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;">
+                            <button onclick="removeOption(${index}, ${optIndex})" style="padding: 0 0.4rem; font-size: 1rem; line-height: 1; color: #94a3b8; border: none; background: transparent; cursor: pointer; flex-shrink: 0;" title="Eliminar opción">×</button>
                         </div>
                     `).join('')}
                 </div>
+                <button onclick="addOption(${index})" style="margin-top: 0.5rem; margin-left: 1rem; padding: 0.2rem 0.7rem; font-size: 0.8rem; border: 1px dashed #22c55e; color: #16a34a; background: transparent; border-radius: 4px; cursor: pointer;">+ Opción</button>
                 <!-- Category Select -->
                 <div style="margin-top: 0.5rem; text-align: right;">
                     <label style="font-size: 0.8rem; color: #64748b; margin-right: 0.5rem;">Tipo:</label>
@@ -344,6 +346,7 @@
                         <option value="INFERENCIAL" ${q.category === 'INFERENCIAL' ? 'selected' : ''}>INFERENCIAL (Deducción)</option>
                         <option value="VOCABULARIO" ${q.category === 'VOCABULARIO' ? 'selected' : ''}>VOCABULARIO (Léxico)</option>
                         <option value="DECODIFICACION" ${q.category === 'DECODIFICACION' ? 'selected' : ''}>DECODIFICACIÓN (Sonido-Letra)</option>
+                        <option value="ORDERING" ${q.category === 'ORDERING' ? 'selected' : ''}>ORDENACIÓN (Drag &amp; Drop)</option>
                         <option value="REFLEXIVA" ${q.category === 'REFLEXIVA' ? 'selected' : ''}>REFLEXIVA (Valores)</option>
                         <option value="LUDICA" ${q.category === 'LUDICA' || q.category === 'LÚDICA' ? 'selected' : ''}>LÚDICA (Juego/Creatividad)</option>
                         <option value="ESCRITA" ${q.category === 'ESCRITA' ? 'selected' : ''}>EXPRESIÓN ESCRITA</option>
@@ -370,6 +373,28 @@
             correct_index: 0,
             category: "LITERAL"
         });
+        renderQuestions(currentUploadData.questions);
+    }
+
+    function addOption(qIndex) {
+        syncCurrentState();
+        currentUploadData.questions[qIndex].options.push("");
+        renderQuestions(currentUploadData.questions);
+        setTimeout(() => {
+            const cards = document.querySelectorAll('#questions-container > div');
+            if (cards[qIndex]) {
+                const inputs = cards[qIndex].querySelectorAll('.q-opt-input');
+                if (inputs.length) inputs[inputs.length - 1].focus();
+            }
+        }, 50);
+    }
+
+    function removeOption(qIndex, optIndex) {
+        syncCurrentState();
+        const q = currentUploadData.questions[qIndex];
+        if (q.options.length <= 2) { alert('Se necesitan al menos 2 opciones.'); return; }
+        q.options.splice(optIndex, 1);
+        if (q.correct_index >= q.options.length) q.correct_index = q.options.length - 1;
         renderQuestions(currentUploadData.questions);
     }
 

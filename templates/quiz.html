@@ -94,6 +94,62 @@
     #nav-links {
         display: none !important;
     }
+
+    /* Drag & Drop Ordering */
+    .ordering-list {
+        list-style: none;
+        padding: 0;
+        margin: 0.75rem 0 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .ordering-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: white;
+        border: 2px solid #CBD5E1;
+        border-radius: 10px;
+        cursor: grab;
+        user-select: none;
+        transition: box-shadow 0.15s, border-color 0.15s;
+        font-family: 'Fredoka', sans-serif;
+    }
+
+    .ordering-item:active { cursor: grabbing; }
+
+    .ordering-item.dragging {
+        opacity: 0.45;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        border-color: #7DD3FC;
+    }
+
+    .ordering-item.drag-over {
+        border-color: #0284C7;
+        background: #EFF6FF;
+    }
+
+    .ordering-item .drag-handle {
+        color: #94A3B8;
+        font-size: 1.2rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .ordering-item.correct-order {
+        background: #dcfce7;
+        border-color: #22c55e;
+        color: #15803d;
+    }
+
+    .ordering-item.wrong-order {
+        background: #fee2e2;
+        border-color: #ef4444;
+        color: #b91c1c;
+    }
 </style>
 {% endblock %}
 
@@ -156,16 +212,17 @@
                 qDiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
                 qDiv.style.borderRadius = '12px';
 
-                // Check for special types
-                // Check for special types via Category (Fallback to content if category missing)
+                // Check for special types via Category
                 const cat = (q.category || "").toUpperCase();
                 const isWritten = cat.includes("ESCRITA");
                 const isReflexive = cat.includes("REFLEXIVA");
                 const isOral = cat.includes("ORAL");
                 const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
+                const isOrdering = cat.includes("ORDERING");
 
                 // Show input for Written/Reflexive
                 // Show only instruction for Oral/Ludica
+                // Show drag-and-drop list for Ordering
                 // Show options for others (Literal, Referential, Vocab, True/False)
 
                 if (isWritten || isReflexive) {
@@ -180,6 +237,22 @@
                             (Actividad para realizar en clase o en casa. No se evalúa aquí.)
                         </div>
                     `;
+                } else if (isOrdering) {
+                    // Shuffle options for display
+                    const shuffled = [...q.options].map((v, i) => ({ v, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(x => x.v);
+                    qDiv.innerHTML = `
+                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
+                        <p style="font-size: 0.9rem; color: #64748B; margin: 0.25rem 0 0.5rem;">Arrastra los elementos para ordenarlos correctamente 👆</p>
+                        <ul class="ordering-list" id="ordering-list-${q.id}">
+                            ${shuffled.map(item => `
+                                <li class="ordering-item" draggable="true" data-value="${encodeURIComponent(item)}">
+                                    <span class="drag-handle">☰</span>
+                                    <span style="font-size: ${currentOptSize}rem;">${item}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                    initDragAndDrop(qDiv.querySelector(`#ordering-list-${q.id}`));
                 } else {
                     // Standard Test Question
                     let optionsHtml = '';
@@ -224,13 +297,37 @@
             const isReflexive = cat.includes("REFLEXIVA");
             const isOral = cat.includes("ORAL");
             const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
+            const isOrdering = cat.includes("ORDERING");
 
             // If it is one of the excluded types, skip scoring logic
             if (isWritten || isReflexive || isOral || isLudica) {
-                // For Written/Reflexive, we might want to save the answer, but for now just disable input
                 if (isWritten || isReflexive) {
                     const txt = document.getElementById(`ans_${q.id}`);
                     if (txt) txt.disabled = true;
+                }
+                return;
+            }
+
+            // Handle ORDERING scoring
+            if (isOrdering) {
+                scorableQuestions++;
+                const list = document.getElementById(`ordering-list-${q.id}`);
+                if (list) {
+                    const items = Array.from(list.querySelectorAll('.ordering-item'));
+                    const userOrder = items.map(el => decodeURIComponent(el.dataset.value));
+                    const correctOrder = q.options;
+                    const isCorrect = userOrder.every((v, i) => v === correctOrder[i]);
+                    if (isCorrect) score++;
+                    // Visual feedback per item
+                    items.forEach((el, i) => {
+                        el.draggable = false;
+                        el.style.cursor = 'default';
+                        if (decodeURIComponent(el.dataset.value) === correctOrder[i]) {
+                            el.classList.add('correct-order');
+                        } else {
+                            el.classList.add('wrong-order');
+                        }
+                    });
                 }
                 return;
             }
@@ -289,9 +386,8 @@
         // Collect Details (Q_ID -> isCorrect)
         let details = {};
         questionsData.forEach(q => {
-            // Only for scorable questions
-            // Only for scorable questions
             const cat = (q.category || "").toUpperCase();
+            const isOrdering = cat.includes("ORDERING");
             const isScorable = !(cat.includes("ESCRITA") ||
                 cat.includes("REFLEXIVA") ||
                 cat.includes("ORAL") ||
@@ -299,13 +395,24 @@
                 cat.includes("LUDICA"));
 
             if (isScorable) {
-                const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
-                const correctIndex = q.correct_answer;
-                let isCorrect = false;
-                if (selected && parseInt(selected.value) === correctIndex) {
-                    isCorrect = true;
+                if (isOrdering) {
+                    const list = document.getElementById(`ordering-list-${q.id}`);
+                    if (list) {
+                        const items = Array.from(list.querySelectorAll('.ordering-item'));
+                        const userOrder = items.map(el => decodeURIComponent(el.dataset.value));
+                        details[q.id] = userOrder.every((v, i) => v === q.options[i]);
+                    } else {
+                        details[q.id] = false;
+                    }
+                } else {
+                    const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                    const correctIndex = q.correct_answer;
+                    let isCorrect = false;
+                    if (selected && parseInt(selected.value) === correctIndex) {
+                        isCorrect = true;
+                    }
+                    details[q.id] = isCorrect;
                 }
-                details[q.id] = isCorrect;
             }
         });
 
@@ -328,6 +435,8 @@
 
         // 2. Reset all questions
         questionsData.forEach(q => {
+            const cat = (q.category || '').toUpperCase();
+
             // Clear and Enable textareas
             const textarea = document.getElementById(`ans_${q.id}`);
             if (textarea) {
@@ -351,10 +460,66 @@
                     optDiv.style.color = 'inherit';
                 }
             });
+
+            // Re-shuffle ordering lists
+            if (cat.includes('ORDERING')) {
+                const list = document.getElementById(`ordering-list-${q.id}`);
+                if (list) {
+                    const items = Array.from(list.querySelectorAll('.ordering-item'));
+                    items.forEach(el => {
+                        el.classList.remove('correct-order', 'wrong-order');
+                        el.draggable = true;
+                        el.style.cursor = 'grab';
+                    });
+                    // Shuffle DOM items
+                    for (let i = items.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        list.appendChild(items[j]);
+                        items.splice(j, 1);
+                    }
+                    initDragAndDrop(list);
+                }
+            }
         });
 
         // 3. Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- Drag & Drop Engine ---
+    function initDragAndDrop(list) {
+        let draggedEl = null;
+
+        list.querySelectorAll('.ordering-item').forEach(item => {
+            item.addEventListener('dragstart', e => {
+                draggedEl = item;
+                setTimeout(() => item.classList.add('dragging'), 0);
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                list.querySelectorAll('.ordering-item').forEach(i => i.classList.remove('drag-over'));
+                draggedEl = null;
+            });
+            item.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (draggedEl && draggedEl !== item) {
+                    item.classList.add('drag-over');
+                    const rect = item.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
+                        list.insertBefore(draggedEl, item);
+                    } else {
+                        list.insertBefore(draggedEl, item.nextSibling);
+                    }
+                }
+            });
+            item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+            item.addEventListener('drop', e => {
+                e.preventDefault();
+                item.classList.remove('drag-over');
+            });
+        });
     }
 
     loadQuiz();
