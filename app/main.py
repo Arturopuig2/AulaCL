@@ -39,7 +39,7 @@ from fastapi.responses import HTMLResponse
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 from starlette.middleware.sessions import SessionMiddleware
 import os
@@ -54,57 +54,57 @@ app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 @app.get("/login-code", response_class=HTMLResponse)
 def login_code_page(request: Request):
-    return templates.TemplateResponse("login_code.html", {"request": request})
+    return templates.TemplateResponse(request, "login_code.html")
 
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html")
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request, "dashboard.html")
 
 @app.get("/reading-room/{text_id}", response_class=HTMLResponse)
 async def reading_page(request: Request, text_id: int, user: models.User = Depends(auth.get_current_user_html)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("reading.html", {"request": request, "text_id": text_id})
+    return templates.TemplateResponse(request, "reading.html", {"text_id": text_id})
 
 @app.get("/quiz/{text_id}", response_class=HTMLResponse)
 async def quiz_page(request: Request, text_id: int, user: models.User = Depends(auth.get_current_user_html)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("quiz.html", {"request": request, "text_id": text_id})
+    return templates.TemplateResponse(request, "quiz.html", {"text_id": text_id})
 
 @app.get("/forgot-password", response_class=HTMLResponse)
 def forgot_password_page(request: Request):
-    return templates.TemplateResponse("forgot_password.html", {"request": request})
+    return templates.TemplateResponse(request, "forgot_password.html")
 
 @app.get("/reset-password", response_class=HTMLResponse)
 def reset_password_page(request: Request):
-    return templates.TemplateResponse("reset_password.html", {"request": request})
+    return templates.TemplateResponse(request, "reset_password.html")
 
 @app.get("/my-subusers", response_class=HTMLResponse)
 async def subusers_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("subusers.html", {"request": request})
+    return templates.TemplateResponse(request, "subusers.html")
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
     if not user or user.username != 'admin':
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(request, "admin.html")
 
 @app.get("/admin/magic", response_class=HTMLResponse)
 async def magic_writer_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
     if not user or user.username != 'admin':
         return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse("magic_writer.html", {"request": request})
+    return templates.TemplateResponse(request, "magic_writer.html")
 
