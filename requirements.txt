@@ -6,9 +6,8 @@ passlib[bcrypt]
 bcrypt==3.2.2
 python-multipart
 python-jose[cryptography]
-jinja2
+jinja2>=3.1.5
 
-aiofiles
 aiofiles
 
 fpdf2
