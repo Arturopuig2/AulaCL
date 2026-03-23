@@ -136,7 +136,7 @@
                 style="width: 100%; padding: 0.5rem; font-weight: bold; font-size: 1.1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 1rem; margin-bottom: 1rem;">
             <div class="form-group">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso</label>
                 <select id="review-course" class="form-control"
@@ -166,6 +166,12 @@
                     <option value="eus">Euskera</option>
                     <option value="fr">Francés</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Nº Orden</label>
+                <input type="number" id="review-order" class="form-control" min="0" max="99" value="0" 
+                    style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
             </div>
         </div>
 
@@ -291,6 +297,7 @@
         document.getElementById('review-title').value = data.title;
         document.getElementById('review-course').value = data.course_level;
         document.getElementById('review-lang').value = data.language;
+        document.getElementById('review-order').value = data.order || 0;
         document.getElementById('review-content').value = data.content;
 
         // Show Image Preview if exists
@@ -402,6 +409,7 @@
         currentUploadData.title = document.getElementById('review-title').value;
         currentUploadData.course_level = document.getElementById('review-course').value;
         currentUploadData.language = document.getElementById('review-lang').value;
+        currentUploadData.order = parseInt(document.getElementById('review-order').value) || 0;
         currentUploadData.content = document.getElementById('review-content').value;
 
         const container = document.getElementById('questions-container');
@@ -454,7 +462,8 @@
                 language: currentUploadData.language,
                 questions: currentUploadData.questions,
                 audio_path: currentUploadData.audio_path,
-                image_path: currentUploadData.image_path
+                image_path: currentUploadData.image_path,
+                order: currentUploadData.order
             };
 
             const token = localStorage.getItem('token');

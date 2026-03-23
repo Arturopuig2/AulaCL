@@ -56,6 +56,7 @@ class TextResponse(TextBase):
     language: Optional[str] = "es"
     is_active: Optional[bool] = True
     is_locked: Optional[bool] = False
+    order: Optional[int] = 0
     timestamps: Optional[List[Optional[dict]]] = None
     
     class Config:
@@ -64,6 +65,7 @@ class TextResponse(TextBase):
 class TextUpdate(BaseModel):
     course_level: Optional[str] = None
     language: Optional[str] = None
+    order: Optional[int] = None
 
 class AttemptCreate(BaseModel):
     text_id: int
@@ -146,6 +148,7 @@ class MagicSaveRequest(BaseModel):
     language: str
     audio_path: Optional[str] = None
     image_path: Optional[str] = None
+    order: Optional[int] = 0
 
 class MagicStoryResponse(BaseModel):
     title: str

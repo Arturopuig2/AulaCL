@@ -41,6 +41,7 @@ class Text(Base):
     image_path = Column(String, nullable=True) # Path to the image file
     language = Column(String, default="es") # "es", "en", "val", "cat", "gal", "eus", "fr"
     is_active = Column(Boolean, default=True)
+    order = Column(Integer, default=0)
     timestamps = Column(JSON, nullable=True)
 
     questions = relationship("Question", back_populates="text")

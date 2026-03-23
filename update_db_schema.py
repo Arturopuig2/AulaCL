@@ -24,6 +24,7 @@ def update_schema():
     
     # TEXTS TABLE
     verify_column(connection, "texts", "image_path", "VARCHAR")
+    verify_column(connection, "texts", "order", "INTEGER DEFAULT 0")
     verify_column(connection, "texts", "timestamps", "JSON")
     
     # READING ATTEMPTS

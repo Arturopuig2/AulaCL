@@ -30,7 +30,7 @@
             </style>
 
             <!-- Metadata Fields -->
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 100px; gap: 1rem; margin-bottom: 2rem;">
                 <div class="form-group">
                     <label style="font-weight: bold;">Título</label>
                     <input type="text" id="edit-title" class="form-control"
@@ -60,6 +60,11 @@
                         <option value="val">Valencià</option>
                         <option value="fr">Francés</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold;">Nº Orden</label>
+                    <input type="number" id="edit-order" class="form-control" min="0" max="99" value="0">
                 </div>
             </div>
 
@@ -229,6 +234,7 @@
         document.getElementById('edit-content').value = currentDraft.content;
         document.getElementById('edit-course').value = currentDraft.course;
         document.getElementById('edit-lang').value = currentDraft.language;
+        document.getElementById('edit-order').value = currentDraft.order || 0;
 
         // Image Preview
         const imgPreview = document.getElementById('draft-image-preview');
@@ -376,6 +382,7 @@
         currentDraft.content = document.getElementById('edit-content').value;
         currentDraft.course = document.getElementById('edit-course').value;
         currentDraft.language = document.getElementById('edit-lang').value;
+        currentDraft.order = parseInt(document.getElementById('edit-order').value) || 0;
 
         // Collect Questions
         const qContainer = document.getElementById('questions-container');
@@ -498,7 +505,8 @@
                 language: currentDraft.language,
                 questions: currentDraft.questions,
                 image_path: currentDraft.image_path,
-                audio_path: currentDraft.audio_path
+                audio_path: currentDraft.audio_path,
+                order: currentDraft.order
             });
 
             alert("¡Cambios guardados correctamente!");

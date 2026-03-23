@@ -34,6 +34,8 @@
             por</label>
         <select id="sort-by" onchange="loadTexts()"
             style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white;">
+            <option value="order_asc">Orden (1-22)</option>
+            <option value="order_desc">Orden (Descendente)</option>
             <option value="id_desc">Más recientes primero</option>
             <option value="id_asc">Más antiguos primero</option>
             <option value="title_asc">Título (A-Z)</option>
@@ -51,6 +53,7 @@
             <thead>
                 <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
                     <th style="padding: 1rem;">ID</th>
+                    <th style="padding: 1rem;">Orden</th>
                     <th style="padding: 1rem;">Título</th>
                     <th style="padding: 1rem;">Curso</th>
                     <th style="padding: 1rem;">Idioma</th>
@@ -122,6 +125,10 @@
             tr.style.borderBottom = '1px solid #f1f5f9';
             tr.innerHTML = `
                 <td style="padding: 1rem;">${text.id}</td>
+                <td style="padding: 1rem;">
+                    <input type="number" id="order-${text.id}" value="${text.order || 0}" min="0" max="99" 
+                    style="width: 50px; padding: 0.3rem; border-radius: 0.3rem; border: 1px solid #cbd5e1; text-align: center;">
+                </td>
                 <td style="padding: 1rem; font-weight: 500;">${text.title}</td>
                 <td style="padding: 1rem;">
                     <select id="course-${text.id}" style="padding: 0.3rem; border-radius: 0.3rem; border: 1px solid #cbd5e1;">
@@ -187,6 +194,7 @@
     async function updateText(id, btn) {
         const course = document.getElementById(`course-${id}`).value;
         const lang = document.getElementById(`lang-${id}`).value;
+        const order = document.getElementById(`order-${id}`).value;
 
         const originalText = btn.innerText;
         const originalColor = btn.style.backgroundColor;
@@ -196,7 +204,8 @@
         try {
             await axios.put(`/reading/admin/texts/${id}`, {
                 course_level: course,
-                language: lang
+                language: lang,
+                order: parseInt(order)
             });
 
             btn.innerText = "¡Guardado!";

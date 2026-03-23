@@ -79,7 +79,7 @@ def get_texts(current_user=Depends(auth.get_current_user), db: Session = Depends
     if not hasattr(current_user, "username"): # SubUsers don't have username
         is_subuser = True
         
-    texts = db.query(models.Text).filter(models.Text.is_active == True).all()
+    texts = db.query(models.Text).filter(models.Text.is_active == True).order_by(models.Text.order.asc(), models.Text.id.asc()).all()
 
     # Query attempts based on user type
     if is_subuser:
@@ -219,7 +219,11 @@ def get_all_texts_admin(
         query = query.filter(models.Text.course_level == course_level)
     
     # Sorting logic
-    if sort_by == "id_asc":
+    if sort_by == "order_asc":
+        query = query.order_by(models.Text.order.asc(), models.Text.id.asc())
+    elif sort_by == "order_desc":
+        query = query.order_by(models.Text.order.desc(), models.Text.id.desc())
+    elif sort_by == "id_asc":
         query = query.order_by(models.Text.id.asc())
     elif sort_by == "id_desc":
         query = query.order_by(models.Text.id.desc())
@@ -232,7 +236,7 @@ def get_all_texts_admin(
     elif sort_by == "course_desc":
         query = query.order_by(models.Text.course_level.desc())
     else:
-        query = query.order_by(models.Text.id.desc())
+        query = query.order_by(models.Text.order.asc(), models.Text.id.asc())
         
     return query.all()
 
@@ -249,6 +253,8 @@ def update_text(text_id: int, text_update: schemas.TextUpdate, current_user: sch
         text.course_level = text_update.course_level
     if text_update.language is not None:
         text.language = text_update.language
+    if text_update.order is not None:
+        text.order = text_update.order
         
     db.commit()
     db.refresh(text)
@@ -267,6 +273,7 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
     text.title = request.title
     text.course_level = request.course_level
     text.language = request.language
+    text.order = request.order
     if request.audio_path:
         # If it doesn't have leading 'audio/' or '/static/audio/', normalize it safely if needed.
         # But usually coming from upload-audio it returns 'audio/filename.mp3'
@@ -1314,7 +1321,8 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
         language=request.language,
         content_path=content_path,
         audio_path=request.audio_path,
-        image_path=request.image_path
+        image_path=request.image_path,
+        order=request.order
     )
     
     db.add(new_text)
