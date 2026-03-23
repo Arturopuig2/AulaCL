@@ -70,7 +70,8 @@ def verify_column(connection, table_name, column_name, column_type):
 
         if not exists:
             print(f"Adding missing column '{column_name}' to table '{table_name}'...")
-            alter_query = text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
+            # Quoting column name for reserved words like 'order'
+            alter_query = text(f'ALTER TABLE {table_name} ADD COLUMN "{column_name}" {column_type}')
             connection.execute(alter_query)
             try:
                 connection.commit()
