@@ -899,7 +899,7 @@ def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str
                 block_height += get_text_height(opt_text, opt_w, "Arial", "", s_opt, lh_opt) # Using new size 15, line height 8
                 char_code += 1
             
-            block_height += 5 # Bottom padding
+            block_height += 12 # Bottom padding (increased from 5)
             
             # 2. Check Space
             # page_break_trigger is the Y position where auto-break happens
@@ -920,7 +920,7 @@ def generate_text_pdf(text_id: int, font_style: str = "imprenta", font_size: str
                 opt_str = opt if not is_uppercase else opt.upper()
                 pdf.multi_cell(available_w, lh_opt, f"{chr(char_code)}) {safe_text(opt_str)}") # Increased line height
                 char_code += 1
-            pdf.ln(5)
+            pdf.ln(12) # Increased from 5 to provide more space between questions
 
     # Solutions Section
     if questions:
