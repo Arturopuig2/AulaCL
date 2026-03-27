@@ -91,6 +91,25 @@
     #nav-links {
         display: none !important;
     }
+
+    /* Mobile overrides for navbar buttons */
+    @media (max-width: 480px) {
+        .navbar-actions-container {
+            gap: 0.2rem !important;
+        }
+
+        .btn-narrow {
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
+            min-width: 40px !important;
+        }
+
+        .btn-square-mobile {
+            min-width: 40px !important;
+            height: 40px !important;
+            padding: 0 !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -100,7 +119,7 @@
 {% block navbar_logo %}{% endblock %}
 
 {% block navbar_actions %}
-<div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; justify-content: flex-end; flex: 1;">
+<div class="navbar-actions-container" style="display: flex; align-items: center; gap: 0.4rem; justify-content: flex-end; flex: 1;">
     <a href="/dashboard" class="btn-bubble btn-bubble-pink"
         style="text-decoration: none; padding: 0.5rem 1rem; font-size: 1rem; margin-right: auto;">
         < volver </a>
@@ -116,15 +135,15 @@
             <!-- Toolbar Group -->
             <div style="display: flex; gap: 0.3rem; padding: 0.2rem; align-items: center;">
                 <!-- Audio Toggle Button -->
-                <button id="btn-audio-toggle" onclick="toggleAudio()" class="btn-bubble btn-bubble-blue"
-                    style="display: none; padding: 0.5rem; min-width: 48px; border-radius: 50%; aspect-ratio: 1;"
+                <button id="btn-audio-toggle" onclick="toggleAudio()" class="btn-bubble btn-bubble-blue btn-square-mobile"
+                    style="display: none; padding: 0.5rem; min-width: 44px; border-radius: 50%; aspect-ratio: 1;"
                     title="Escuchar">
                     <svg id="svg-audio-play" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <svg id="svg-audio-pause" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                 </button>
 
-                <button onclick="openPdfModal()" class="btn-bubble btn-bubble-blue"
-                    style="padding: 0.5rem; min-width: 48px; border-radius: 50%; aspect-ratio: 1;"
+                <button onclick="openPdfModal()" class="btn-bubble btn-bubble-blue btn-square-mobile"
+                    style="padding: 0.5rem; min-width: 44px; border-radius: 50%; aspect-ratio: 1;"
                     title="Descargar Ficha PDF">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -136,17 +155,17 @@
                     </svg>
                 </button>
 
-                <button onclick="toggleFontStyle()" class="btn-bubble btn-bubble-orange"
-                    style="font-size: 1.8rem; padding: 0.5rem; min-width: 48px; border-radius: 50%; aspect-ratio: 1; font-family: 'AulaCNova', cursive !important; line-height: 0.8; text-transform: none;"
+                <button onclick="toggleFontStyle()" class="btn-bubble btn-bubble-orange btn-square-mobile"
+                    style="font-size: 1.6rem; padding: 0.5rem; min-width: 44px; border-radius: 50%; aspect-ratio: 1; font-family: 'AulaCNova', cursive !important; line-height: 0.8; text-transform: none;"
                     title="Letra Ligada">
                     a
                 </button>
 
-                <div style="display: flex; gap: 0.1rem;">
-                    <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
-                        style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A-</button>
-                    <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
-                        style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A+</button>
+                <div style="display: flex; gap: 0.2rem;">
+                    <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green btn-narrow"
+                        style="padding: 0.4rem 0.8rem; font-size: 1rem; min-width: 40px;">A-</button>
+                    <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green btn-narrow"
+                        style="padding: 0.4rem 0.8rem; font-size: 1rem; min-width: 40px;">A+</button>
                 </div>
             </div>
 </div>
