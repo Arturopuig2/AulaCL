@@ -115,6 +115,14 @@
 
             <!-- Toolbar Group -->
             <div style="display: flex; gap: 0.3rem; padding: 0.2rem; align-items: center;">
+                <!-- Audio Toggle Button -->
+                <button id="btn-audio-toggle" onclick="toggleAudio()" class="btn-bubble btn-bubble-blue"
+                    style="display: none; padding: 0.5rem; min-width: 48px; border-radius: 50%; aspect-ratio: 1;"
+                    title="Escuchar">
+                    <svg id="svg-audio-play" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <svg id="svg-audio-pause" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                </button>
+
                 <button onclick="openPdfModal()" class="btn-bubble btn-bubble-blue"
                     style="padding: 0.5rem; min-width: 48px; border-radius: 50%; aspect-ratio: 1;"
                     title="Descargar Ficha PDF">
@@ -146,18 +154,19 @@
 
 {% block content %}
 
-<div style="padding: 1.5rem;">
+<div style="padding: 0.5rem 1.5rem;">
     <!-- Title moved above buttons for better mobile stability -->
     <h1 id="text-title"
-        style="margin: 0 0 1.5rem 0; color: #1e293b; font-size: 2.5rem; letter-spacing: -0.5px; text-align: left;">
+        style="margin: 0 0 0.8rem 0; color: #1e293b; font-size: 2.2rem; letter-spacing: -0.5px; text-align: left;">
         Cargando...
     </h1>
 
 </div>
 
-<div id="illustration-container" style="text-align: center; margin-bottom: 1.5rem; display: none;">
+<div id="illustration-container" style="text-align: center; margin-bottom: 0.8rem; display: none;">
     <img id="text-illustration" src="" alt="Ilustración" style="max-height: 250px;">
-    <audio id="audio-player" controls style="width: 100%; display: none;">
+    <!-- Hidden player, controlled by navbar button -->
+    <audio id="audio-player" style="display: none;">
         <source id="audio-source" src="" type="audio/mpeg">
         Tu navegador no soporta audio.
     </audio>
@@ -306,6 +315,37 @@
         }
     }
 
+    // --- AUDIO CONTROL ---
+    function updateAudioIcons(isPlaying) {
+        const playSvg = document.getElementById('svg-audio-play');
+        const pauseSvg = document.getElementById('svg-audio-pause');
+        if (isPlaying) {
+            playSvg.style.display = 'none';
+            pauseSvg.style.display = 'block';
+        } else {
+            playSvg.style.display = 'block';
+            pauseSvg.style.display = 'none';
+        }
+    }
+
+    function toggleAudio() {
+        const player = document.getElementById('audio-player');
+        if (player.paused) {
+            player.play();
+        } else {
+            player.pause();
+        }
+    }
+
+    // Update button icon when audio naturally pauses or ends
+    document.addEventListener('DOMContentLoaded', () => {
+        const player = document.getElementById('audio-player');
+        if (player) {
+            player.addEventListener('pause', () => { updateAudioIcons(false); });
+            player.addEventListener('play', () => { updateAudioIcons(true); });
+        }
+    });
+
     // Process text into sentences for karaoke
     function processTextContent(text) {
         // Robust splitting for various newline formats
@@ -434,10 +474,11 @@
                 // Use dedicated /audio mount point as it handles persistent disks better than /static
                 document.getElementById('audio-source').src = textData.audio_path.startsWith('/') ? textData.audio_path : "/" + textData.audio_path;
                 audioPlayer.load();
-                audioPlayer.style.display = 'block';
-                showContainer = true;
+                document.getElementById('btn-audio-toggle').style.display = 'inline-flex';
+                // Show container only if there's an image, as audio player is now hidden
+                if (textData.image_path) showContainer = true;
             } else {
-                audioPlayer.style.display = 'none';
+                document.getElementById('btn-audio-toggle').style.display = 'none';
             }
 
             if (showContainer) {
@@ -524,7 +565,7 @@
                             if (activeSpan) {
                                 activeSpan.classList.add('active-highlight');
                                 // Only auto-scroll if NOT tts (tts handles its own scroll)
-                                if (!ttsActive) activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                if (!ttsActive) activeSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
                         }
                     };
