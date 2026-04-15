@@ -289,19 +289,51 @@ def forgot_password(request_data: schemas.PasswordResetRequest, request: Request
         # Let's just return success message.
         return {"message": "Si el correo existe, se enviará un enlace."}
     
-    # Generate Token
-    access_token_expires = timedelta(minutes=15) # Short lived
+    # Generar Token
+    access_token_expires = timedelta(minutes=15)
     reset_token = create_access_token(
         data={"sub": user.username, "type": "reset"}, expires_delta=access_token_expires
     )
     
-    # SIMULATE EMAIL SENDING
-    print("==================================================")
-    print(f"PASSWORD RESET LINK FOR {user.username}:")
-    print(f"http://127.0.0.1:8000/reset-password?token={reset_token}")
-    print("==================================================")
+    # Determinar URL dinámica (sirve para localhost o producción)
+    base_url = str(request.base_url).rstrip("/")
+    if "127.0.0.1" not in base_url and "localhost" not in base_url:
+        base_url = base_url.replace("http://", "https://")
+    reset_link = f"{base_url}/reset-password?token={reset_token}"
     
-    return {"message": "Enlace enviado (Revisar consola del servidor)."}
+    # Intentar enviar por Email real si hay variables de entorno (SMTP)
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_pass = os.getenv("SMTP_PASSWORD")
+    
+    if smtp_user and smtp_pass:
+        import smtplib
+        from email.mime.text import MIMEText
+        try:
+            msg = MIMEText(f"Hola {user.name or user.username},\n\nAquí tienes tu enlace para crear una nueva contraseña en Aula CL:\n\n{reset_link}\n\nEste enlace caducará en 15 minutos.")
+            msg['Subject'] = 'Recuperar Contraseña - Aula CL'
+            msg['From'] = smtp_user
+            msg['To'] = user.email
+            
+            # Usa el host y puerto especificado en variables, o asume Gmail por defecto
+            smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+            smtp_port = int(os.getenv("SMTP_PORT", 587))
+            
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+            return {"message": "Enlace enviado con éxito a tu correo electrónico."}
+        except Exception as e:
+            print(f"SMTP Error: {e}")
+            return {"message": "Error al enviar el correo, pero operamos en modo seguro. Contactar al admin."}
+    else:
+        # MODO SIMULACIÓN (Local o si no hay SMTP configurado)
+        print("==================================================")
+        print(f"PASSWORD RESET LINK FOR {user.username}:")
+        print(reset_link)
+        print("==================================================")
+        
+        return {"message": "Modo simulación: Revisa la terminal del servidor para ver el link de recuperación."}
 
 @router.post("/reset-password")
 def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(get_db)):
