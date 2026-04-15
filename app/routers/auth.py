@@ -308,10 +308,19 @@ def forgot_password(request_data: schemas.PasswordResetRequest, request: Request
     if smtp_user and smtp_pass:
         import smtplib
         from email.mime.text import MIMEText
+        from email.utils import formataddr
         try:
             msg = MIMEText(f"Hola {user.name or user.username},\n\nAquí tienes tu enlace para crear una nueva contraseña en Aula CL:\n\n{reset_link}\n\nEste enlace caducará en 15 minutos.")
+            # Prevenir que el mail llegue como From: 'info' si el servidor requiere login corto
+            smtp_from = os.getenv("SMTP_FROM", smtp_user)
+            if "@" not in smtp_from:
+                smtp_from = f"{smtp_from}@editorialaula.es"
+
+            # Personalizar el nombre visible del remitente
+            sender_name = os.getenv("SMTP_SENDER_NAME", "Aula CL")
+
             msg['Subject'] = 'Recuperar Contraseña - Aula CL'
-            msg['From'] = smtp_user
+            msg['From'] = formataddr((sender_name, smtp_from))
             msg['To'] = user.email
             
             # Usa el host y puerto especificado en variables, o asume Gmail por defecto
