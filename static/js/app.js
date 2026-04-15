@@ -58,11 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Custom Navigation Logic based on User Role (Teacher vs Parent)
             let menuItemsHTML = '';
 
-            // "Añadir Licencia" is for everyone EXCEPT admin
-            if (user.username !== 'admin') {
+            // "Añadir Licencia" is for main users EXCEPT admin
+            if (!isSubUser && user.username !== 'admin') {
                 menuItemsHTML += `
                     <a href="#" class="dropdown-item" id="add-license-action">Añadir Licencia</a>
                     <div class="dropdown-divider"></div>
+                `;
+            }
+
+            // "Mi Progreso" is for everyone EXCEPT admin
+            if (user.username !== 'admin') {
+                menuItemsHTML += `
                     <a href="#" class="dropdown-item" id="my-progress-action">Mi Progreso</a>
                     <div class="dropdown-divider"></div>
                 `;
