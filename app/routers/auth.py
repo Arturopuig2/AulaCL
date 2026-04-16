@@ -331,7 +331,7 @@ def forgot_password(request_data: schemas.PasswordResetRequest, request: Request
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
                 server.send_message(msg)
-            return {"message": "Enlace enviado con éxito a tu correo electrónico."}
+            return {"message": "Enlace enviado a tu correo."}
         except Exception as e:
             print(f"SMTP Error: {e}")
             return {"message": "Error al enviar el correo, pero operamos en modo seguro. Contactar al admin."}
@@ -342,7 +342,7 @@ def forgot_password(request_data: schemas.PasswordResetRequest, request: Request
         print(reset_link)
         print("==================================================")
         
-        return {"message": "Modo simulación: Revisa la terminal del servidor para ver el link de recuperación."}
+        return {"message": "Modo simulación"}
 
 @router.post("/reset-password")
 def reset_password(request: schemas.PasswordResetConfirm, db: Session = Depends(get_db)):
