@@ -206,7 +206,7 @@ def submit_attempt(attempt: schemas.AttemptCreate, current_user = Depends(auth.g
 @router.get("/admin/texts", response_model=List[schemas.TextResponse])
 def get_all_texts_admin(
     course_level: Optional[str] = None,
-    sort_by: Optional[str] = "id_desc",
+    sort_by: Optional[str] = "order_asc",
     current_user: schemas.User = Depends(auth.get_current_user), 
     db: Session = Depends(database.get_db)
 ):
