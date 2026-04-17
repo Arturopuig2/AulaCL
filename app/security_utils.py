@@ -16,14 +16,13 @@ DIGITS = string.digits
 
 def generate_login_code() -> str:
     """
-    Generates an 11-char code: 'CL' + 6 digits + 3 uppercase letters.
+    Generates a 9-char code: 6 digits + 3 uppercase letters.
     No I, L, O in letters.
-    Example: CL482901QTR
+    Example: 482901QTR
     """
-    prefix = "CL"
     numbers = ''.join(secrets.choice(DIGITS) for _ in range(6))
     letters = ''.join(secrets.choice(ALPHABET_UPPER_NO_CONFUSING) for _ in range(3))
-    return f"{prefix}{numbers}{letters}"
+    return f"{numbers}{letters}"
 
 def generate_license_key() -> str:
     """

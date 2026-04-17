@@ -512,19 +512,14 @@ def generate_licenses(count: int = 1, duration_days: int = 365, current_user: sc
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    import secrets
-    import string
-    
     new_keys = []
     for _ in range(count):
-        # Generate random uppercase code
-        rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
-        key = f"LIC-{rand_part}"
+        # Use utility to generate a clean license key (No I, L, O)
+        key = security_utils.generate_license_key()
         
         # Check uniqueness in License table
         while db.query(models.License).filter(models.License.key == key).first():
-             rand_part = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
-             key = f"LIC-{rand_part}"
+             key = security_utils.generate_license_key()
              
         # Create License (Student License)
         db_license = models.License(
