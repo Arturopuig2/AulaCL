@@ -107,10 +107,9 @@
 
             // Auto-Download Text File
             const keys = response.data;
-            let fileContent = "LICENCIAS DE ALUMNOS - AULA CL\n==============================\n\n";
-            fileContent += "Instrucciones: Entrega una clave a cada alumno. Deben ir a 'Mis Alumnos' -> 'Añadir Licencia' para usarla.\n\n";
-            fileContent += keys.join("\n");
-            fileContent += "\n\n==============================\nGenerado el: " + new Date().toLocaleString();
+            const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            let fileContent = keys.map(key => `Licencia- Aula CL: ${key}`).join("\n");
+            fileContent += `\n\n${today}`;
 
             const blob = new Blob([fileContent], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
