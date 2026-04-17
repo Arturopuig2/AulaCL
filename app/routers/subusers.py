@@ -20,10 +20,10 @@ def process_license_activation(db: Session, subuser: models.SubUser, license_key
     ).first()
     
     if not license_entry:
-        raise HTTPException(status_code=404, detail="Licencia no válida. Contacta con info@editorialaula.es")
+        raise HTTPException(status_code=404, detail="Licencia incorrecta. Contacta con info@editorialaula.es")
         
     if license_entry.status != "ACTIVE":
-        raise HTTPException(status_code=400, detail="Esta licencia ya ha sido utilizada o no es válida. Contacta con info@editorialaula.es")
+        raise HTTPException(status_code=400, detail="Esta licencia ya ha sido utilizada o es incorrecta. Contacta con info@editorialaula.es")
         
     # Activate License
     license_entry.status = "USED"

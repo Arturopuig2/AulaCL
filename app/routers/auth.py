@@ -403,13 +403,13 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
     
     if license_entry:
         if license_entry.status != "ACTIVE":
-             raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o no es válida. Contacta con info@editorialaula.es")
+             raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o es incorrecta. Contacta con info@editorialaula.es")
         used_license = True
     else:
         # 2. TRY INVITATION CODE (Legacy)
         invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
         if not invitation:
-            raise HTTPException(status_code=403, detail="Licencia no válida. Contacta con info@editorialaula.es")
+            raise HTTPException(status_code=403, detail="Licencia incorrecta. Contacta con info@editorialaula.es")
         
         if invitation.is_used:
             raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")

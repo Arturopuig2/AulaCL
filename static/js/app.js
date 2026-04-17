@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) {
                     console.error(error);
                     if (error.response) {
-                        alert(error.response.data.detail || "Código incorrecto");
+                        alert(error.response.data.detail || "Licencia incorrecta. Contacta con info@editorialaula.es");
                     } else {
                         alert("Error de conexión");
                     }
