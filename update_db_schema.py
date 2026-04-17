@@ -33,6 +33,7 @@ def update_schema():
     # LICENSES TABLE
     verify_column(connection, "licenses", "used_by_subuser_id", "INTEGER")
     verify_column(connection, "licenses", "used_by_user_id", "INTEGER")
+    verify_column(connection, "licenses", "expires_at", "DATETIME")
     # Postgres needs explicit foreign key? Usually integer is enough for code-level logic, 
     # but database integrity relies on Constraints. verify_column only adds column.
     

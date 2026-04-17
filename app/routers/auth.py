@@ -202,11 +202,8 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
          
     # 2. Password Complexity
     # At least 8 chars, 1 letter, 1 number
-    if len(user.password) < 8:
-        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres")
-        
-    if not re.search(r'[A-Za-z]', user.password) or not re.search(r'\d', user.password):
-        raise HTTPException(status_code=400, detail="La contraseña debe contener al menos una letra y un número")
+    if len(user.password) < 8 or not re.search(r'[A-Za-z]', user.password) or not re.search(r'\d', user.password):
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres y contener letras y números.")
     
     # Check if email is already taken (if provided)
     if user.email:
@@ -252,7 +249,9 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
         
         if license_entry and license_entry.status == "ACTIVE":
             license_entry.status = "USED"
-            license_entry.activated_at = datetime.utcnow()
+            now = datetime.utcnow()
+            license_entry.activated_at = now
+            license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
             license_entry.used_by_user_id = db_user.id
             
             # Set Expiry
@@ -378,6 +377,11 @@ def change_password(request: schemas.ChangePasswordRequest, current_user: schema
     user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not verify_password(request.current_password, user.hashed_password):
         raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
+        
+    # Validation
+    import re
+    if len(request.new_password) < 8 or not re.search(r'[A-Za-z]', request.new_password) or not re.search(r'\d', request.new_password):
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres y contener letras y números.")
     
     # 2. Update Password
     user.hashed_password = get_password_hash(request.new_password)
@@ -399,13 +403,13 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
     
     if license_entry:
         if license_entry.status != "ACTIVE":
-             raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o no es válida")
+             raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o no es válida. Contacta con info@editorialaula.es")
         used_license = True
     else:
         # 2. TRY INVITATION CODE (Legacy)
         invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
         if not invitation:
-            raise HTTPException(status_code=403, detail="Código de acceso inválido")
+            raise HTTPException(status_code=403, detail="Licencia no válida. Contacta con info@editorialaula.es")
         
         if invitation.is_used:
             raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
@@ -426,6 +430,7 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
     if used_license:
         license_entry.status = "USED"
         license_entry.activated_at = now
+        license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
         license_entry.used_by_user_id = current_user.id
     else:
         invitation.is_used = True

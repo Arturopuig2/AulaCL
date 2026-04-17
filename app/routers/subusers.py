@@ -20,15 +20,17 @@ def process_license_activation(db: Session, subuser: models.SubUser, license_key
     ).first()
     
     if not license_entry:
-        raise HTTPException(status_code=404, detail="Clave de licencia inválida")
+        raise HTTPException(status_code=404, detail="Licencia no válida. Contacta con info@editorialaula.es")
         
     if license_entry.status != "ACTIVE":
-        raise HTTPException(status_code=400, detail="Licencia ya usada o no válida")
+        raise HTTPException(status_code=400, detail="Esta licencia ya ha sido utilizada o no es válida. Contacta con info@editorialaula.es")
         
     # Activate License
     license_entry.status = "USED"
     license_entry.used_by_subuser_id = subuser.id
-    license_entry.activated_at = datetime.utcnow()
+    now = datetime.utcnow()
+    license_entry.activated_at = now
+    license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
     
     # Extend Access
     now = datetime.utcnow()

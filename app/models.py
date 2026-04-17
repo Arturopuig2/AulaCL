@@ -110,6 +110,7 @@ class License(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     activated_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
     
     used_by_subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True)
     used_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)

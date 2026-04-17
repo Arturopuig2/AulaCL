@@ -287,8 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                if (newPw.length < 6) {
-                    alert("La nueva contraseña debe tener al menos 6 caracteres");
+                const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+                if (!passwordRegex.test(newPw)) {
+                    alert("La contraseña debe tener al menos 8 caracteres y contener letras y números.");
                     return;
                 }
 
