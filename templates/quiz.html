@@ -3,549 +3,716 @@
 {% block navbar_logo %}{% endblock %}
 
 {% block navbar_actions %}
-<div style="display: flex; align-items: center; gap: 0.3rem; flex: 1; justify-content: flex-end;">
+<div style="display: flex; align-items: center; gap: 1rem; flex: 1; justify-content: flex-end;">
     <a href="/reading-room/{{ text_id }}" class="btn-bubble btn-bubble-pink"
         style="text-decoration: none; padding: 0.5rem 1rem; font-size: 1rem; margin-right: auto;">
         < volver</a>
 
-            <div style="display: flex; gap: 0.3rem; padding: 0.2rem; align-items: center;">
-                <div style="display: flex; gap: 0.1rem;">
-                    <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
-                        style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A-</button>
-                    <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
-                        style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A+</button>
-                </div>
-            </div>
+    <!-- Hits Counter -->
+    <div id="hits-counter" class="hits-counter">
+        <svg class="star-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 2L20.45 11.02L30.41 12.47L23.21 19.49L24.91 29.41L16 24.72L7.09 29.41L8.79 19.49L1.59 12.47L11.55 11.02L16 2Z" fill="url(#starGradient)" stroke="#FFD600" stroke-width="1.5" stroke-linejoin="round"/>
+            <defs>
+                <linearGradient id="starGradient" x1="16" y1="2" x2="16" y2="29.41" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FFEB3B"/>
+                    <stop offset="1" stop-color="#FFC107"/>
+                </linearGradient>
+            </defs>
+        </svg>
+        <span id="hits-count" class="hits-count">0</span>
+    </div>
+
+    <div style="display: flex; gap: 0.3rem; padding: 0.2rem; align-items: center;">
+        <div style="display: flex; gap: 0.1rem;">
+            <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
+                style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A-</button>
+            <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
+                style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A+</button>
+        </div>
+    </div>
 </div>
 {% endblock %}
+
 {% block head %}
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    /* Bubble Button Style */
-    .btn-bubble {
-        border-radius: 50px;
-        border: none;
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        font-family: 'Fredoka', sans-serif;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        text-decoration: none;
+    body {
+        background-color: #EBF5FF !important;
+        font-family: 'Fredoka', sans-serif !important;
     }
 
-    .btn-bubble-blue {
+    .quiz-layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 80vh;
+        padding: 1rem;
+    }
+
+    .quiz-card {
+        background: white;
+        border-radius: 40px;
+        padding: 3rem;
+        width: 100%;
+        max-width: 900px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        position: relative;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .question-text {
+        font-size: 2.0rem;
+        font-weight: 500;
+        color: #1e293b;
+        margin-bottom: 2.5rem;
+        line-height: 1.3;
+    }
+
+    .options-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 640px) {
+        .options-grid {
+            grid-template-columns: 1fr;
+        }
+        .quiz-card {
+            padding: 2rem;
+        }
+    }
+
+    .option-btn {
+        background: white;
+        border: 2px solid #5495FF;
+        border-radius: 25px;
+        padding: 1.2rem 1.5rem;
+        font-size: 1.4rem;
+        color: #5495FF;
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 80px;
+    }
+
+    .option-btn:hover:not(:disabled) {
+        background: #F0F7FF;
+    }
+
+    .option-btn.selected {
+        background: #5495FF;
+        color: white;
+    }
+
+    .option-btn.correct {
+        background: #2ECC71 !important;
+        border-color: #2ECC71 !important;
+        color: white !important;
+    }
+
+    .option-btn.incorrect {
+        background: #E74C3C !important;
+        border-color: #E74C3C !important;
+        color: white !important;
+    }
+
+    .option-btn.dimmed {
+        opacity: 0.5;
+        border-color: #D1E1F5;
+        color: #8EACD6;
+    }
+
+    .feedback-banner {
+        margin-top: 1rem;
+        padding: 1.2rem;
+        border-radius: 20px;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        font-size: 1.4rem;
+        font-weight: 600;
+        animation: slideUp 0.3s ease;
+    }
+
+    .feedback-correct {
+        background: #E8F8F0;
+        color: #27AE60;
+        border: 2px solid #2ECC71;
+    }
+
+    .feedback-incorrect {
+        background: #FDF2F2;
+        color: #E74C3C;
+        border: 2px solid #F8B4B4;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        min-height: 60px;
+    }
+
+    .btn-next {
         background: #E0F2FE;
         color: #0284C7;
         border: 2px solid #7DD3FC;
+        border-radius: 50px;
+        padding: 0.8rem 2.5rem;
+        font-family: 'Fredoka', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+        transition: all 0.2s ease;
     }
 
-    .btn-bubble-green {
-        background: #DCFCE7;
-        color: #16A34A;
-        border: 2px solid #86EFAC;
+    .btn-next:hover {
+        filter: brightness(1.05);
     }
 
-    .btn-bubble-pink {
-        background: #FCE7F3;
-        color: #DB2777;
-        border: 2px solid #F9A8D4;
-    }
-
-    .btn-bubble-orange {
-        background: #FEF3C7;
-        color: #D97706;
-        border: 2px solid #FCD34D;
-    }
-
-    /* Child Friendly Overrides */
-    body {
-        background-color: #EFF6FF !important;
-        background-image: radial-gradient(#DBEAFE 1px, transparent 1px) !important;
-        background-size: 20px 20px !important;
-        font-family: 'Fredoka', sans-serif !important;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        font-family: 'Fredoka', sans-serif !important;
-        font-weight: 500 !important;
-    }
-
-    .glass-panel {
-        background: white !important;
-        border: 1px solid white !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
-    }
-
-    .question-card {
-        background: #F8FAFC !important;
-        border: 2px solid #E2E8F0;
-        box-shadow: 0 4px 0 #E2E8F0;
-    }
-
-    #nav-links {
-        display: none !important;
-    }
-
-    /* Drag & Drop Ordering */
-    .ordering-list {
-        list-style: none;
-        padding: 0;
-        margin: 0.75rem 0 0 0;
+    .pagination-dots {
         display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        justify-content: center;
+        gap: 0.8rem;
+        margin-top: 2rem;
     }
 
-    .ordering-item {
+    .dot {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #4B8CF2;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .dot.active {
+        background: #2ECC71;
+        border-color: #2ECC71;
+        transform: scale(1.2);
+    }
+
+    .dot.completed {
+        background: #2ECC71;
+        border-color: #2ECC71;
+    }
+
+    /* Written answer style */
+    .written-answer-container {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .written-textarea {
+        width: 100%;
+        border: 3px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 1.5rem;
+        font-size: 1.3rem;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.3s;
+        resize: none;
+    }
+
+    .written-textarea:focus {
+        border-color: #4B8CF2;
+    }
+
+    #result-panel {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .score-circle {
+        display: none; /* Replaced by hits-counter in results */
+    }
+
+    .score-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #4B8CF2;
+    }
+
+    .score-label {
+        font-size: 1rem;
+        color: #64748B;
+    }
+
+    /* Hits Counter Style */
+    .hits-counter {
+        background-color: #FFF9E7;
+        border: 2px solid #FFD600;
+        border-radius: 60px;
+        padding: 0.5rem 1.2rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.6rem 1rem;
-        background: white;
-        border: 2px solid #CBD5E1;
-        border-radius: 10px;
-        cursor: grab;
+        gap: 0.6rem;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         user-select: none;
-        transition: box-shadow 0.15s, border-color 0.15s;
+        height: 44px;
+        box-sizing: border-box;
+    }
+
+    .hits-counter .star-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .hits-count {
         font-family: 'Fredoka', sans-serif;
-    }
-
-    .ordering-item:active { cursor: grabbing; }
-
-    .ordering-item.dragging {
-        opacity: 0.45;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        border-color: #7DD3FC;
-    }
-
-    .ordering-item.drag-over {
-        border-color: #0284C7;
-        background: #EFF6FF;
-    }
-
-    .ordering-item .drag-handle {
-        color: #94A3B8;
-        font-size: 1.2rem;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #6D4C41;
         line-height: 1;
-        flex-shrink: 0;
     }
 
-    .ordering-item.correct-order {
-        background: #dcfce7;
-        border-color: #22c55e;
-        color: #15803d;
+    @keyframes star-jump {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.4); }
+        100% { transform: scale(1); }
     }
 
-    .ordering-item.wrong-order {
-        background: #fee2e2;
-        border-color: #ef4444;
-        color: #b91c1c;
+    .star-animate {
+        animation: star-jump 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .flying-star-temp {
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        will-change: transform;
+        transform-origin: center center;
+    }
+
+    .star-particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 10001;
+        transition: transform 0.1s linear;
+        transform-origin: center center;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="quiz-layout">
+    <div id="quiz-card" class="quiz-card">
+        <div id="question-content">
+            <!-- Content will be injected here -->
+        </div>
 
-<div class="glass-panel" style="padding: 1.5rem;">
-    <!-- Title moved above buttons for better mobile stability -->
-    <h1 style="margin: 0 0 1rem 0; text-align: left;">Quiz: <span id="text-title"></span></h1>
+        <div id="feedback-banner" class="feedback-banner">
+            <span id="feedback-icon" style="font-size: 1.5rem;"></span>
+            <span id="feedback-text"></span>
+        </div>
 
-
-    <div id="quiz-container">
-        <!-- Questions loaded here -->
-    </div>
-
-    <div id="result-panel"
-        style="display: none; margin-top: 2rem; padding: 1.5rem; border-radius: var(--radius); background: rgba(255,255,255,0.95); text-align: center; border: 3px solid #7DD3FC;">
-        <h2 style="font-size: 2rem; margin-bottom: 1.5rem;">Resultado: <span id="score-display"
-                style="color: #0284C7;"></span></h2>
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-            <button onclick="resetQuiz()" class="btn-bubble btn-bubble-blue"
-                style="padding: 0.8rem 2rem; font-size: 1.1rem;">Rehacer Quiz</button>
-            <a href="/dashboard" class="btn-bubble btn-bubble-pink"
-                style="padding: 0.8rem 2rem; font-size: 1.1rem;">Volver a Lecturas</a>
+        <div class="nav-container">
+            <button id="btn-next" class="btn-next" onclick="handleNext()">
+                Siguiente >
+            </button>
         </div>
     </div>
 
-    <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-        <button id="submit-quiz" class="btn-bubble btn-bubble-green"
-            style="padding: 0.8rem 2rem; font-size: 1.1rem;">enviar respuestas</button>
+    <div id="pagination-dots" class="pagination-dots">
+        <!-- Dots will be injected here -->
+    </div>
+</div>
+
+<div id="result-panel-container" style="display: none;">
+    <div class="quiz-card" style="text-align: center; margin: 2rem auto;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">¡Felicidades! 🎉</h2>
+        <p style="font-size: 1.5rem; color: #64748B; margin-bottom: 2rem;">Has completado el cuestionario.</p>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 3rem;">
+            <div class="hits-counter" style="transform: scale(1.6); padding: 0.6rem 2rem;">
+                <svg class="star-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 2L20.45 11.02L30.41 12.47L23.21 19.49L24.91 29.41L16 24.72L7.09 29.41L8.79 19.49L1.59 12.47L11.55 11.02L16 2Z" fill="url(#starGradientResults)" stroke="#FFD600" stroke-width="1.5" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="starGradientResults" x1="16" y1="2" x2="16" y2="29.41" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#FFEB3B"/>
+                            <stop offset="1" stop-color="#FFC107"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="hits-count" id="final-score-val">0</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button onclick="location.reload()" class="btn-bubble btn-bubble-blue"
+                style="padding: 1rem 2.5rem; font-size: 1.3rem;">Repetir</button>
+            <a href="/dashboard" class="btn-bubble btn-bubble-pink"
+                style="padding: 1rem 2.5rem; font-size: 1.3rem;">Volver</a>
+        </div>
     </div>
 </div>
 
 <script>
     const textId = parseInt("{{ text_id }}");
     let questionsData = [];
+    let currentIdx = 0;
+    let answers = {}; // q_id -> isCorrect or userValue
+    let scorableCount = 0;
+    let score = 0;
+    let currentQSize = 2.0;
+    let currentOptSize = 1.4;
 
     async function loadQuiz() {
         const token = localStorage.getItem('token');
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 
         try {
-            // Get text title
-            const textRes = await axios.get(`/reading/texts/${textId}`);
-            document.getElementById('text-title').innerText = textRes.data.title;
-
-            // Get questions
             const qRes = await axios.get(`/reading/texts/${textId}/questions`);
             questionsData = qRes.data;
 
-            const container = document.getElementById('quiz-container');
+            if (questionsData.length === 0) {
+                alert("No hay preguntas para este texto.");
+                return;
+            }
 
-            let scorableCount = 0;
-
-            questionsData.forEach((q, index) => {
-                const qDiv = document.createElement('div');
-                qDiv.className = 'question-card';
-                qDiv.id = `q-card-${q.id}`;
-                qDiv.style.marginBottom = '2rem';
-                qDiv.style.padding = '1rem';
-                qDiv.style.backgroundColor = 'rgba(255,255,255,0.5)';
-                qDiv.style.borderRadius = '12px';
-
-                // Check for special types via Category
-                const cat = (q.category || "").toUpperCase();
-                const isWritten = cat.includes("ESCRITA");
-                const isReflexive = cat.includes("REFLEXIVA");
-                const isOral = cat.includes("ORAL");
-                const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
-                const isOrdering = cat.includes("ORDERING");
-
-                // Show input for Written/Reflexive
-                // Show only instruction for Oral/Ludica
-                // Show drag-and-drop list for Ordering
-                // Show options for others (Literal, Referential, Vocab, True/False)
-
-                if (isWritten || isReflexive) {
-                    qDiv.innerHTML = `
-                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
-                        <textarea id="ans_${q.id}" rows="4" style="width: 100%; border-radius: 8px; padding: 0.5rem; margin-top: 0.5rem; font-size: ${currentOptSize}rem;" placeholder="Escribe tu respuesta aquí..."></textarea>
-                    `;
-                } else if (isOral || isLudica) {
-                    qDiv.innerHTML = `
-                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
-                        <div style="margin-top: 0.5rem; font-style: italic; color: #666; font-size: ${currentOptSize}rem;">
-                            (Actividad para realizar en clase o en casa. No se evalúa aquí.)
-                        </div>
-                    `;
-                } else if (isOrdering) {
-                    // Shuffle options for display
-                    const shuffled = [...q.options].map((v, i) => ({ v, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(x => x.v);
-                    qDiv.innerHTML = `
-                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
-                        <p style="font-size: 0.9rem; color: #64748B; margin: 0.25rem 0 0.5rem;">Arrastra los elementos para ordenarlos correctamente 👆</p>
-                        <ul class="ordering-list" id="ordering-list-${q.id}">
-                            ${shuffled.map(item => `
-                                <li class="ordering-item" draggable="true" data-value="${encodeURIComponent(item)}">
-                                    <span class="drag-handle">☰</span>
-                                    <span style="font-size: ${currentOptSize}rem;">${item}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    `;
-                    initDragAndDrop(qDiv.querySelector(`#ordering-list-${q.id}`));
-                } else {
-                    // Standard Test Question
-                    let optionsHtml = '';
-                    q.options.forEach((opt, optedIndex) => {
-                        optionsHtml += `
-                            <div id="opt-div-${q.id}-${optedIndex}" style="margin: 0.5rem 0; display: flex; align-items: center; padding: 0.5rem; border-radius: 0.5rem;">
-                                <input type="radio" name="q_${q.id}" value="${optedIndex}" id="q_${q.id}_${optedIndex}" style="width: auto; margin-right: 0.5rem;">
-                                <label for="q_${q.id}_${optedIndex}" style="margin: 0; width: 100%; cursor: pointer; font-size: ${currentOptSize}rem;">${opt}</label>
-                            </div>
-                        `;
-                    });
-
-                    qDiv.innerHTML = `
-                        <h3 style="font-size: ${currentQSize}rem;">${index + 1}. ${q.question_content}</h3>
-                        ${optionsHtml}
-                    `;
-                }
-
-                container.appendChild(qDiv);
-            });
-
+            renderDots();
+            renderQuestion(0);
         } catch (error) {
             console.error(error);
             alert("Error cargando preguntas");
         }
     }
 
-    document.getElementById('submit-quiz').addEventListener('click', async () => {
-        // Disable button to prevent double submit
-        const submitBtn = document.getElementById('submit-quiz');
-        if (submitBtn.innerText === "Volver a Lecturas") {
-            window.location.href = '/dashboard';
-            return;
+    function renderDots() {
+        const dotsContainer = document.getElementById('pagination-dots');
+        dotsContainer.innerHTML = '';
+        questionsData.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dot.id = `dot-${i}`;
+            dotsContainer.appendChild(dot);
+        });
+    }
+
+    function renderQuestion(idx) {
+        currentIdx = idx;
+        const q = questionsData[idx];
+        const content = document.getElementById('question-content');
+        const nextBtn = document.getElementById('btn-next');
+        const feedback = document.getElementById('feedback-banner');
+
+        feedback.style.display = 'none';
+        nextBtn.style.display = 'none';
+
+        // Update dots
+        document.querySelectorAll('.dot').forEach((dot, i) => {
+            dot.classList.remove('active');
+            if (i === idx) dot.classList.add('active');
+            if (answers[questionsData[i].id] !== undefined) dot.classList.add('completed');
+        });
+
+        const cat = (q.category || "").toUpperCase();
+        const isWritten = cat.includes("ESCRITA") || cat.includes("REFLEXIVA");
+        const isOral = cat.includes("ORAL") || cat.includes("LÚDICA") || cat.includes("LUDICA");
+        const isOrdering = cat.includes("ORDERING");
+
+        let html = `<div class="question-text" style="font-size: ${currentQSize}rem">${q.question_content}</div>`;
+
+        if (isWritten) {
+            html += `
+                <div class="written-answer-container">
+                    <textarea id="written-ans" class="written-textarea" rows="4" placeholder="Escribe tu respuesta aquí..." oninput="showNextBtnIfNotEmpty()"></textarea>
+                </div>
+            `;
+        } else if (isOral) {
+            html += `
+                <p style="font-size: 1.5rem; color: #64748B; font-style: italic;">(Esta es una actividad de clase. Di tu respuesta en voz alta o realiza la acción y pulsa Siguiente)</p>
+            `;
+            setTimeout(() => { nextBtn.style.display = 'flex'; }, 500);
+        } else if (isOrdering) {
+            html += `<p style="font-size: 1.2rem; color: #64748B;">Ordena los elementos (esta función está simplificada en el nuevo diseño).</p>`;
+            q.options.forEach((opt, i) => {
+                html += `<div class="option-btn dimmed" style="margin-bottom:0.5rem; cursor: default;">${opt}</div>`;
+            });
+            setTimeout(() => { nextBtn.style.display = 'flex'; }, 500);
+        } else {
+            // Standard Multiple Choice
+            html += `<div class="options-grid">`;
+            q.options.forEach((opt, i) => {
+                html += `<button class="option-btn" id="opt-${i}" onclick="checkAnswer(${i})" style="font-size: ${currentOptSize}rem">${opt}</button>`;
+            });
+            html += `</div>`;
         }
 
-        let score = 0;
-        let scorableQuestions = 0;
+        content.innerHTML = html;
+        
+        if (idx === questionsData.length - 1) {
+            nextBtn.innerHTML = 'Terminar';
+        } else {
+            nextBtn.innerHTML = 'Siguiente >';
+        }
+    }
 
-        questionsData.forEach(q => {
-            const cat = (q.category || "").toUpperCase();
-            const isWritten = cat.includes("ESCRITA");
-            const isReflexive = cat.includes("REFLEXIVA");
-            const isOral = cat.includes("ORAL");
-            const isLudica = cat.includes("LÚDICA") || cat.includes("LUDICA");
-            const isOrdering = cat.includes("ORDERING");
+    function showNextBtnIfNotEmpty() {
+        const val = document.getElementById('written-ans').value.trim();
+        const btn = document.getElementById('btn-next');
+        if (val.length > 2) btn.style.display = 'flex';
+        else btn.style.display = 'none';
+    }
 
-            // If it is one of the excluded types, skip scoring logic
-            if (isWritten || isReflexive || isOral || isLudica) {
-                if (isWritten || isReflexive) {
-                    const txt = document.getElementById(`ans_${q.id}`);
-                    if (txt) txt.disabled = true;
-                }
-                return;
-            }
+    function checkAnswer(selectedIdx) {
+        const q = questionsData[currentIdx];
+        const correctIdx = q.correct_answer;
+        const buttons = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedback-banner');
+        const nextBtn = document.getElementById('btn-next');
 
-            // Handle ORDERING scoring
-            if (isOrdering) {
-                scorableQuestions++;
-                const list = document.getElementById(`ordering-list-${q.id}`);
-                if (list) {
-                    const items = Array.from(list.querySelectorAll('.ordering-item'));
-                    const userOrder = items.map(el => decodeURIComponent(el.dataset.value));
-                    const correctOrder = q.options;
-                    const isCorrect = userOrder.every((v, i) => v === correctOrder[i]);
-                    if (isCorrect) score++;
-                    // Visual feedback per item
-                    items.forEach((el, i) => {
-                        el.draggable = false;
-                        el.style.cursor = 'default';
-                        if (decodeURIComponent(el.dataset.value) === correctOrder[i]) {
-                            el.classList.add('correct-order');
-                        } else {
-                            el.classList.add('wrong-order');
-                        }
-                    });
-                }
-                return;
-            }
+        buttons.forEach(btn => btn.disabled = true);
 
-            scorableQuestions++;
+        const isCorrect = selectedIdx === correctIdx;
+        answers[q.id] = isCorrect;
 
-            const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
-            const correctIndex = q.correct_answer;
+        if (isCorrect) {
+            score++;
+            
+            // Play correct sound
+            const sound = new Audio('/static/audio/acierto.mp3');
+            sound.play().catch(e => console.log('Audio playback blocked or failed', e));
 
-            // Highlight Correct Answer (Green)
-            const correctDiv = document.getElementById(`opt-div-${q.id}-${correctIndex}`);
-            if (correctDiv) {
-                correctDiv.style.backgroundColor = '#dcfce7'; // green-100
-                correctDiv.style.border = '1px solid #22c55e';
-                correctDiv.style.color = '#15803d';
-            }
+            const btnEl = document.getElementById(`opt-${selectedIdx}`);
+            // Flying star animation
+            playSuccessAnimation(btnEl);
 
-            if (selected) {
-                const selectedVal = parseInt(selected.value);
-                if (selectedVal === correctIndex) {
-                    score++;
-                } else {
-                    // Highlight Incorrect Selection (Red)
-                    const wrongDiv = document.getElementById(`opt-div-${q.id}-${selectedVal}`);
-                    if (wrongDiv) {
-                        wrongDiv.style.backgroundColor = '#fee2e2'; // red-100
-                        wrongDiv.style.border = '1px solid #ef4444';
-                        wrongDiv.style.color = '#b91c1c';
-                    }
-                }
-            } else {
-                // Not answered
-                // Optional: Mark question title as unanswered?
-            }
+            document.getElementById(`opt-${selectedIdx}`).classList.add('correct');
+            // feedback.className = 'feedback-banner feedback-correct';
+            // document.getElementById('feedback-icon').innerText = '✅';
+            // document.getElementById('feedback-text').innerText = '¡Correcto! 🎉';
+            // feedback.style.display = 'flex';
+        } else {
+            document.getElementById(`opt-${selectedIdx}`).classList.add('incorrect');
+            document.getElementById(`opt-${correctIdx}`).classList.add('correct');
+            
+            // Play error sound
+            const errorSound = new Audio('/static/audio/error.mp3');
+            errorSound.play().catch(e => console.log('Audio playback blocked or failed', e));
 
-            // Disable inputs
-            const inputs = document.getElementsByName(`q_${q.id}`);
-            inputs.forEach(input => input.disabled = true);
+            // feedback.className = 'feedback-banner feedback-incorrect';
+            // document.getElementById('feedback-icon').innerText = '❌';
+            // document.getElementById('feedback-text').innerText = '¡Ups!';
+            // feedback.style.display = 'flex';
+        }
+
+        buttons.forEach((btn, i) => {
+            if (i !== selectedIdx && i !== correctIdx) btn.classList.add('dimmed');
         });
 
-        // Avoid division by zero if all questions are non-scorable
-        if (scorableQuestions === 0) scorableQuestions = 1;
+        nextBtn.style.display = 'flex';
+    }
 
-        const finalScore = (score / scorableQuestions) * 100;
+    async function handleNext() {
+        const q = questionsData[currentIdx];
+        const cat = (q.category || "").toUpperCase();
+        if (cat.includes("ESCRITA") || cat.includes("REFLEXIVA")) {
+            answers[q.id] = document.getElementById('written-ans').value;
+        } else if (answers[q.id] === undefined) {
+             answers[q.id] = true;
+        }
+
+        if (currentIdx < questionsData.length - 1) {
+            renderQuestion(currentIdx + 1);
+        } else {
+            submitResults();
+        }
+    }
+
+    async function submitResults() {
+        let totalScorable = 0;
+        questionsData.forEach(q => {
+            const cat = (q.category || "").toUpperCase();
+            if (!(cat.includes("ESCRITA") || cat.includes("REFLEXIVA") || cat.includes("ORAL") || cat.includes("LÚDICA") || cat.includes("LUDICA"))) {
+                totalScorable++;
+            }
+        });
+
+        const finalScore = totalScorable > 0 ? (score / totalScorable) * 100 : 100;
         const timeSpent = parseFloat(localStorage.getItem(`time_spent_${textId}`)) || 0;
 
-        // Display Result
-        document.getElementById('submit-quiz').style.display = 'none';
-        const resultPanel = document.getElementById('result-panel');
-        resultPanel.style.display = 'block';
-        document.getElementById('score-display').innerText = `${score} / ${scorableQuestions}`;
-
-        // Scroll to bottom
-        resultPanel.scrollIntoView({ behavior: 'smooth' });
-
-        // Collect Details (Q_ID -> isCorrect)
-        let details = {};
-        questionsData.forEach(q => {
-            const cat = (q.category || "").toUpperCase();
-            const isOrdering = cat.includes("ORDERING");
-            const isScorable = !(cat.includes("ESCRITA") ||
-                cat.includes("REFLEXIVA") ||
-                cat.includes("ORAL") ||
-                cat.includes("LÚDICA") ||
-                cat.includes("LUDICA"));
-
-            if (isScorable) {
-                if (isOrdering) {
-                    const list = document.getElementById(`ordering-list-${q.id}`);
-                    if (list) {
-                        const items = Array.from(list.querySelectorAll('.ordering-item'));
-                        const userOrder = items.map(el => decodeURIComponent(el.dataset.value));
-                        details[q.id] = userOrder.every((v, i) => v === q.options[i]);
-                    } else {
-                        details[q.id] = false;
-                    }
-                } else {
-                    const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
-                    const correctIndex = q.correct_answer;
-                    let isCorrect = false;
-                    if (selected && parseInt(selected.value) === correctIndex) {
-                        isCorrect = true;
-                    }
-                    details[q.id] = isCorrect;
-                }
-            }
-        });
+        document.querySelector('.quiz-layout').style.display = 'none';
+        document.getElementById('result-panel-container').style.display = 'block';
+        document.getElementById('final-score-val').innerText = score;
 
         try {
             await axios.post('/reading/attempt', {
                 text_id: textId,
                 time_spent_seconds: timeSpent,
                 score: finalScore,
-                details: details
+                details: answers
             });
         } catch (e) {
             console.error('Error enviando resultados', e);
         }
-    });
-
-    function resetQuiz() {
-        // 1. Hide results, show submit button
-        document.getElementById('result-panel').style.display = 'none';
-        document.getElementById('submit-quiz').style.display = 'inline-flex';
-
-        // 2. Reset all questions
-        questionsData.forEach(q => {
-            const cat = (q.category || '').toUpperCase();
-
-            // Clear and Enable textareas
-            const textarea = document.getElementById(`ans_${q.id}`);
-            if (textarea) {
-                textarea.value = '';
-                textarea.disabled = false;
-            }
-
-            // Clear and Enable Radios
-            const radios = document.getElementsByName(`q_${q.id}`);
-            radios.forEach(r => {
-                r.checked = false;
-                r.disabled = false;
-            });
-
-            // Reset styling on option divs
-            q.options.forEach((opt, idx) => {
-                const optDiv = document.getElementById(`opt-div-${q.id}-${idx}`);
-                if (optDiv) {
-                    optDiv.style.backgroundColor = 'transparent';
-                    optDiv.style.border = 'none';
-                    optDiv.style.color = 'inherit';
-                }
-            });
-
-            // Re-shuffle ordering lists
-            if (cat.includes('ORDERING')) {
-                const list = document.getElementById(`ordering-list-${q.id}`);
-                if (list) {
-                    const items = Array.from(list.querySelectorAll('.ordering-item'));
-                    items.forEach(el => {
-                        el.classList.remove('correct-order', 'wrong-order');
-                        el.draggable = true;
-                        el.style.cursor = 'grab';
-                    });
-                    // Shuffle DOM items
-                    for (let i = items.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        list.appendChild(items[j]);
-                        items.splice(j, 1);
-                    }
-                    initDragAndDrop(list);
-                }
-            }
-        });
-
-        // 3. Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    // --- Drag & Drop Engine ---
-    function initDragAndDrop(list) {
-        let draggedEl = null;
-
-        list.querySelectorAll('.ordering-item').forEach(item => {
-            item.addEventListener('dragstart', e => {
-                draggedEl = item;
-                setTimeout(() => item.classList.add('dragging'), 0);
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            item.addEventListener('dragend', () => {
-                item.classList.remove('dragging');
-                list.querySelectorAll('.ordering-item').forEach(i => i.classList.remove('drag-over'));
-                draggedEl = null;
-            });
-            item.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (draggedEl && draggedEl !== item) {
-                    item.classList.add('drag-over');
-                    const rect = item.getBoundingClientRect();
-                    const midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) {
-                        list.insertBefore(draggedEl, item);
-                    } else {
-                        list.insertBefore(draggedEl, item.nextSibling);
-                    }
-                }
-            });
-            item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-            item.addEventListener('drop', e => {
-                e.preventDefault();
-                item.classList.remove('drag-over');
-            });
-        });
-    }
-
-    loadQuiz();
-
-    let currentQSize = 1.5;
-    let currentOptSize = 1.5;
 
     function adjustFontSize(change) {
         currentQSize += change;
         currentOptSize += change;
-
-        // Clamp
-        if (currentQSize < 1.0) currentQSize = 1.0;
-        if (currentQSize > 3.0) currentQSize = 3.0;
+        if (currentQSize < 1.2) currentQSize = 1.2;
+        if (currentQSize > 3.5) currentQSize = 3.5;
         if (currentOptSize < 1.0) currentOptSize = 1.0;
         if (currentOptSize > 3.0) currentOptSize = 3.0;
 
-        // Apply to all headers
-        document.querySelectorAll('.question-card h3').forEach(el => {
-            el.style.fontSize = currentQSize + 'rem';
+        const qText = document.querySelector('.question-text');
+        if (qText) qText.style.fontSize = currentQSize + 'rem';
+        
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.style.fontSize = currentOptSize + 'rem';
         });
-
-        // Apply to all labels
-        document.querySelectorAll('.question-card label').forEach(el => {
-            el.style.fontSize = currentOptSize + 'rem';
-        });
+        const textarea = document.getElementById('written-ans');
+        if (textarea) textarea.style.fontSize = currentOptSize + 'rem';
     }
+
+    function playSuccessAnimation(btnEl) {
+        const startRect = btnEl.getBoundingClientRect();
+        const counterStar = document.querySelector('#hits-counter .star-icon');
+        const endRect = counterStar.getBoundingClientRect();
+
+        const star = document.createElement('div');
+        star.className = 'flying-star-temp';
+        
+        // Target 24x24 in hits-counter, source div is 32x32
+        const startX = startRect.left + startRect.width / 2 - 16;
+        const startY = startRect.top + startRect.height / 2 - 16;
+        const endX = endRect.left + endRect.width / 2 - 16;
+        const endY = endRect.top + endRect.height / 2 - 16;
+
+        star.style.left = startX + 'px';
+        star.style.top = startY + 'px';
+        star.innerHTML = `
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 2L20.45 11.02L30.41 12.47L23.21 19.49L24.91 29.41L16 24.72L7.09 29.41L8.79 19.49L1.59 12.47L11.55 11.02L16 2Z" fill="#FFD600" stroke="#FFA000" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+        `;
+        document.body.appendChild(star);
+
+        const startTime = performance.now();
+        const duration = 850;
+
+        function animate(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Dynamic arch height to keep star on screen
+            const maxSafeArch = Math.min(startY, endY) - 50; 
+            const archHeight = Math.max(80, Math.min(300, maxSafeArch)); 
+            const arch = -archHeight * Math.sin(Math.PI * progress); 
+
+            // Horizontal side curve for "magnetic" feel
+            const sideArch = (endX > startX ? 60 : -60) * Math.sin(Math.PI * progress); 
+            
+            const curX = startX + (endX - startX) * progress + sideArch;
+            const curY = startY + (endY - startY) * progress + arch;
+
+            // Final scale should match the 24px star in navbar (24/32 = 0.75)
+            const baseScale = 1 + 0.8 * Math.sin(Math.PI * progress); // Grows during flight
+            const finalScaleProgress = 1 - (1 - 0.75) * progress; 
+            const curScale = baseScale * (1 - progress) + 0.75 * progress;
+
+            star.style.left = curX + 'px';
+            star.style.top = curY + 'px';
+            star.style.transform = `rotate(${progress * 1440}deg) scale(${curScale})`;
+            star.style.opacity = 1 - progress * 0.2;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                const finalRect = star.getBoundingClientRect();
+                const centerX = finalRect.left + finalRect.width / 2;
+                const centerY = finalRect.top + finalRect.height / 2;
+                star.remove();
+                createExplosion(centerX, centerY);
+                updateCounter();
+            }
+        }
+
+        function updateCounter() {
+            const hitsCountEl = document.getElementById('hits-count');
+            const hitsCounterEl = document.getElementById('hits-counter');
+            if (hitsCountEl) {
+                hitsCountEl.innerText = score;
+                hitsCounterEl.classList.remove('star-animate');
+                void hitsCounterEl.offsetWidth; // trigger reflow
+                hitsCounterEl.classList.add('star-animate');
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    function createExplosion(x, y) {
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div');
+            p.className = 'star-particle';
+            p.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 32 32" fill="#FFD600">
+                    <path d="M16 2L20.45 11.02L30.41 12.47L23.21 19.49L24.91 29.41L16 24.72L7.09 29.41L8.79 19.49L1.59 12.47L11.55 11.02L16 2Z"/>
+                </svg>
+            `;
+            // Center the particle on the coordinate (24px width/height -> offset 12px)
+            const particleX = x - 12;
+            const particleY = y - 12;
+            p.style.left = particleX + 'px';
+            p.style.top = particleY + 'px';
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 3 + Math.random() * 8;
+            let vx = Math.cos(angle) * velocity;
+            let vy = Math.sin(angle) * velocity;
+            
+            document.body.appendChild(p);
+
+            let posX = particleX;
+            let posY = particleY;
+            let opacity = 1;
+
+            function animateParticle() {
+                posX += vx;
+                posY += vy;
+                vy += 0.3; // gravity
+                opacity -= 0.02;
+                
+                p.style.left = posX + 'px';
+                p.style.top = posY + 'px';
+                p.style.opacity = opacity;
+                p.style.transform = `scale(${opacity}) rotate(${opacity * 360}deg)`;
+
+                if (opacity > 0) {
+                    requestAnimationFrame(animateParticle);
+                } else {
+                    p.remove();
+                }
+            }
+            requestAnimationFrame(animateParticle);
+        }
+    }
+
+    loadQuiz();
 </script>
 {% endblock %}
