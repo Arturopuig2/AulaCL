@@ -378,18 +378,6 @@
 <script>
     const textId = parseInt("{{ text_id }}");
     
-    // Bloquear gesto de retroceso del navegador/móvil (Swipe-back)
-    history.pushState(null, null, location.href);
-    window.onpopstate = function(event) {
-        history.pushState(null, null, location.href);
-    };
-
-    // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile)
-    document.addEventListener('touchstart', (e) => {
-        if (e.touches[0].pageX < 50) {
-            e.preventDefault();
-        }
-    }, { passive: false });
 
     // AudioManager con Web Audio API (evita que aparezca el indicador de reproducción en la isla dinámica/barra de estado)
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();

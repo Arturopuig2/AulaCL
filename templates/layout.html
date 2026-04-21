@@ -273,13 +273,25 @@
     </div>
 
     <script>
-        // Token storage handling if needed (e.g. from Google Auth callback)
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('token');
         if (tokenFromUrl) {
             localStorage.setItem('token', tokenFromUrl);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
+
+        // Bloquear gesto de retroceso del navegador/móvil globalmente
+        history.pushState(null, null, location.href);
+        window.onpopstate = function(event) {
+            history.pushState(null, null, location.href);
+        };
+
+        // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile)
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches[0] && e.touches[0].pageX < 50) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
     <script src="/static/js/app.js?v=27"></script>
 </body>
