@@ -384,9 +384,11 @@
         history.pushState(null, null, location.href);
     };
 
-    // Bloqueo físico de inicio de gesto en bordes (iOS Safari)
+    // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile)
     document.addEventListener('touchstart', (e) => {
-        if (e.pageX < 20) e.preventDefault();
+        if (e.touches[0].pageX < 50) {
+            e.preventDefault();
+        }
     }, { passive: false });
 
     // AudioManager con Web Audio API (evita que aparezca el indicador de reproducción en la isla dinámica/barra de estado)
