@@ -378,11 +378,42 @@
 <script>
     const textId = parseInt("{{ text_id }}");
     
-    // Bloquear gesto de retroceso del navegador/móvil
+    // Bloquear gesto de retroceso del navegador/móvil (Swipe-back)
     history.pushState(null, null, location.href);
-    window.onpopstate = function() {
-        history.go(1);
+    window.onpopstate = function(event) {
+        history.pushState(null, null, location.href);
     };
+
+    // Bloqueo físico de inicio de gesto en bordes (iOS Safari)
+    document.addEventListener('touchstart', (e) => {
+        if (e.pageX < 20) e.preventDefault();
+    }, { passive: false });
+
+    // AudioManager con Web Audio API (evita que aparezca el indicador de reproducción en la isla dinámica/barra de estado)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const soundCache = {};
+
+    async function preloadSound(url) {
+        if (soundCache[url]) return soundCache[url];
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            soundCache[url] = audioBuffer;
+            return audioBuffer;
+        } catch (e) {
+            console.error("Error preloading sound", url, e);
+        }
+    }
+
+    function playSound(url) {
+        if (!soundCache[url]) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const source = audioCtx.createBufferSource();
+        source.buffer = soundCache[url];
+        source.connect(audioCtx.destination);
+        source.start(0);
+    }
 
     let questionsData = [];
     let currentIdx = 0;
@@ -393,6 +424,10 @@
     let currentOptSize = 1.4;
 
     async function loadQuiz() {
+        // Pre-cargar sonidos
+        preloadSound('/static/audio/acierto.mp3');
+        preloadSound('/static/audio/error.mp3');
+
         const token = localStorage.getItem('token');
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
 
@@ -505,9 +540,8 @@
         if (isCorrect) {
             score++;
             
-            // Play correct sound
-            const sound = new Audio('/static/audio/acierto.mp3');
-            sound.play().catch(e => console.log('Audio playback blocked or failed', e));
+            // Play correct sound (Web Audio API)
+            playSound('/static/audio/acierto.mp3');
 
             const btnEl = document.getElementById(`opt-${selectedIdx}`);
             // Flying star animation
@@ -522,9 +556,8 @@
             document.getElementById(`opt-${selectedIdx}`).classList.add('incorrect');
             document.getElementById(`opt-${correctIdx}`).classList.add('correct');
             
-            // Play error sound
-            const errorSound = new Audio('/static/audio/error.mp3');
-            errorSound.play().catch(e => console.log('Audio playback blocked or failed', e));
+            // Play error sound (Web Audio API)
+            playSound('/static/audio/error.mp3');
 
             // feedback.className = 'feedback-banner feedback-incorrect';
             // document.getElementById('feedback-icon').innerText = '❌';
