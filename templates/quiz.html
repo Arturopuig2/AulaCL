@@ -312,26 +312,12 @@
         display: none !important;
     }
 
-    /* Fijar cabecera y evitar rebote en móvil */
-    nav {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
     html, body {
-        overscroll-behavior: none; /* Evita rebote y navegación por gestos lateral */
+        overscroll-behavior: none;
     }
 
     body {
-        padding-top: 70px; /* Espacio para la cabecera fija */
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        touch-action: manipulation; /* Permite clics pero evita zoom y scroll */
+        touch-action: manipulation;
     }
 </style>
 {% endblock %}
@@ -391,6 +377,13 @@
 
 <script>
     const textId = parseInt("{{ text_id }}");
+    
+    // Bloquear gesto de retroceso del navegador/móvil
+    history.pushState(null, null, location.href);
+    window.onpopstate = function() {
+        history.go(1);
+    };
+
     let questionsData = [];
     let currentIdx = 0;
     let answers = {}; // q_id -> isCorrect or userValue
