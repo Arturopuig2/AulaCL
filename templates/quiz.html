@@ -311,6 +311,28 @@
     #nav-links {
         display: none !important;
     }
+
+    /* Fijar cabecera y evitar rebote en móvil */
+    nav {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        overscroll-behavior: none; /* Evita rebote y navegación por gestos lateral */
+    }
+
+    body {
+        padding-top: 70px; /* Espacio para la cabecera fija */
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        touch-action: manipulation; /* Permite clics pero evita zoom y scroll */
+    }
 </style>
 {% endblock %}
 
