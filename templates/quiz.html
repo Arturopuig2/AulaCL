@@ -22,14 +22,6 @@
         <span id="hits-count" class="hits-count">0</span>
     </div>
 
-    <div style="display: flex; gap: 0.3rem; padding: 0.2rem; align-items: center;">
-        <div style="display: flex; gap: 0.1rem;">
-            <button onclick="adjustFontSize(-0.1)" class="btn-bubble btn-bubble-green"
-                style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A-</button>
-            <button onclick="adjustFontSize(0.1)" class="btn-bubble btn-bubble-green"
-                style="padding: 0.5rem 1.2rem; font-size: 1.1rem;">A+</button>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
@@ -314,6 +306,11 @@
         transition: transform 0.1s linear;
         transform-origin: center center;
     }
+
+    /* Ocultar menú de perfil en el quiz */
+    #nav-links {
+        display: none !important;
+    }
 </style>
 {% endblock %}
 
@@ -557,6 +554,9 @@
 
         document.querySelector('.quiz-layout').style.display = 'none';
         document.getElementById('result-panel-container').style.display = 'block';
+        if (document.querySelector('nav')) {
+            document.querySelector('nav').style.display = 'none';
+        }
         document.getElementById('final-score-val').innerText = score;
 
         try {
