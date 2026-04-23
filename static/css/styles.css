@@ -171,6 +171,7 @@ select:focus {
     border-radius: var(--radius);
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
+    touch-action: pan-y;
     /* transition: transform 0.2s; REMOVED per user request */
 }
 
