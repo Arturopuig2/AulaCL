@@ -109,14 +109,13 @@
             font-weight: 400;
         }
 
-        html, body {
-            overscroll-behavior: none;
-            overflow-x: hidden;
+        html, body, .container {
+            overscroll-behavior: none !important;
+            overflow-x: hidden !important;
             width: 100%;
-            height: 100%;
             margin: 0;
             padding: 0;
-            touch-action: pan-y; /* Permite scroll vertical pero bloquea gestos horizontales */
+            touch-action: pan-y !important; /* Only vertical scroll allowed */
         }
     </style>
     {% block head %}{% endblock %}
@@ -291,12 +290,27 @@
             history.pushState(null, null, location.href);
         };
 
-        // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile - Back/Forward swipe)
+        let touchStartX = 0;
+        let touchStartY = 0;
+
         document.addEventListener('touchstart', (e) => {
-            const touchX = e.touches[0].pageX;
+            touchStartX = e.touches[0].pageX;
+            touchStartY = e.touches[0].pageY;
             const threshold = 50; 
-            if (touchX < threshold || touchX > window.innerWidth - threshold) {
-                e.preventDefault();
+            if (touchStartX < threshold || touchStartX > window.innerWidth - threshold) {
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            const touchCurrentX = e.touches[0].pageX;
+            const touchCurrentY = e.touches[0].pageY;
+            const diffX = Math.abs(touchCurrentX - touchStartX);
+            const diffY = Math.abs(touchCurrentY - touchStartY);
+
+            // Si el movimiento es predominantemente horizontal, lo bloqueamos
+            if (diffX > diffY && diffX > 10) {
+                if (e.cancelable) e.preventDefault();
             }
         }, { passive: false });
     </script>

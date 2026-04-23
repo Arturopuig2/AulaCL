@@ -33,13 +33,17 @@
         font-family: 'Fredoka', sans-serif !important;
     }
 
+    .container {
+        margin-top: 3.5rem !important; /* Reducido de 5.5rem para acercar a la barra */
+    }
+
     .quiz-layout {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 80vh;
-        padding: 1rem;
+        min-height: 70vh;
+        padding: 0.5rem 1rem; /* Reducido padding superior */
     }
 
     .quiz-card {
@@ -47,7 +51,7 @@
         border-radius: 40px;
         padding: 3rem;
         width: 100%;
-        max-width: 900px;
+        max-width: 1100px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
         position: relative;
         transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
