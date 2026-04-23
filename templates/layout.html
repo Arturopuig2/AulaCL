@@ -109,13 +109,19 @@
             font-weight: 400;
         }
 
-        html, body, .container {
+        html, body, .container, #main-nav, #texts-grid, * {
             overscroll-behavior: none !important;
+            overscroll-behavior-x: none !important;
             overflow-x: hidden !important;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            touch-action: pan-y !important; /* Only vertical scroll allowed */
+            touch-action: pan-y; /* Only vertical scroll allowed */
+        }
+        
+        html, body {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: relative;
         }
     </style>
     {% block head %}{% endblock %}
@@ -134,7 +140,7 @@
 
     {% block navbar %}
     <nav
-        style="background: white; padding: 1rem; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; box-sizing: border-box;">
+        style="background: white; padding: 1rem; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; box-sizing: border-box; touch-action: pan-y !important;">
         <div style="display: flex; align-items: center; flex: 1;">
             {% block navbar_logo %}
             <div style="margin-right: 1.5rem;">
@@ -308,8 +314,8 @@
             const diffX = Math.abs(touchCurrentX - touchStartX);
             const diffY = Math.abs(touchCurrentY - touchStartY);
 
-            // Si el movimiento es predominantemente horizontal, lo bloqueamos
-            if (diffX > diffY && diffX > 10) {
+            // Si el movimiento es predominantemente horizontal, lo bloqueamos (umbral bajo para máxima seguridad)
+            if (diffX > diffY && diffX > 5) {
                 if (e.cancelable) e.preventDefault();
             }
         }, { passive: false });
