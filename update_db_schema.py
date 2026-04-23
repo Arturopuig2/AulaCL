@@ -21,6 +21,7 @@ def update_schema():
 
     # USERS TABLE
     verify_column(connection, "users", "is_teacher", "BOOLEAN DEFAULT FALSE")
+    verify_column(connection, "users", "is_parent", "BOOLEAN DEFAULT FALSE")
     
     # TEXTS TABLE
     verify_column(connection, "texts", "image_path", "VARCHAR")

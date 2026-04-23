@@ -14,6 +14,7 @@ class User(Base):
     name = Column(String, nullable=True)
     access_expires_at = Column(DateTime, nullable=True)
     is_teacher = Column(Boolean, default=False)
+    is_parent = Column(Boolean, default=False)
     
     attempts = relationship("ReadingAttempt", back_populates="user")
     subusers = relationship("SubUser", back_populates="parent_user")

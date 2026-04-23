@@ -94,6 +94,8 @@ def reset_password_page(request: Request):
 async def subusers_page(request: Request, user: models.User = Depends(auth.get_current_user_html)):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
+    if not user.is_teacher and user.username != 'admin':
+        return RedirectResponse(url="/dashboard", status_code=302)
     return templates.TemplateResponse(request, "subusers.html")
 
 @app.get("/admin", response_class=HTMLResponse)

@@ -111,6 +111,12 @@
 
         html, body {
             overscroll-behavior: none;
+            overflow-x: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            touch-action: pan-y; /* Permite scroll vertical pero bloquea gestos horizontales */
         }
     </style>
     {% block head %}{% endblock %}
@@ -140,11 +146,6 @@
         </div>
 
         <!-- Header Text Removed -->
-        <div id="dynamic-nav-title"
-            style="position: absolute; left: 50%; transform: translateX(-50%); font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 500; color: #1e293b; pointer-events: none;">
-            <!-- JS will populate this -->
-        </div>
-
         <div id="nav-links">
             <!-- JS will populate this based on auth status -->
         </div>
@@ -290,9 +291,11 @@
             history.pushState(null, null, location.href);
         };
 
-        // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile)
+        // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile - Back/Forward swipe)
         document.addEventListener('touchstart', (e) => {
-            if (e.touches[0] && e.touches[0].pageX < 50) {
+            const touchX = e.touches[0].pageX;
+            const threshold = 50; 
+            if (touchX < threshold || touchX > window.innerWidth - threshold) {
                 e.preventDefault();
             }
         }, { passive: false });

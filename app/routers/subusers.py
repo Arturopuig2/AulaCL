@@ -54,6 +54,9 @@ def create_subuser(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_active_user)
 ):
+    if not current_user.is_teacher and current_user.username != 'admin':
+        raise HTTPException(status_code=403, detail="Solo los profesores pueden gestionar alumnos/as")
+
     # Create sub-user attached to current user
     db_subuser = models.SubUser(
         name=subuser.name,
@@ -86,6 +89,8 @@ def read_subusers(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_active_user)
 ):
+    if not current_user.is_teacher and current_user.username != 'admin':
+        return []
     return current_user.subusers
 
 @router.post("/{subuser_id}/license")

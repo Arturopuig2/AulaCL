@@ -236,7 +236,8 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
         email=user.email,
         name=user.name,
         access_expires_at=expires_at,
-        is_teacher=user.is_teacher
+        is_teacher=user.is_teacher,
+        is_parent=user.is_parent
     )
     db.add(db_user)
     db.commit()
@@ -245,20 +246,27 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
     # Process License Key if provided (Anonymous -> Registered User with License)
     if user.license_key and user.license_key.strip():
         lic_key = user.license_key.strip().upper()
-        license_entry = db.query(models.License).filter(models.License.key == lic_key).first()
         
+        # 1. Try modern License table
+        license_entry = db.query(models.License).filter(models.License.key == lic_key).first()
         if license_entry and license_entry.status == "ACTIVE":
             license_entry.status = "USED"
             now = datetime.utcnow()
             license_entry.activated_at = now
             license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
             license_entry.used_by_user_id = db_user.id
-            
-            # Set Expiry
-            now = datetime.utcnow()
-            db_user.access_expires_at = now + timedelta(days=license_entry.duration_days)
+            db_user.access_expires_at = license_entry.expires_at
             db.commit()
-            db.refresh(db_user)
+        else:
+            # 2. Try legacy InvitationCode table
+            invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == lic_key).first()
+            if invitation and not invitation.is_used:
+                invitation.is_used = True
+                now = datetime.utcnow()
+                invitation.used_at = now
+                invitation.used_by_user_id = db_user.id
+                db_user.access_expires_at = now + timedelta(days=365)
+                db.commit()
 
     return db_user
 
@@ -543,21 +551,25 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # 1. Fetch Subuser Licenses (Old Model)
-    licenses = db.query(models.License).all()
-    
     result = []
-    
-    # Process Subuser Licenses
+
+    # 1. Fetch Subuser Licenses (Student Model)
+    licenses = db.query(models.License).all()
     for lic in licenses:
         used_by_name = None
         parent_email = None
+        
         if lic.used_by_subuser_id:
             sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
             if sub:
-                used_by_name = f"SubUser: {sub.name}"
+                used_by_name = f"Alumno/a: {sub.name}"
                 if sub.parent_user:
                     parent_email = sub.parent_user.email
+        elif lic.used_by_user_id:
+            user = db.query(models.User).filter(models.User.id == lic.used_by_user_id).first()
+            if user:
+                used_by_name = f"Usuario: {user.name or user.username}"
+                parent_email = user.email
 
         result.append({
             "key": lic.key,
@@ -567,10 +579,10 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
             "activated_at": lic.activated_at,
             "used_by": used_by_name,
             "parent_email": parent_email,
-            "type": "Student"
+            "type": "Estudiante"
         })
 
-    # 2. Fetch Main Invitation Codes (New Model)
+    # 2. Fetch Main Invitation Codes (Legacy/Premium Model)
     invitations = db.query(models.InvitationCode).all()
     for inv in invitations:
         used_by_name = None
@@ -580,7 +592,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
         if inv.used_by_user_id:
             u = db.query(models.User).filter(models.User.id == inv.used_by_user_id).first()
             if u:
-                used_by_name = f"User: {u.name or u.username}"
+                used_by_name = f"Usuario: {u.name or u.username}"
                 parent_email = u.email
         
         result.append({

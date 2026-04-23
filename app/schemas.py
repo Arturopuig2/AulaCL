@@ -13,11 +13,13 @@ class UserCreate(UserBase):
     access_code: Optional[str] = None
     license_key: Optional[str] = None
     is_teacher: Optional[bool] = False
+    is_parent: Optional[bool] = False
 
 class User(UserBase):
     id: int
     access_expires_at: Optional[datetime] = None
     is_teacher: Optional[bool] = False
+    is_parent: Optional[bool] = False
     
     class Config:
         from_attributes = True

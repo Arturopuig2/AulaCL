@@ -20,20 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update role flags based on server data
             const isTeacher = !!user.is_teacher;
+            const isParent = !!user.is_parent;
             const isSubUser = !user.username;
 
             localStorage.setItem('is_teacher', isTeacher);
+            localStorage.setItem('is_parent', isParent);
             localStorage.setItem('is_subuser', isSubUser);
 
-            // Update Dynamic Nav Title
-            const titleContainer = document.getElementById('dynamic-nav-title');
-            if (titleContainer && window.location.pathname === '/dashboard') {
-                if (isTeacher) {
-                    titleContainer.innerText = 'Panel de profesorado';
-                } else {
-                    titleContainer.innerText = '';
-                }
-            }
+
 
             if (user.username !== 'admin') {
                 if (user.access_expires_at && new Date(user.access_expires_at) > new Date()) {
@@ -74,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
-            // "Mis alumnos" is ONLY for Teachers
+            // "Mis alumnos" / "Mis hijos"
             if (user.is_teacher) {
                 menuItemsHTML += `
                     <a href="/my-subusers" class="dropdown-item">Mis Alumnos/as</a>
