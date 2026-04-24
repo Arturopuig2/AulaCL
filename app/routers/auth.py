@@ -553,57 +553,68 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
     
     result = []
 
-    # 1. Fetch Subuser Licenses (Student Model)
-    licenses = db.query(models.License).all()
-    for lic in licenses:
-        used_by_name = None
-        parent_email = None
-        
-        if lic.used_by_subuser_id:
-            sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
-            if sub:
-                used_by_name = f"Alumno/a: {sub.name}"
-                if sub.parent_user:
-                    parent_email = sub.parent_user.email
-        elif lic.used_by_user_id:
-            user = db.query(models.User).filter(models.User.id == lic.used_by_user_id).first()
-            if user:
-                used_by_name = f"Usuario: {user.name or user.username}"
-                parent_email = user.email
+    try:
+        # 1. Fetch Student Licenses
+        student_licenses = db.query(models.License).all()
+        for lic in student_licenses:
+            used_by_name = None
+            parent_email = None
+            
+            # Use relationships if available for better reliability
+            if lic.used_by_subuser_id:
+                sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
+                if sub:
+                    used_by_name = f"Alumno/a: {sub.name or 'S/N'}"
+                    if sub.parent_user:
+                        parent_email = sub.parent_user.email
+            elif lic.used_by_user_id:
+                u = db.query(models.User).filter(models.User.id == lic.used_by_user_id).first()
+                if u:
+                    used_by_name = f"Usuario: {u.name or u.username or 'S/N'}"
+                    parent_email = u.email
 
-        result.append({
-            "key": lic.key,
-            "status": lic.status,
-            "duration_days": lic.duration_days,
-            "created_at": lic.created_at,
-            "activated_at": lic.activated_at,
-            "used_by": used_by_name,
-            "parent_email": parent_email,
-            "type": "Estudiante"
-        })
+            result.append({
+                "key": lic.key,
+                "status": lic.status,
+                "duration_days": lic.duration_days,
+                "created_at": lic.created_at,
+                "activated_at": lic.activated_at,
+                "used_by": used_by_name,
+                "parent_email": parent_email,
+                "type": "Estudiante"
+            })
 
-    # 2. Fetch Main Invitation Codes (Legacy/Premium Model)
-    invitations = db.query(models.InvitationCode).all()
-    for inv in invitations:
-        used_by_name = None
-        parent_email = None
-        status = "USED" if inv.is_used else "ACTIVE"
+        # 2. Fetch Premium Invitation Codes (Legacy)
+        invitations = db.query(models.InvitationCode).all()
+        for inv in invitations:
+            used_by_name = None
+            parent_email = None
+            status_val = "USED" if inv.is_used else "ACTIVE"
+            
+            if inv.used_by_user_id:
+                u = db.query(models.User).filter(models.User.id == inv.used_by_user_id).first()
+                if u:
+                    used_by_name = f"Usuario: {u.name or u.username or 'S/N'}"
+                    parent_email = u.email
+            
+            result.append({
+                "key": inv.code,
+                "status": status_val,
+                "duration_days": 365,
+                "created_at": inv.created_at,
+                "activated_at": inv.used_at,
+                "used_by": used_by_name,
+                "parent_email": parent_email,
+                "type": "Premium"
+            })
+            
+        return result
         
-        if inv.used_by_user_id:
-            u = db.query(models.User).filter(models.User.id == inv.used_by_user_id).first()
-            if u:
-                used_by_name = f"Usuario: {u.name or u.username}"
-                parent_email = u.email
-        
-        result.append({
-            "key": inv.code,
-            "status": status,
-            "duration_days": 365,
-            "created_at": inv.created_at,
-            "activated_at": inv.used_at,
-            "used_by": used_by_name,
-            "parent_email": parent_email,
-            "type": "Premium"
-        })
-        
-    return result
+    except Exception as e:
+        print(f"Error in get_licenses: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor al recuperar licencias: {str(e)}"
+        )
