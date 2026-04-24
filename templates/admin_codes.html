@@ -30,10 +30,15 @@
                     <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
                         <th style="padding: 0.5rem;">Clave de Licencia</th>
                         <th style="padding: 0.5rem;">Estado</th>
+                <thead style="position: sticky; top: 0; background: white;">
+                    <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 0.5rem;">Clave de Licencia</th>
+                        <th style="padding: 0.5rem;">Estado</th>
                         <th style="padding: 0.5rem;">Usado Por (Alumno)</th>
                         <th style="padding: 0.5rem;">Email Tutor</th>
                         <th style="padding: 0.5rem;">Activada</th>
-                        <th style="padding: 0.5rem;">Caduca el</th>
+                        <th style="padding: 0.5rem;">Caduca</th>
+                        <th style="padding: 0.5rem;">Quedan</th>
                         <th style="padding: 0.5rem;">Duración</th>
                     </tr>
                 </thead>
@@ -62,14 +67,14 @@
 
     async function loadCodes() {
         const tbody = document.getElementById('codes-table-body');
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Cargando...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">Cargando...</td></tr>';
         
         try {
             const response = await axios.get('/auth/admin/licenses');
             tbody.innerHTML = '';
 
             if (!response.data || response.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">No hay licencias generadas aún.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">No hay licencias generadas aún.</td></tr>';
                 return;
             }
 
@@ -78,6 +83,8 @@
                 if (a.status === b.status) return 0;
                 return a.status === 'ACTIVE' ? -1 : 1;
             });
+
+            const now = new Date();
 
             codes.forEach(c => {
                 const tr = document.createElement('tr');
@@ -89,6 +96,22 @@
                     const date = new Date(dateStr);
                     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 };
+
+                // Cálculo de días restantes
+                let daysLeftHtml = '<span style="color: #cbd5e1;">-</span>';
+                if (c.expires_at && c.status === 'USED') {
+                    const expiry = new Date(c.expires_at);
+                    const diffTime = expiry - now;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays <= 0) {
+                        daysLeftHtml = '<span style="color: #ef4444; font-weight: 700;">Expirada</span>';
+                    } else if (diffDays <= 30) {
+                        daysLeftHtml = `<span style="color: #f97316; font-weight: 700;">${diffDays} d</span>`;
+                    } else {
+                        daysLeftHtml = `<span style="color: #1e293b;">${diffDays} d</span>`;
+                    }
+                }
 
                 tr.innerHTML = `
                     <td style="padding: 0.8rem 0.5rem; font-family: monospace; font-weight: 600; color: #1e40af;">${c.key}</td>
@@ -109,6 +132,9 @@
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #1e293b; font-size: 0.8rem; font-weight: 600;">
                         ${formatDate(c.expires_at)}
+                    </td>
+                    <td style="padding: 0.8rem 0.5rem; font-size: 0.8rem;">
+                        ${daysLeftHtml}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
                         ${c.duration_days} días
