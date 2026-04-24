@@ -34,11 +34,11 @@ def update_schema():
     # LICENSES TABLE
     verify_column(connection, "licenses", "used_by_subuser_id", "INTEGER")
     verify_column(connection, "licenses", "used_by_user_id", "INTEGER")
-    verify_column(connection, "licenses", "expires_at", "DATETIME")
-    # Postgres needs explicit foreign key? Usually integer is enough for code-level logic, 
-    # but database integrity relies on Constraints. verify_column only adds column.
     
-    # (Add other missing columns here if any found later)
+    # Use TIMESTAMP for Postgres, DATETIME for SQLite
+    is_sqlite = "sqlite" in str(engine.url)
+    time_type = "DATETIME" if is_sqlite else "TIMESTAMP"
+    verify_column(connection, "licenses", "expires_at", time_type)
 
     # (Add other missing columns here if any found later)
     
