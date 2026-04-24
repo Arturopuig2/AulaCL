@@ -110,12 +110,11 @@
         }
 
         html, body {
-            overscroll-behavior: none !important;
             overflow-x: hidden !important;
             width: 100%;
             margin: 0;
             padding: 0;
-            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
         }
     </style>
     {% block head %}{% endblock %}
@@ -285,22 +284,12 @@
         }
 
         // Bloquear gesto de retroceso del navegador/móvil globalmente
-        history.pushState(null, null, location.href);
-        window.onpopstate = function(event) {
-            history.pushState(null, null, location.href);
-        };
+        // history.pushState(null, null, location.href);
+        // window.onpopstate = function(event) {
+        //     history.pushState(null, null, location.href);
+        // };
 
-        let touchStartX = 0;
-        let touchStartY = 0;
-
-        // Bloqueo físico de inicio de gesto en bordes (iOS Safari / Chrome Mobile)
-        document.addEventListener('touchstart', (e) => {
-            const touchX = e.touches[0].pageX;
-            const threshold = 50; 
-            if (touchX < threshold || touchX > window.innerWidth - threshold) {
-                if (e.cancelable) e.preventDefault();
-            }
-        }, { passive: false });
+        // Removed edge touch blocking as it interferes with scrolling
     </script>
     <script src="/static/js/app.js?v=27"></script>
 </body>
