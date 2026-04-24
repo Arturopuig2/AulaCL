@@ -53,15 +53,24 @@
             window.location.href = '/dashboard';
             return;
         }
+        
+        // Ensure Axios has the token
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-        loadCodes();
+        await loadCodes();
     }
 
     async function loadCodes() {
+        const tbody = document.getElementById('codes-table-body');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Cargando...</td></tr>';
+        
         try {
             const response = await axios.get('/auth/admin/licenses');
-            const tbody = document.getElementById('codes-table-body');
             tbody.innerHTML = '';
+
+            if (!response.data || response.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">No hay licencias generadas aún.</td></tr>';
+                return;
+            }
 
             // Sort: ACTIVE first, then by creation date
             const codes = response.data.sort((a, b) => {
@@ -73,22 +82,23 @@
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #f1f5f9';
                 tr.innerHTML = `
-                    <td style="padding: 0.5rem; font-family: monospace; font-weight: bold; color: #1e40af;">${c.key}</td>
-                    <td style="padding: 0.5rem;">
+                    <td style="padding: 0.8rem 0.5rem; font-family: monospace; font-weight: 600; color: #1e40af;">${c.key}</td>
+                    <td style="padding: 0.8rem 0.5rem;">
                         ${c.status === 'USED'
-                        ? '<span style="color: #ef4444; font-size: 0.8rem; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">Usada</span>'
-                        : '<span style="color: #22c55e; font-size: 0.8rem; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Activa/Libre</span>'}
+                        ? '<span style="color: #ef4444; font-size: 0.75rem; background: #fee2e2; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Usada</span>'
+                        : '<span style="color: #16a34a; font-size: 0.75rem; background: #dcfce7; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Activa/Libre</span>'}
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">${c.type || 'Fija'}</div>
                     </td>
-                    <td style="padding: 0.5rem; color: var(--text-primary); font-weight: 500;">
-                        ${c.used_by || '-'}
+                    <td style="padding: 0.8rem 0.5rem; color: #334155; font-weight: 500;">
+                        ${c.used_by || '<span style="color: #cbd5e1;">-</span>'}
                     </td>
-                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
-                        ${c.parent_email || '-'}
+                    <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
+                        ${c.parent_email || '<span style="color: #cbd5e1;">-</span>'}
                     </td>
-                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
-                        ${c.activated_at ? new Date(c.activated_at).toLocaleDateString() : '-'}
+                    <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
+                        ${c.activated_at ? new Date(c.activated_at).toLocaleDateString() : '<span style="color: #cbd5e1;">-</span>'}
                     </td>
-                    <td style="padding: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                    <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
                         ${c.duration_days} días
                     </td>
                 `;
@@ -96,38 +106,49 @@
             });
         } catch (error) {
             console.error("Error loading licenses", error);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">Error al cargar las licencias: ${error.response?.data?.detail || error.message}</td></tr>`;
         }
     }
 
     async function generateCodes() {
         const count = document.getElementById('code-count').value;
+        const btn = document.querySelector('button[onclick="generateCodes()"]');
+        const originalText = btn.innerText;
+        
         try {
+            btn.innerText = "Generando...";
+            btn.disabled = true;
+            
             const response = await axios.post(`/auth/admin/licenses?count=${count}`);
-            loadCodes();
+            await loadCodes();
 
             // Auto-Download Text File
             const keys = response.data;
             const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
             let fileContent = keys.map(key => `Licencia- Aula CL: ${key}`).join("\n");
-            fileContent += `\n\n${today}`;
+            fileContent += `\n\nGenerado el: ${today}`;
 
             const blob = new Blob([fileContent], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `licencias_alumnos_${new Date().getTime()}.txt`;
+            a.download = `licencias_estudiantes_${new Date().getTime()}.txt`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            alert(`¡${count} licencias generadas!`);
+            alert(`¡${count} licencias generadas con éxito y descargadas!`);
         } catch (error) {
             console.error(error);
             alert('Error generando licencias: ' + (error.response?.data?.detail || error.message));
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
     }
 
-    checkAuth();
+    // Wait for everything to load
+    document.addEventListener('DOMContentLoaded', checkAuth);
 </script>
 {% endblock %}
