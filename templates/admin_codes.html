@@ -33,6 +33,7 @@
                         <th style="padding: 0.5rem;">Usado Por (Alumno)</th>
                         <th style="padding: 0.5rem;">Email Tutor</th>
                         <th style="padding: 0.5rem;">Activada</th>
+                        <th style="padding: 0.5rem;">Caduca el</th>
                         <th style="padding: 0.5rem;">Duración</th>
                     </tr>
                 </thead>
@@ -61,14 +62,14 @@
 
     async function loadCodes() {
         const tbody = document.getElementById('codes-table-body');
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Cargando...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Cargando...</td></tr>';
         
         try {
             const response = await axios.get('/auth/admin/licenses');
             tbody.innerHTML = '';
 
             if (!response.data || response.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">No hay licencias generadas aún.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">No hay licencias generadas aún.</td></tr>';
                 return;
             }
 
@@ -81,6 +82,14 @@
             codes.forEach(c => {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #f1f5f9';
+                
+                // Formateo de fechas a es-ES (dd/mm/aaaa)
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '<span style="color: #cbd5e1;">-</span>';
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                };
+
                 tr.innerHTML = `
                     <td style="padding: 0.8rem 0.5rem; font-family: monospace; font-weight: 600; color: #1e40af;">${c.key}</td>
                     <td style="padding: 0.8rem 0.5rem;">
@@ -96,7 +105,10 @@
                         ${c.parent_email || '<span style="color: #cbd5e1;">-</span>'}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
-                        ${c.activated_at ? new Date(c.activated_at).toLocaleDateString() : '<span style="color: #cbd5e1;">-</span>'}
+                        ${formatDate(c.activated_at)}
+                    </td>
+                    <td style="padding: 0.8rem 0.5rem; color: #1e293b; font-size: 0.8rem; font-weight: 600;">
+                        ${formatDate(c.expires_at)}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
                         ${c.duration_days} días
