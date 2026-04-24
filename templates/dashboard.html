@@ -243,7 +243,7 @@
     </div>
 
     <div id="texts-grid"
-        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; touch-action: pan-y !important;">
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; touch-action: pan-y !important;">
         <!-- Texts will be loaded here -->
     </div>
 </div>
@@ -333,7 +333,7 @@
     function renderTexts(texts) {
         const grid = document.getElementById('texts-grid');
         grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(240px, 1fr))';
         grid.style.gap = '2rem';
         grid.innerHTML = '';
 
