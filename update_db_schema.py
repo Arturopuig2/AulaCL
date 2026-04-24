@@ -44,6 +44,7 @@ def update_schema():
     
     # 3. DATA FIXES
     fix_audio_paths(connection)
+    fix_missing_expiry(connection)
     
     connection.close()
     print("Schema check complete.")
@@ -115,6 +116,38 @@ def fix_audio_paths(connection):
                 pass
     except Exception as e:
         print(f"Error fixing audio paths: {e}")
+
+def fix_missing_expiry(connection):
+    """
+    Backfills expires_at for licenses that have activated_at but no expires_at (due to previous missing column).
+    """
+    try:
+        print("Checking for missing expiration dates...")
+        # SQLite vs Postgres syntax for adding intervals is different. 
+        # Using a safer approach: Fetch and update if needed, or use generic SQL.
+        
+        query = text("SELECT id, activated_at, duration_days FROM licenses WHERE activated_at IS NOT NULL AND expires_at IS NULL")
+        results = connection.execute(query).fetchall()
+        
+        count = 0
+        from datetime import timedelta
+        for row in results:
+            l_id, activated_at, duration = row
+            if activated_at:
+                new_expiry = activated_at + timedelta(days=duration)
+                print(f"Fixing License ID {l_id}: Setting expiry to {new_expiry}")
+                update_query = text("UPDATE licenses SET expires_at = :expiry WHERE id = :id")
+                connection.execute(update_query, {"expiry": new_expiry, "id": l_id})
+                count += 1
+        
+        if count > 0:
+            try:
+                connection.commit()
+                print(f"Backfilled {count} expiration dates.")
+            except:
+                pass
+    except Exception as e:
+        print(f"Error fixing missing expiries: {e}")
 
 if __name__ == "__main__":
     update_schema()

@@ -579,6 +579,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                 "duration_days": lic.duration_days,
                 "created_at": lic.created_at,
                 "activated_at": lic.activated_at,
+                "expires_at": lic.expires_at or (lic.activated_at + timedelta(days=lic.duration_days) if lic.activated_at else None),
                 "used_by": used_by_name,
                 "parent_email": parent_email,
                 "type": "Estudiante"
@@ -603,6 +604,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                 "duration_days": 365,
                 "created_at": inv.created_at,
                 "activated_at": inv.used_at,
+                "expires_at": inv.used_at + timedelta(days=365) if inv.used_at else None,
                 "used_by": used_by_name,
                 "parent_email": parent_email,
                 "type": "Premium"
