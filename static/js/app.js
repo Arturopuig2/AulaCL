@@ -202,6 +202,15 @@ function openUnlockModal() {
 
 function closeUnlockModal() {
     document.getElementById('unlock-modal').style.display = 'none';
+    // Reset state for next time
+    document.getElementById('unlock-success-msg').style.display = 'none';
+    document.getElementById('unlock-error-msg').style.display = 'none';
+    document.getElementById('unlock-modal-description').style.display = 'block';
+    const form = document.getElementById('unlock-form');
+    if (form) {
+        form.style.display = 'block';
+        form.reset();
+    }
 }
 
 // --- GLOBAL CHANGE PASSWORD MODAL LOGIC ---
@@ -235,23 +244,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 const code = document.getElementById('unlock-code').value;
                 const token = localStorage.getItem('token');
 
+                const successMsg = document.getElementById('unlock-success-msg');
+                const errorMsg = document.getElementById('unlock-error-msg');
+                const modalDesc = document.getElementById('unlock-modal-description');
+                
+                successMsg.style.display = 'none';
+                errorMsg.style.display = 'none';
+
                 try {
                     const response = await axios.post('/auth/unlock',
                         { access_code: code },
                         { headers: { 'Authorization': 'Bearer ' + token } }
                     );
 
-                    alert(response.data.message);
-                    closeUnlockModal();
-                    window.location.reload();
+                    // Show Integrated Success
+                    modalDesc.style.display = 'none';
+                    unlockForm.style.display = 'none';
+                    successMsg.innerText = response.data.message;
+                    successMsg.style.display = 'block';
+
+                    setTimeout(() => {
+                        closeUnlockModal();
+                        window.location.reload();
+                    }, 2000);
 
                 } catch (error) {
                     console.error(error);
-                    if (error.response) {
-                        alert(error.response.data.detail || "Licencia incorrecta. Contacta con info@editorialaula.es");
-                    } else {
-                        alert("Error de conexión");
-                    }
+                    const detail = error.response?.data?.detail || "Licencia incorrecta. Contacta con info@editorialaula.es";
+                    errorMsg.innerText = detail;
+                    errorMsg.style.display = 'block';
                 } finally {
                     btn.innerText = originalText;
                     btn.disabled = false;
