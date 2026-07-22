@@ -527,7 +527,7 @@ def upload_text(
                         if c: context_instruction = f"\n    CONTEXTO ADICIONAL: {c}\n"
             except: pass
 
-            questions_data = generate_lomloe_questions_logic(main_text, client, context_instruction)
+            questions_data = generate_lomloe_questions_logic(main_text, client, context_instruction, language=new_text.language)
             
             for q in questions_data:
                 db_q = models.Question(
@@ -1094,9 +1094,20 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
 
 # --- HELPERS ---
 
-def generate_lomloe_questions_logic(content: str, client, context_instruction: str = ""):
+def generate_lomloe_questions_logic(content: str, client, context_instruction: str = "", language: str = None):
     import json
     import traceback
+    
+    lang_instruction = ""
+    if language:
+        lang_map = {
+            "es": "Castellano / Español",
+            "val": "Valencià / Catalán",
+            "en": "Inglés",
+            "fr": "Francés"
+        }
+        lang_name = lang_map.get(language, language)
+        lang_instruction = f"\n    - IDIOMA DE LAS PREGUNTAS Y OPCIONES: Debes formular OBLIGATORIAMENTE todas las preguntas, enunciados, explicaciones (reasoning) y opciones de respuesta en {lang_name}."
     
     prompt = f"""
     Genera 14 preguntas/actividades de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
@@ -1105,6 +1116,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
     {content}
 
     {context_instruction}
+    {lang_instruction}
     
     DEFINICIONES DE TIPOS DE PREGUNTAS (LOMLOE):
 
@@ -1282,7 +1294,7 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
     except Exception as e:
         print(f"Warning: Could not read magic_context.txt: {e}")
 
-    questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction)
+    questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction, language=request.language)
     return schemas.MagicQuestionsResponse(questions=questions_data)
 
 

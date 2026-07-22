@@ -492,7 +492,10 @@
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('/reading/admin/magic/questions', { content: content }, {
+            const res = await axios.post('/reading/admin/magic/questions', { 
+                content: content, 
+                language: currentUploadData.language 
+            }, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             // Filter out empty options from AI response

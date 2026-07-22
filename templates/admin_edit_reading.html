@@ -460,7 +460,8 @@
         try {
             const response = await axios.post('/reading/admin/magic/questions', {
                 content: currentDraft.content,
-                topic: currentDraft.title
+                topic: currentDraft.title,
+                language: currentDraft.language
             });
 
             // Replace questions but keep text

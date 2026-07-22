@@ -423,6 +423,7 @@
     async function generateMagicQuestions() {
         const content = document.getElementById('edit-content').value;
         const topic = document.getElementById('edit-title').value; // Optional context
+        const lang = document.getElementById('magic-lang').value;
 
         if (!content || content.length < 50) {
             alert("El texto es demasiado corto para generar preguntas.");
@@ -447,7 +448,8 @@
         try {
             const response = await axios.post('/reading/admin/magic/questions', {
                 content: content,
-                topic: topic
+                topic: topic,
+                language: lang
             });
 
             // Filter out empty options from AI response
