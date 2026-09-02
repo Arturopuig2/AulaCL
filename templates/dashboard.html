@@ -20,16 +20,21 @@
     }
 
     /* Custom Dropdown System */
+    #filters {
+        position: relative;
+        z-index: 9999;
+    }
+
     .custom-select-wrapper {
         position: relative;
         user-select: none;
         width: 100%;
         font-family: 'Fredoka', sans-serif;
-        z-index: 10;
+        z-index: 100;
     }
 
     .custom-select-wrapper.open {
-        z-index: 1000;
+        z-index: 99999 !important;
     }
 
     .custom-select-trigger {
@@ -84,8 +89,8 @@
         background: white;
         border-radius: 25px;
         display: none;
-        z-index: 1000;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        z-index: 100000 !important;
+        box-shadow: 0 14px 35px rgba(0, 0, 0, 0.15);
         padding: 0.5rem;
         max-height: min(80vh, 520px);
         overflow-y: auto;
@@ -93,6 +98,11 @@
         scrollbar-width: thin;
         scrollbar-color: #FED7AA transparent;
         transform-origin: top;
+    }
+
+    #texts-grid {
+        position: relative;
+        z-index: 1;
     }
 
     .options-course {
@@ -197,7 +207,7 @@
 
     <!-- Sub-users Section removed (moved to separate page) -->
 
-    <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap; position: relative; z-index: 50;">
+    <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap; position: relative; z-index: 9999;">
         <!-- Course Custom Select -->
         <div style="flex: 1; min-width: 200px;">
             <div class="custom-select-wrapper" id="wrapper-course">
