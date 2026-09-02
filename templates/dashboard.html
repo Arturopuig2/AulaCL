@@ -169,10 +169,6 @@
     .hidden-select {
         display: none !important;
     }
-
-    #texts-grid {
-        overflow-x: hidden !important;
-    }
 </style>
 {% endblock %}
 
@@ -354,6 +350,17 @@
         grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(240px, 1fr))';
         grid.style.gap = '2rem';
         grid.innerHTML = '';
+
+        if (!texts || texts.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; color: #64748b; font-family: 'Fredoka', sans-serif;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📖</div>
+                    <h3 style="font-size: 1.4rem; color: #1e293b; margin-bottom: 0.5rem; font-weight: 500;">No hay lecturas disponibles</h3>
+                    <p style="font-size: 1rem; color: #94a3b8; margin: 0;">Prueba a seleccionar otro curso o idioma.</p>
+                </div>
+            `;
+            return;
+        }
 
         let hasLockedContent = false;
 
