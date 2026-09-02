@@ -378,8 +378,13 @@
                 return;
             }
 
+            // Support markdown bold (**palabra**) and italic (*palabra*)
+            let formattedLine = line
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\*(.*?)\*/g, '<i>$1</i>');
+
             // Wrap content
-            htmlContent += `<span id="sent-${globalIndex}" class="audio-sentence">${line}</span><br>`;
+            htmlContent += `<span id="sent-${globalIndex}" class="audio-sentence">${formattedLine}</span><br>`;
             globalIndex++;
         });
 
