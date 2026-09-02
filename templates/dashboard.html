@@ -25,6 +25,11 @@
         user-select: none;
         width: 100%;
         font-family: 'Fredoka', sans-serif;
+        z-index: 10;
+    }
+
+    .custom-select-wrapper.open {
+        z-index: 1000;
     }
 
     .custom-select-trigger {
@@ -82,10 +87,11 @@
         z-index: 1000;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         padding: 0.5rem;
-        max-height: 350px;
+        max-height: min(80vh, 520px);
         overflow-y: auto;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #FED7AA transparent;
         transform-origin: top;
     }
 
@@ -99,26 +105,26 @@
 
     .custom-select-wrapper.open .custom-options {
         display: block;
-        animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes slideDown {
         from {
             opacity: 0;
-            transform: scaleY(0);
+            transform: translateY(-6px) scale(0.98);
         }
 
         to {
             opacity: 1;
-            transform: scaleY(1);
+            transform: translateY(0) scale(1);
         }
     }
 
     .custom-option {
-        padding: 0.7rem 1rem;
+        padding: 0.55rem 0.9rem;
         cursor: pointer;
         border-radius: 15px;
-        transition: all 0.2s;
+        transition: all 0.15s ease;
         font-size: 0.95rem;
         color: #475569;
         margin-bottom: 2px;
@@ -140,9 +146,23 @@
         color: #EA580C;
     }
 
-    /* Hide Scrollbar */
+    /* Styled Scrollbar */
     .custom-options::-webkit-scrollbar {
-        display: none;
+        width: 6px;
+    }
+
+    .custom-options::-webkit-scrollbar-track {
+        background: transparent;
+        margin: 10px 0;
+    }
+
+    .custom-options::-webkit-scrollbar-thumb {
+        background: #FED7AA;
+        border-radius: 10px;
+    }
+
+    .custom-options::-webkit-scrollbar-thumb:hover {
+        background: #FB923C;
     }
 
     /* Hide Native Selects */
@@ -164,8 +184,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="glass-panel"
-    style="padding: 0rem 2rem 2rem 2rem; margin-bottom: 2rem; background: transparent; border: none; box-shadow: none;">
+<div style="padding: 0rem 2rem 2rem 2rem; margin-bottom: 2rem; min-height: 65vh; position: relative;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <h1 id="dashboard-title"
@@ -182,7 +201,7 @@
 
     <!-- Sub-users Section removed (moved to separate page) -->
 
-    <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+    <div id="filters" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; flex-wrap: wrap; position: relative; z-index: 50;">
         <!-- Course Custom Select -->
         <div style="flex: 1; min-width: 200px;">
             <div class="custom-select-wrapper" id="wrapper-course">
