@@ -1110,7 +1110,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
         lang_instruction = f"\n    - IDIOMA DE LAS PREGUNTAS Y OPCIONES: Debes formular OBLIGATORIAMENTE todas las preguntas, enunciados, explicaciones (reasoning) y opciones de respuesta en {lang_name}."
     
     prompt = f"""
-    Genera 12 preguntas de comprensión lectora (tipo test con 3 opciones cada una) basándote EXCLUSIVAMENTE en el siguiente texto:
+    Genera 12 preguntas de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
     
     TEXTO:
     {content}
@@ -1135,27 +1135,34 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
     REGLAS ESTRICTAS:
     - Genera ÚNICAMENTE preguntas de tipo LITERAL, INFERENCIAL y VOCABULARIO.
     - NO generes preguntas de Decodificación, Expresión Oral, Expresión Escrita, Lúdica ni Reflexiva.
-    - TODAS las preguntas DEBEN ser tipo test con 3 opciones de respuesta claras y 1 sola opción correcta.
+    - TODAS las preguntas DEBEN tener opciones de respuesta cerradas con 1 sola opción correcta.
 
-    DISTRIBUCIÓN DE PREGUNTAS (Total 12 preguntas tipo test):
+    DISTRIBUCIÓN Y FORMATO DE LAS 12 PREGUNTAS:
 
-    1. 5 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
-       - Respuesta explícita en el texto.
-       - REASONING: Cita la frase exacta.
+    1. 6 PREGUNTAS TIPO TEST ESTÁNDAR (3 de tipo LITERAL y 3 de tipo INFERENCIAL):
+       - 3 opciones de respuesta cada una.
+       - Preguntas directas de comprensión y deducción.
 
-    2. 5 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
-       - Respuesta deducida ("leer entre líneas").
-       - REASONING: Explica la deducción.
+    2. 2 PREGUNTAS DE "VERDADERO O FALSO":
+       - Opciones: ["Verdadero", "Falso"] (o en el idioma correspondiente, ej. ["Verdader", "Fals"] en valencià).
+       - Clasifícalas como "LITERAL" o "INFERENCIAL" según corresponda.
 
-    3. 2 PREGUNTAS DE VOCABULARIO (Tipo Test, 3 opciones).
-       - Sinónimos, antónimos o significado de una palabra según el texto.
+    3. 2 PREGUNTAS DE "COMPLETA LA FRASE" (Rellenar hueco):
+       - Enunciado con la frase incompleta (ej: 'Completa la frase: "El personaje decidió ir a ______..."').
+       - 3 opciones de respuesta para rellenar el hueco.
+       - Clasifícalas como "LITERAL" o "INFERENCIAL".
+
+    4. 2 PREGUNTAS DE VOCABULARIO:
+       - Tipo test con 3 opciones.
+       - Pregunta por el significado, sinónimo o antónimo de una palabra en el contexto de la lectura.
+       - Clasifícalas como "VOCABULARIO".
 
     FORMATO JSON OBLIGATORIO:
     {{
         "questions": [
             {{
                 "question": "Texto de la pregunta...",
-                "options": ["Opción A", "Opción B", "Opción C"],
+                "options": ["Opción A", "Opción B", "Opción C"] o ["Verdadero", "Falso"],
                 "correct_index": 0,
                 "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO",
                 "reasoning": "Explicación breve de la respuesta correcta"
