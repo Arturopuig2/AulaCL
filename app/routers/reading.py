@@ -1110,7 +1110,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
         lang_instruction = f"\n    - IDIOMA DE LAS PREGUNTAS Y OPCIONES: Debes formular OBLIGATORIAMENTE todas las preguntas, enunciados, explicaciones (reasoning) y opciones de respuesta en {lang_name}."
     
     prompt = f"""
-    Genera 10 preguntas de comprensión lectora (tipo test con 3 opciones cada una) basándote EXCLUSIVAMENTE en el siguiente texto:
+    Genera 12 preguntas de comprensión lectora (tipo test con 3 opciones cada una) basándote EXCLUSIVAMENTE en el siguiente texto:
     
     TEXTO:
     {content}
@@ -1137,13 +1137,13 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
     - NO generes preguntas de Decodificación, Expresión Oral, Expresión Escrita, Lúdica ni Reflexiva.
     - TODAS las preguntas DEBEN ser tipo test con 3 opciones de respuesta claras y 1 sola opción correcta.
 
-    DISTRIBUCIÓN DE PREGUNTAS (Total 10 preguntas tipo test):
+    DISTRIBUCIÓN DE PREGUNTAS (Total 12 preguntas tipo test):
 
-    1. 4 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
+    1. 5 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
        - Respuesta explícita en el texto.
        - REASONING: Cita la frase exacta.
 
-    2. 4 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
+    2. 5 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
        - Respuesta deducida ("leer entre líneas").
        - REASONING: Explica la deducción.
 
