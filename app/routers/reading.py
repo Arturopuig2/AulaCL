@@ -1110,7 +1110,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
         lang_instruction = f"\n    - IDIOMA DE LAS PREGUNTAS Y OPCIONES: Debes formular OBLIGATORIAMENTE todas las preguntas, enunciados, explicaciones (reasoning) y opciones de respuesta en {lang_name}."
     
     prompt = f"""
-    Genera 14 preguntas/actividades de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
+    Genera 10 preguntas de comprensión lectora (tipo test con 3 opciones cada una) basándote EXCLUSIVAMENTE en el siguiente texto:
     
     TEXTO:
     {content}
@@ -1131,76 +1131,40 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
        - Indaga en el "por qué", "conclusiones" o "sentimientos" no explicados.
     
     C) VOCABULARIO (Léxico):
-       - Identificación de significados, contrarios o sentido figurado.
+       - Identificación de significados, sinónimos, antónimos o sentido figurado a partir del contexto del texto.
     
-    D) EXPRESIÓN ORAL (Comunicación):
-       - Propuestas para hablar, debatir o explicar algo verbalmente.
-    
-    E) EXPRESIÓN ESCRITA (Creación):
-       - Propuestas para escribir frases, finales alternativos o descripciones.
-    
-    F) ACTIVIDAD LÚDICA (Juego):
-       - Dramatización, dibujo, ritmos o retos divertidos basados en el texto.
-    
-    G) ACTIVIDAD REFLEXIVA (Valores/Crítico):
-       - Relación con valores, emociones o pensamiento crítico (ODS).
-    
-    H) DECODIFICACIÓN (Sonido-Letra):
-       - Relación fonema-grafema, conciencia fonológica, sílabas, rimas y reconocimiento de palabras.
+    D) DECODIFICACIÓN (Sonido-Letra):
+       - Relación fonema-grafema, conciencia fonológica, sílabas, rimas o reconocimiento de palabras del texto.
 
-    REQUISITOS (Total 14 preguntas/actividades):
+    REGLAS ESTRICTAS:
+    - NO generes actividades abiertas ni subjetivas (NO generar preguntas de Expresión Oral, Expresión Escrita, Lúdica ni Reflexiva).
+    - TODAS las preguntas DEBEN ser tipo test con 3 opciones de respuesta claras y 1 sola opción correcta.
 
-    1. 2 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
+    DISTRIBUCIÓN DE PREGUNTAS (Total 10 preguntas tipo test):
+
+    1. 3 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
        - Respuesta explícita en el texto.
        - REASONING: Cita la frase exacta.
 
-    2. 2 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
-       - Respuesta deducida.
-       - IMPERATIVO: Si la respuesta está en el texto, CÁMBIALA a Literal o haz otra pregunta.
+    2. 3 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
+       - Respuesta deducida ("leer entre líneas").
        - REASONING: Explica la deducción.
 
-    3. 2 PREGUNTAS DE VERDADERO O FALSO.
-       - Opciones: ["Verdadero", "Falso"].
-       - Indica si es [LITERAL] o [INFERENCIAL].
+    3. 2 PREGUNTAS DE VOCABULARIO (Tipo Test, 3 opciones).
+       - Sinónimos, antónimos o significado de una palabra según el texto.
 
-    4. 2 PREGUNTAS DE "RELLENAR HUECO".
-       - Enunciado: "Completa la frase: ... ______ ...".
-       - REGLA DE ORO: Si es cita exacta -> LITERAL. Si es conclusión -> INFERENCIAL.
-
-    5. 2 PREGUNTAS DE VOCABULARIO.
-       - Ej: Buscar antónimo, sinónimo o significado. (Tipo Test u Abierta).
-       
-    6. 1 ACTIVIDAD DE EXPRESIÓN ORAL.
-       - Ej: "Explica a tus compañeros...", "Debate sobre...".
-       - Options: [] (Array vacío).
-       
-    7. 1 ACTIVIDAD DE EXPRESIÓN ESCRITA.
-       - Ej: "Escribe un final alternativo...", "Inventa una frase...".
-       - Options: [] (Array vacío).
-
-    8. 1 ACTIVIDAD LÚDICA.
-       - Ej: "Dibuja...", "Dramatiza...", "Canta...".
-       - Options: [] (Array vacío).
-
-    9. 1 ACTIVIDAD REFLEXIVA.
-       - Ej: "¿Qué harías tú...?", "¿Por qué es importante...?".
-       - Options: [] (Array vacío).
-
-    10. 2 PREGUNTAS DE DECODIFICACIÓN.
-        - Ej: Rimas, contar sílabas, identificar letras o sonidos.
-        - Si es tipo test, 3 opciones. Si es abierta, [].
-
-    IMPORTANTE: El campo 'options' debe ser una lista de textos. Si es una actividad abierta, usa [].
+    4. 2 PREGUNTAS DE DECODIFICACIÓN (Tipo Test, 3 opciones).
+       - Rimas, conteo de sílabas, sonidos o identificación de palabras del texto.
 
     FORMATO JSON OBLIGATORIO:
     {{
         "questions": [
             {{
-                "question": "Texto de la pregunta/actividad...",
-                "options": ["Opción A", "Opción B"] o [],
+                "question": "Texto de la pregunta...",
+                "options": ["Opción A", "Opción B", "Opción C"],
                 "correct_index": 0,
-                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "ORAL" | "ESCRITA" | "LUDICA" | "REFLEXIVA" | "DECODIFICACION",
-                "reasoning": "Explicación de la clasificación"
+                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "DECODIFICACION",
+                "reasoning": "Explicación breve de la respuesta correcta"
             }}
         ]
     }}
