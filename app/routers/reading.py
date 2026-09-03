@@ -1118,43 +1118,37 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
     {context_instruction}
     {lang_instruction}
     
-    DEFINICIONES DE TIPOS DE PREGUNTAS (LOMLOE):
+    DEFINICIONES DE TIPOS DE PREGUNTAS:
 
     A) LITERAL (Comprensión):
-       - La respuesta está ESCRITA en el texto. Se puede señalar con el dedo.
+       - La respuesta está ESCRITA explícitamente en el texto. Se puede señalar directamente.
        - Fórmula: Texto = Respuesta.
-       - Si la respuesta usa las mismas palabras, ES LITERAL.
 
     B) INFERENCIAL (Comprensión):
-       - La respuesta NO está escrita explícitamente. Requiere "leer entre líneas".
+       - La respuesta NO está escrita explícitamente. Requiere deducir y "leer entre líneas".
        - Fórmula: Pistas del texto + Conocimiento previo = Inferencia.
-       - Indaga en el "por qué", "conclusiones" o "sentimientos" no explicados.
+       - Indaga en motivos, causas, conclusiones o sentimientos implícitos.
     
     C) VOCABULARIO (Léxico):
        - Identificación de significados, sinónimos, antónimos o sentido figurado a partir del contexto del texto.
-    
-    D) DECODIFICACIÓN (Sonido-Letra):
-       - Relación fonema-grafema, conciencia fonológica, sílabas, rimas o reconocimiento de palabras del texto.
 
     REGLAS ESTRICTAS:
-    - NO generes actividades abiertas ni subjetivas (NO generar preguntas de Expresión Oral, Expresión Escrita, Lúdica ni Reflexiva).
+    - Genera ÚNICAMENTE preguntas de tipo LITERAL, INFERENCIAL y VOCABULARIO.
+    - NO generes preguntas de Decodificación, Expresión Oral, Expresión Escrita, Lúdica ni Reflexiva.
     - TODAS las preguntas DEBEN ser tipo test con 3 opciones de respuesta claras y 1 sola opción correcta.
 
     DISTRIBUCIÓN DE PREGUNTAS (Total 10 preguntas tipo test):
 
-    1. 3 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
+    1. 4 PREGUNTAS LITERALES (Tipo Test, 3 opciones).
        - Respuesta explícita en el texto.
        - REASONING: Cita la frase exacta.
 
-    2. 3 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
+    2. 4 PREGUNTAS INFERENCIALES (Tipo Test, 3 opciones).
        - Respuesta deducida ("leer entre líneas").
        - REASONING: Explica la deducción.
 
     3. 2 PREGUNTAS DE VOCABULARIO (Tipo Test, 3 opciones).
        - Sinónimos, antónimos o significado de una palabra según el texto.
-
-    4. 2 PREGUNTAS DE DECODIFICACIÓN (Tipo Test, 3 opciones).
-       - Rimas, conteo de sílabas, sonidos o identificación de palabras del texto.
 
     FORMATO JSON OBLIGATORIO:
     {{
@@ -1163,7 +1157,7 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
                 "question": "Texto de la pregunta...",
                 "options": ["Opción A", "Opción B", "Opción C"],
                 "correct_index": 0,
-                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "DECODIFICACION",
+                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO",
                 "reasoning": "Explicación breve de la respuesta correcta"
             }}
         ]
