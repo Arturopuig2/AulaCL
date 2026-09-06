@@ -9,7 +9,7 @@
 <h1 style="max-width: 1000px; margin: 0 auto 2rem auto;">Gestión de Lecturas</h1>
 
 <div style="max-width: 1000px; margin: 0 auto 1.5rem auto; display: flex; gap: 1rem; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 200px;">
+    <div style="flex: 1; min-width: 180px;">
         <label for="filter-course"
             style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.3rem;">Filtrar por Curso</label>
         <select id="filter-course" onchange="loadTexts()"
@@ -29,7 +29,22 @@
             <option value="2BAT">2º Bachillerato</option>
         </select>
     </div>
-    <div style="flex: 1; min-width: 200px;">
+    <div style="flex: 1; min-width: 180px;">
+        <label for="filter-lang"
+            style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.3rem;">Filtrar por Idioma</label>
+        <select id="filter-lang" onchange="loadTexts()"
+            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white;">
+            <option value="ALL_FILTERS">Todos los idiomas</option>
+            <option value="es">Español</option>
+            <option value="val">Valencià</option>
+            <option value="cat">Català</option>
+            <option value="gal">Gallego</option>
+            <option value="eus">Euskera</option>
+            <option value="en">Inglés</option>
+            <option value="fr">Francés</option>
+        </select>
+    </div>
+    <div style="flex: 1; min-width: 180px;">
         <label for="sort-by" style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.3rem;">Ordenar
             por</label>
         <select id="sort-by" onchange="loadTexts()"
@@ -100,12 +115,14 @@
 
     async function loadTexts() {
         const course = document.getElementById('filter-course').value;
+        const lang = document.getElementById('filter-lang').value;
         const sort = document.getElementById('sort-by').value;
 
         try {
             const response = await axios.get('/reading/admin/texts', {
                 params: {
                     course_level: course,
+                    language: lang,
                     sort_by: sort
                 }
             });
@@ -119,6 +136,17 @@
     function renderTable(texts) {
         const tbody = document.getElementById('texts-table-body');
         tbody.innerHTML = '';
+
+        if (!texts || texts.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="padding: 2.5rem 1rem; text-align: center; color: #64748b; font-size: 1rem;">
+                        No se encontraron lecturas con los filtros seleccionados.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
 
         texts.forEach(text => {
             const tr = document.createElement('tr');

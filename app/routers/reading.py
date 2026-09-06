@@ -206,6 +206,7 @@ def submit_attempt(attempt: schemas.AttemptCreate, current_user = Depends(auth.g
 @router.get("/admin/texts", response_model=List[schemas.TextResponse])
 def get_all_texts_admin(
     course_level: Optional[str] = None,
+    language: Optional[str] = None,
     sort_by: Optional[str] = "order_asc",
     current_user: schemas.User = Depends(auth.get_current_user), 
     db: Session = Depends(database.get_db)
@@ -217,6 +218,9 @@ def get_all_texts_admin(
     
     if course_level and course_level != "ALL_FILTERS":
         query = query.filter(models.Text.course_level == course_level)
+
+    if language and language != "ALL_FILTERS":
+        query = query.filter(models.Text.language == language)
     
     # Sorting logic
     if sort_by == "order_asc":
@@ -1333,12 +1337,6 @@ def delete_text(text_id: int, current_user: schemas.User = Depends(auth.get_curr
     db.delete(text)
     db.commit()
     return {"message": "Text deleted successfully"}
-
-@router.get("/admin/texts", response_model=List[schemas.TextResponse])
-def get_admin_texts(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    if current_user.username != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized")
-    return db.query(models.Text).all()
 
 @router.put("/admin/texts/{text_id}/timestamps")
 def update_timestamps(text_id: int, request: dict, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
