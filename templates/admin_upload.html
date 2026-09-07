@@ -492,9 +492,11 @@
 
         try {
             const token = localStorage.getItem('token');
+            const course = currentUploadData.course_level || document.getElementById('meta-course')?.value || null;
             const res = await axios.post('/reading/admin/magic/questions', { 
                 content: content, 
-                language: currentUploadData.language 
+                language: currentUploadData.language,
+                course_level: course
             }, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });

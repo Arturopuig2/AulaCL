@@ -531,7 +531,7 @@ def upload_text(
                         if c: context_instruction = f"\n    CONTEXTO ADICIONAL: {c}\n"
             except: pass
 
-            questions_data = generate_lomloe_questions_logic(main_text, client, context_instruction, language=new_text.language)
+            questions_data = generate_lomloe_questions_logic(main_text, client, context_instruction, language=new_text.language, course_level=new_text.course_level)
             
             for q in questions_data:
                 db_q = models.Question(
@@ -1098,7 +1098,7 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
 
 # --- HELPERS ---
 
-def generate_lomloe_questions_logic(content: str, client, context_instruction: str = "", language: str = None):
+def generate_lomloe_questions_logic(content: str, client, context_instruction: str = "", language: str = None, course_level: str = None):
     import json
     import traceback
     
@@ -1113,7 +1113,84 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
         lang_name = lang_map.get(language, language)
         lang_instruction = f"\n    - IDIOMA DE LAS PREGUNTAS Y OPCIONES: Debes formular OBLIGATORIAMENTE todas las preguntas, enunciados, explicaciones (reasoning) y opciones de respuesta en {lang_name}."
     
-    prompt = f"""
+    is_early_primary = False
+    if course_level:
+        cl = str(course_level).upper().strip()
+        if cl in ["1P", "2P", "1º PRIMARIA", "2º PRIMARIA", "1º", "2º", "1", "2", "PRIMERO", "SEGUNDO"]:
+            is_early_primary = True
+
+    if is_early_primary:
+        prompt = f"""
+    Genera 12 preguntas de comprensión lectora para alumnado de 1º/2º de Primaria basándote EXCLUSIVAMENTE en el siguiente texto:
+    
+    TEXTO:
+    {content}
+
+    {context_instruction}
+    {lang_instruction}
+    
+    DEFINICIONES DE TIPOS DE PREGUNTAS:
+
+    A) LITERAL (Comprensión directa):
+       - La respuesta está ESCRITA explícitamente en el texto. Se puede señalar directamente.
+       - Fórmula: Texto = Respuesta.
+
+    B) INFERENCIAL (Comprensión):
+       - La respuesta NO está escrita explícitamente. Requiere deducir y "leer entre líneas".
+       - Fórmula: Pistas del texto + Conocimiento previo = Inferencia.
+       - Indaga en motivos sencillos, emociones o conclusiones implícitas.
+    
+    C) VOCABULARIO (Léxico):
+       - Identificación de significados, palabras contrarias (antónimos), parecidas (sinónimos) o palabras clave del texto.
+
+    D) DECODIFICACIÓN (Sonido-Letra / Fonológica):
+       - Conciencia fonológica, conteo de sílabas, rimas, identificación de sonidos iniciales/finales o reconocimiento de letras de palabras que aparecen en el texto.
+
+    REGLAS ESTRICTAS:
+    - Genera ÚNICAMENTE preguntas de tipo LITERAL, INFERENCIAL, VOCABULARIO y DECODIFICACION.
+    - NO generes preguntas abiertas, ni de Expresión Oral, Expresión Escrita, Lúdica ni Reflexiva.
+    - TODAS las preguntas DEBEN tener opciones de respuesta cerradas con 1 sola opción correcta.
+
+    DISTRIBUCIÓN Y FORMATO DE LAS 12 PREGUNTAS (1º y 2º de Primaria):
+
+    1. 4 PREGUNTAS TIPO TEST ESTÁNDAR (2 de tipo LITERAL y 2 de tipo INFERENCIAL):
+       - 3 opciones de respuesta cada una.
+       - Preguntas directas y adaptadas a 1º/2º de Primaria.
+
+    2. 2 PREGUNTAS DE "VERDADERO O FALSO":
+       - Opciones: ["Verdadero", "Falso"] (o en el idioma correspondiente, ej. ["Verdader", "Fals"] en valencià).
+       - Clasifícalas como "LITERAL" o "INFERENCIAL".
+
+    3. 2 PREGUNTAS DE "COMPLETA LA FRASE" (Rellenar hueco):
+       - Enunciado con la frase incompleta (ej: 'Completa la frase: "El personaje vivía en ______..."').
+       - 3 opciones de respuesta para rellenar el hueco.
+       - Clasifícalas como "LITERAL" o "INFERENCIAL".
+
+    4. 2 PREGUNTAS DE VOCABULARIO:
+       - Tipo test con 3 opciones.
+       - Pregunta por el significado, sinónimo o antónimo de una palabra del texto.
+       - Clasifícalas como "VOCABULARIO".
+
+    5. 2 PREGUNTAS DE DECODIFICACIÓN:
+       - Tipo test con 3 opciones cada una.
+       - Preguntas sobre rimas, conteo de sílabas, sonidos o identificación de palabras del texto (ej: "¿Cuántas sílabas tiene la palabra...?", "¿Qué palabra del texto rima con...?").
+       - Clasifícalas como "DECODIFICACION".
+
+    FORMATO JSON OBLIGATORIO:
+    {{
+        "questions": [
+            {{
+                "question": "Texto de la pregunta...",
+                "options": ["Opción A", "Opción B", "Opción C"] o ["Verdadero", "Falso"],
+                "correct_index": 0,
+                "type": "LITERAL" | "INFERENCIAL" | "VOCABULARIO" | "DECODIFICACION",
+                "reasoning": "Explicación breve de la respuesta correcta"
+            }}
+        ]
+    }}
+    """
+    else:
+        prompt = f"""
     Genera 12 preguntas de comprensión lectora basándote EXCLUSIVAMENTE en el siguiente texto:
     
     TEXTO:
@@ -1263,7 +1340,7 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
     except Exception as e:
         print(f"Warning: Could not read magic_context.txt: {e}")
 
-    questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction, language=request.language)
+    questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction, language=request.language, course_level=request.course_level)
     return schemas.MagicQuestionsResponse(questions=questions_data)
 
 

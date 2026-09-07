@@ -160,6 +160,7 @@ class MagicQuestionsRequest(BaseModel):
     content: str
     topic: Optional[str] = None
     language: Optional[str] = None
+    course_level: Optional[str] = None
 
 class MagicQuestionsResponse(BaseModel):
     questions: List[QuestionDraft]

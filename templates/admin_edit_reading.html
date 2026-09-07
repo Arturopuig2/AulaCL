@@ -458,10 +458,12 @@
         btn.disabled = true;
 
         try {
+            const course = document.getElementById('edit-course')?.value || currentDraft.course;
             const response = await axios.post('/reading/admin/magic/questions', {
                 content: currentDraft.content,
                 topic: currentDraft.title,
-                language: currentDraft.language
+                language: currentDraft.language,
+                course_level: course
             });
 
             // Replace questions but keep text
