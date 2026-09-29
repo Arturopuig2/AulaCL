@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import os
-from app import schemas, auth, models, database, config
+from app import schemas, auth, models, database, config, image_sync
 
 def robust_decode(raw_bytes: bytes) -> str:
     """
@@ -262,6 +262,7 @@ def update_text(text_id: int, text_update: schemas.TextUpdate, current_user: sch
         
     db.commit()
     db.refresh(text)
+    image_sync.sync_all_matching_illustrations(db)
     return text
 
 @router.put("/admin/texts/{text_id}/full", response_model=schemas.TextResponse)
@@ -316,6 +317,7 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
         
     db.commit()
     db.refresh(text)
+    image_sync.sync_all_matching_illustrations(db)
     return text
 
 @router.post("/admin/upload-audio")
@@ -1399,6 +1401,7 @@ def save_magic_story(request: schemas.MagicSaveRequest, current_user: schemas.Us
         db.add(db_q)
     
     db.commit()
+    image_sync.sync_all_matching_illustrations(db)
     
     return new_text
 
@@ -1458,3 +1461,13 @@ def upload_image(
         raise HTTPException(status_code=500, detail=f"Error saving image: {str(e)}")
         
     return {"path": f"/static/images/uploads/{unique_filename}"}
+
+@router.post("/admin/sync-illustrations")
+def trigger_sync_illustrations(
+    current_user: schemas.User = Depends(auth.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    updated = image_sync.sync_all_matching_illustrations(db)
+    return {"status": "success", "updated_count": updated}

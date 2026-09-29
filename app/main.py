@@ -15,8 +15,24 @@ from slowapi.middleware import SlowAPIMiddleware
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
 
+from .database import SessionLocal
+from .image_sync import sync_all_matching_illustrations
+
 # Initialize Rate Limiter
 app = FastAPI(title="Aula CL")
+
+@app.on_event("startup")
+def on_startup():
+    db = SessionLocal()
+    try:
+        updated = sync_all_matching_illustrations(db)
+        if updated > 0:
+            print(f"Successfully synchronized illustrations for {updated} reading(s).")
+    except Exception as e:
+        print(f"Error during startup image sync: {e}")
+    finally:
+        db.close()
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
