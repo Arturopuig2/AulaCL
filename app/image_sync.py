@@ -16,12 +16,14 @@ def normalize_text(text: str) -> str:
     return clean_text.strip()
 
 def strip_articles(text: str) -> str:
-    """Remove common leading articles in Spanish and Valencian for comparison."""
+    """Remove common leading articles/prefixes in Spanish and Valencian for comparison."""
     norm = normalize_text(text)
+    # Strip prefixes like "receta", "recepta"
+    norm = re.sub(r'^(receta|recepta)\s+', '', norm).strip()
     return re.sub(r'^(el|la|los|las|els|les|un|una|uns|unes|l)\s+', '', norm).strip()
 
 TITLE_MAPPINGS = {
-    # --- 1P ---
+    # ==================== 1P (1º PRIMARIA) ====================
     # Las abejas <-> Les abelles
     "les abelles": "las abejas",
     "abelles": "las abejas",
@@ -172,16 +174,101 @@ TITLE_MAPPINGS = {
     "do d ada": "ada yey",
     "ada yey": "ada yey",
 
-    # --- 2P ---
-    # La liebre y la tortuga <-> La llebre i la tortuga
-    "la llebre i la tortuga": "la liebre y la tortuga",
-    "llebre i la tortuga": "la liebre y la tortuga",
-    "la llebre i tortuga": "la liebre y la tortuga",
-    "llebre i tortuga": "la liebre y la tortuga",
-    "la liebre y la tortuga": "la liebre y la tortuga",
-    "liebre y la tortuga": "la liebre y la tortuga",
+    # ==================== 2P (2º PRIMARIA) ====================
+    # 1. El tambor de Pol <-> El tambor de Pol
+    "el tambor de pol": "el tambor de pol",
+    "tambor de pol": "el tambor de pol",
 
-    # Viaje a la Luna / La luna brillante <-> Viatge a la Lluna / La lluna brillant
+    # 2. El mono divertido <-> El mico divertit
+    "el mico divertit": "el mono divertido",
+    "mico divertit": "el mono divertido",
+    "el mono divertit": "el mono divertido",
+
+    # 3. Las hormigas trabajadoras <-> Les formigues treballadores
+    "les formigues treballadores": "las hormigas trabajadoras",
+    "formigues treballadores": "las hormigas trabajadoras",
+    "les formigues": "las hormigas trabajadoras",
+    "formigues": "las hormigas trabajadoras",
+    "las hotmigas trabajadoras": "las hormigas trabajadoras",
+    "las hormigas trabajadoras": "las hormigas trabajadoras",
+
+    # 4. El vampiro Casimiro <-> El vampir Casimir
+    "el vampir casimir": "el vampiro casimiro",
+    "vampir casimir": "el vampiro casimiro",
+    "el vampir casimiro": "el vampiro casimiro",
+    "vampir casimiro": "el vampiro casimiro",
+    "el vampiro casimiro": "el vampiro casimiro",
+
+    # 5. El otoño <-> La tardor
+    "la tardor": "el otono",
+    "tardor": "el otono",
+    "el otono": "el otono",
+    "otono": "el otono",
+
+    # 6. El oso goloso <-> L'os llépol
+    "l os llepol": "el oso goloso",
+    "el os llepol": "el oso goloso",
+    "os llepol": "el oso goloso",
+    "el oso goloso": "el oso goloso",
+    "oso goloso": "el oso goloso",
+
+    # 7. Brochetas de fruta con chocolate <-> Broquetes de fruita amb xocolate
+    "broquetes de fruita amb xocolate": "brochetas de fruta con chocolate",
+    "broquetes de fruita amb xocolata": "brochetas de fruta con chocolate",
+    "broquetes de fruita": "brochetas de fruta con chocolate",
+    "broquetes": "brochetas de fruta con chocolate",
+    "brochetas de fruta con chocolate": "brochetas de fruta con chocolate",
+
+    # 8. El submarino de cartón <-> El submarí de cartó
+    "el submari de carto": "el submarino de carton",
+    "submari de carto": "el submarino de carton",
+    "el submari": "el submarino de carton",
+    "submari": "el submarino de carton",
+    "el submarino de carton": "el submarino de carton",
+    "submarino de carton": "el submarino de carton",
+
+    # 9. El invierno <-> L'Hivern
+    "l hivern": "el invierno",
+    "el hivern": "el invierno",
+    "hivern": "el invierno",
+    "el invierno": "el invierno",
+    "invierno": "el invierno",
+
+    # 10. Receta: Tarta de manzana <-> Pastís de poma
+    "pastis de poma": "receta tarta de manzana",
+    "el pastis de poma": "receta de tarta de manzana",
+    "tarta de poma": "receta tarta de manzana",
+    "recepta pastis de poma": "receta tarta de manzana",
+    "recepta pastis poma": "receta tarta de manzana",
+    "recepta tarta de poma": "receta tarta de manzana",
+    "tarta de manzana": "receta tarta de manzana",
+    "receta tarta de manzana": "receta tarta de manzana",
+    "receta de tarta de manzana": "receta tarta de manzana",
+
+    # 11. El ovillo de Mica <-> El cabdell de Mica
+    "el cabdell de mica": "el ovillo de mica",
+    "cabdell de mica": "el ovillo de mica",
+    "el ovillo de mica": "el ovillo de mica",
+    "ovillo de mica": "el ovillo de mica",
+
+    # 12. Jack, el pirata aventurero <-> Jack, el pirata
+    "jack el pirata": "jack el pirata aventurero",
+    "el pirata jack": "jack el pirata aventurero",
+    "jack el pirata aventurer": "jack el pirata aventurero",
+    "jack el pirata aventurero": "jack el pirata aventurero",
+
+    # 13. El tesoro del Pirata Jack <-> El tresor del pirata Jack
+    "el tresor del pirata jack": "el tesoro del pirata jack",
+    "tresor del pirata jack": "el tesoro del pirata jack",
+    "el tresor de jack": "el tesoro del pirata jack",
+    "tresor de jack": "el tesoro del pirata jack",
+    "el tesoro del pirata jack": "el tesoro del pirata jack",
+
+    # 14. Poesía del pirata <-> Poesia del pirata
+    "poesia del pirata": "poesia del pirata",
+    "poesia de pirata": "poesia del pirata",
+
+    # 15. Viaje a la Luna <-> Viatge a la Lluna
     "viatge a la lluna": "viaje a la luna",
     "viatge a lluna": "viaje a la luna",
     "la lluna brillant": "la luna brillante",
@@ -191,11 +278,56 @@ TITLE_MAPPINGS = {
     "viaje a la luna": "viaje a la luna",
     "la luna brillante": "la luna brillante",
 
+    # 16. Tito, ratoncito <-> Tonet, ratolinet
+    "tonet ratolinet": "tito ratoncito",
+    "ratoli tonet": "tito ratoncito",
+    "el ratoli tonet": "tito ratoncito",
+    "tonet": "tito ratoncito",
+    "tito ratoncito": "tito ratoncito",
+    "ratoncito tito": "tito ratoncito",
+
+    # 17. La primavera <-> La Primavera
+    "la primavera": "la primavera",
+    "primavera": "la primavera",
+
+    # 18. Mi merienda <-> El meu berenar
+    "el meu berenar": "mi merienda",
+    "meu berenar": "mi merienda",
+    "berenar": "mi merienda",
+    "mi merienda": "mi merienda",
+    "merienda": "mi merienda",
+
+    # 19. La gata Mica <-> La gata Mica
+    "la gata mica": "la gata mica",
+    "gata mica": "la gata mica",
+
+    # 20. El verano <-> L'estiu
+    "l estiu": "el verano",
+    "el estiu": "el verano",
+    "estiu": "el verano",
+    "el verano": "el verano",
+    "verano": "el verano",
+
+    # 21. El arcoíris <-> L'arc de Sant Martí
+    "l arc de sant marti": "el arcoiris",
+    "arc de sant marti": "el arcoiris",
+    "l arc iris": "el arcoiris",
+    "arc iris": "el arcoiris",
+    "el arcoiris": "el arcoiris",
+    "el arco iris": "el arcoiris",
+    "arcoiris": "el arcoiris",
+
+    # La liebre y la tortuga <-> La llebre i la tortuga
+    "la llebre i la tortuga": "la liebre y la tortuga",
+    "llebre i la tortuga": "la liebre y la tortuga",
+    "la llebre i tortuga": "la liebre y la tortuga",
+    "llebre i tortuga": "la liebre y la tortuga",
+    "la liebre y la tortuga": "la liebre y la tortuga",
+    "liebre y la tortuga": "la liebre y la tortuga",
+
     # Ada tiene un don / El don de Ada <-> Ada té un do / El do d'Ada
     "ada te un do": "ada tiene un don",
     "ada te do": "ada tiene un don",
-    "el do d ada": "el don de ada",
-    "do d ada": "el don de ada",
     "ada tiene un don": "ada tiene un don",
     "el don de ada": "el don de ada",
 
@@ -223,6 +355,46 @@ TITLE_MAPPINGS = {
 }
 
 KEYWORD_RULES = [
+    # 2P: Tambor Pol
+    (lambda v, e: "tambor" in v and "tambor" in e and "pol" in v and "pol" in e),
+    # 2P: Mono / Mico
+    (lambda v, e: ("mico" in v or "mono" in v) and ("mono" in e or "mico" in e)),
+    # 2P: Hormigas / Formigues
+    (lambda v, e: ("formig" in v) and ("hormig" in e or "hotmig" in e)),
+    # 2P: Vampiro / Vampir Casimir
+    (lambda v, e: ("vampir" in v) and ("vampir" in e) and ("casimir" in v) and ("casimir" in e)),
+    # 2P: Tardor / Otoño
+    (lambda v, e: ("tardor" in v) and ("oton" in e)),
+    # 2P: Oso goloso / Os llepol
+    (lambda v, e: ("llepol" in v or "golos" in v) and ("golos" in e or "llepol" in e)),
+    # 2P: Brochetas / Broquetes chocolate
+    (lambda v, e: ("broquet" in v) and ("brochet" in e)),
+    # 2P: Submarino cartón / Submari carto
+    (lambda v, e: ("submari" in v) and ("submarin" in e)),
+    # 2P: Invierno / Hivern
+    (lambda v, e: ("hivern" in v) and ("inviern" in e)),
+    # 2P: Tarta manzana / Pastis poma
+    (lambda v, e: ("poma" in v or "pastis" in v) and ("manzan" in e or "tarta" in e)),
+    # 2P: Ovillo / Cabdell Mica
+    (lambda v, e: ("cabdell" in v or "ovillo" in v) and ("mica" in v) and ("ovillo" in e or "cabdell" in e) and ("mica" in e)),
+    # 2P: Pirata Jack tesoro
+    (lambda v, e: ("tresor" in v) and ("tesor" in e) and ("jack" in v and "jack" in e)),
+    # 2P: Pirata Jack / Jack pirata aventurero
+    (lambda v, e: ("jack" in v and "jack" in e) and ("pirat" in v and "pirat" in e)),
+    # 2P: Poesia pirata
+    (lambda v, e: ("poesi" in v and "poesi" in e) and ("pirat" in v and "pirat" in e)),
+    # 2P: Tito / Tonet ratoncito / ratolinet
+    (lambda v, e: ("tonet" in v or "ratoli" in v) and ("tito" in e or "raton" in e)),
+    # 2P: Primavera
+    (lambda v, e: ("primaver" in v) and ("primaver" in e)),
+    # 2P: Berenar / Merienda
+    (lambda v, e: ("berenar" in v) and ("meriend" in e)),
+    # 2P: Gata Mica
+    (lambda v, e: ("gata" in v and "mica" in v) and ("gata" in e and "mica" in e)),
+    # 2P: Estiu / Verano
+    (lambda v, e: ("estiu" in v) and ("veran" in e)),
+    # 2P: Arc Sant Marti / Arcoiris
+    (lambda v, e: ("marti" in v or "arc" in v) and ("arco" in e or "iris" in e)),
     # 2P: Liebre y tortuga
     (lambda v, e: ("llebre" in v or "tortuga" in v) and ("liebre" in e or "tortuga" in e)),
     # 2P: Luna / Lluna
@@ -231,6 +403,7 @@ KEYWORD_RULES = [
     (lambda v, e: ("radar" in v) and ("radar" in e)),
     # 2P: Fortunio
     (lambda v, e: ("fortunio" in v) and ("fortunio" in e)),
+
     # 1P: Abejas / Abelles
     (lambda v, e: ("abel" in v or "abell" in v) and ("abej" in e)),
     # 1P: Perro / Gosset
@@ -283,10 +456,14 @@ def find_matching_spanish_text(val_text: models.Text, es_texts: List[models.Text
     # 1. Direct title mapping
     target_es_norm = TITLE_MAPPINGS.get(v_norm) or TITLE_MAPPINGS.get(v_stripped)
     if target_es_norm:
+        target_stripped = strip_articles(target_es_norm)
         for es in es_texts:
             e_norm = normalize_text(es.title)
             e_stripped = strip_articles(es.title)
-            if e_norm == target_es_norm or e_stripped == target_es_norm or target_es_norm in e_norm or e_norm in target_es_norm:
+            if (e_norm == target_es_norm or e_stripped == target_es_norm or
+                e_norm == target_stripped or e_stripped == target_stripped or
+                target_es_norm in e_norm or e_norm in target_es_norm or
+                target_stripped in e_stripped or e_stripped in target_stripped):
                 return es
 
     # 2. Exact normalized title match
