@@ -9,8 +9,10 @@ def test_normalize_text():
     assert normalize_text("¿El muñeco de nieve?") == "el muneco de nieve"
     assert normalize_text("¡Perrito perdido!") == "perrito perdido"
     assert normalize_text("Els bigots de renat") == "els bigots de renat"
+    assert normalize_text("La llebre i la tortuga") == "la llebre i la tortuga"
+    assert normalize_text("Viatge a la Lluna") == "viatge a la lluna"
 
-def test_user_reported_reading_pairs():
+def test_user_reported_1p_reading_pairs():
     es_abejas = models.Text(id=1, title="Las abejas", course_level="1P", language="es", image_path="/img/abejas.png")
     es_renato = models.Text(id=2, title="El gato Renato", course_level="1P", language="es", image_path="/img/renato.png")
     es_perrito = models.Text(id=3, title="¡Perrito perdido!", course_level="1P", language="es", image_path="/img/perrito.png")
@@ -42,3 +44,27 @@ def test_user_reported_reading_pairs():
 
     val_classe = models.Text(id=107, title="En classe", course_level="1P", language="val")
     assert find_matching_spanish_text(val_classe, es_texts) == es_clase
+
+def test_2p_reading_pairs():
+    es_liebre = models.Text(id=201, title="La liebre y la tortuga", course_level="2P", language="es", image_path="/img/liebre.png")
+    es_luna = models.Text(id=202, title="Viaje a la Luna", course_level="2P", language="es", image_path="/img/luna.png")
+    es_radar = models.Text(id=203, title="Radar llega a casa", course_level="2P", language="es", image_path="/img/radar.png")
+    es_don = models.Text(id=204, title="Ada tiene un don", course_level="2P", language="es", image_path="/img/don.png")
+    es_fortunio = models.Text(id=205, title="El taller de Fortunio", course_level="2P", language="es", image_path="/img/fortunio.png")
+
+    es_texts = [es_liebre, es_luna, es_radar, es_don, es_fortunio]
+
+    val_llebre = models.Text(id=301, title="La llebre i la tortuga", course_level="2P", language="val")
+    assert find_matching_spanish_text(val_llebre, es_texts) == es_liebre
+
+    val_lluna = models.Text(id=302, title="Viatge a la Lluna", course_level="2P", language="val")
+    assert find_matching_spanish_text(val_lluna, es_texts) == es_luna
+
+    val_radar = models.Text(id=303, title="Radar arriba a casa", course_level="2P", language="val")
+    assert find_matching_spanish_text(val_radar, es_texts) == es_radar
+
+    val_do = models.Text(id=304, title="Ada té un do", course_level="2P", language="val")
+    assert find_matching_spanish_text(val_do, es_texts) == es_don
+
+    val_fortunio = models.Text(id=305, title="Fortunio i els seus invents", course_level="2P", language="val")
+    assert find_matching_spanish_text(val_fortunio, es_texts) == es_fortunio

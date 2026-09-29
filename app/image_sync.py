@@ -21,6 +21,7 @@ def strip_articles(text: str) -> str:
     return re.sub(r'^(el|la|los|las|els|les|un|una|uns|unes|l)\s+', '', norm).strip()
 
 TITLE_MAPPINGS = {
+    # --- 1P ---
     # Las abejas <-> Les abelles
     "les abelles": "las abejas",
     "abelles": "las abejas",
@@ -169,51 +170,108 @@ TITLE_MAPPINGS = {
     # Ada Yey <-> El do d'Ada
     "el do d ada": "ada yey",
     "do d ada": "ada yey",
-    "ada yey": "ada yey"
+    "ada yey": "ada yey",
+
+    # --- 2P ---
+    # La liebre y la tortuga <-> La llebre i la tortuga
+    "la llebre i la tortuga": "la liebre y la tortuga",
+    "llebre i la tortuga": "la liebre y la tortuga",
+    "la llebre i tortuga": "la liebre y la tortuga",
+    "llebre i tortuga": "la liebre y la tortuga",
+    "la liebre y la tortuga": "la liebre y la tortuga",
+    "liebre y la tortuga": "la liebre y la tortuga",
+
+    # Viaje a la Luna / La luna brillante <-> Viatge a la Lluna / La lluna brillant
+    "viatge a la lluna": "viaje a la luna",
+    "viatge a lluna": "viaje a la luna",
+    "la lluna brillant": "la luna brillante",
+    "lluna brillant": "la luna brillante",
+    "la lluna": "viaje a la luna",
+    "lluna": "viaje a la luna",
+    "viaje a la luna": "viaje a la luna",
+    "la luna brillante": "la luna brillante",
+
+    # Ada tiene un don / El don de Ada <-> Ada té un do / El do d'Ada
+    "ada te un do": "ada tiene un don",
+    "ada te do": "ada tiene un don",
+    "el do d ada": "el don de ada",
+    "do d ada": "el don de ada",
+    "ada tiene un don": "ada tiene un don",
+    "el don de ada": "el don de ada",
+
+    # Radar llega a casa <-> Radar arriba a casa
+    "radar arriba a casa": "radar llega a casa",
+    "radar arriba": "radar llega a casa",
+    "arriba a casa": "radar llega a casa",
+    "radar la gata": "radar la gata",
+    "la gata radar": "radar la gata",
+    "radar": "radar",
+    "radar llega a casa": "radar llega a casa",
+    "radar llega": "radar llega a casa",
+
+    # El taller de Fortunio <-> El taller de Fortunio / Fortunio i els invents
+    "el taller de fortunio": "el taller de fortunio",
+    "taller de fortunio": "el taller de fortunio",
+    "fortunio i els seus invents": "fortunio y sus inventos",
+    "fortunio i els invents": "fortunio y sus inventos",
+    "fortunio y sus inventos": "fortunio y sus inventos",
+    "fortunio": "fortunio",
+
+    # Radar en el taller <-> Radar al taller
+    "radar al taller": "radar en el taller",
+    "radar en el taller": "radar en el taller",
 }
 
 KEYWORD_RULES = [
-    # Abejas / Abelles
+    # 2P: Liebre y tortuga
+    (lambda v, e: ("llebre" in v or "tortuga" in v) and ("liebre" in e or "tortuga" in e)),
+    # 2P: Luna / Lluna
+    (lambda v, e: ("lluna" in v) and ("luna" in e)),
+    # 2P: Radar
+    (lambda v, e: ("radar" in v) and ("radar" in e)),
+    # 2P: Fortunio
+    (lambda v, e: ("fortunio" in v) and ("fortunio" in e)),
+    # 1P: Abejas / Abelles
     (lambda v, e: ("abel" in v or "abell" in v) and ("abej" in e)),
-    # Perro / Gosset
+    # 1P: Perro / Gosset
     (lambda v, e: ("gos" in v or "gosset" in v or "perdut" in v) and ("perr" in e or "perdit" in e or "perdid" in e)),
-    # Bigotes Renato
+    # 1P: Bigotes Renato
     (lambda v, e: "renat" in v and "renat" in e and ("bigot" in v or "bigotis" in v) and ("bigot" in e or "bigotes" in e)),
-    # Gato Renato
+    # 1P: Gato Renato
     (lambda v, e: "renat" in v and "renat" in e and ("gat" in v or "gato" in v or "renat" in v) and ("gat" in e or "gato" in e)),
-    # Barco papel
+    # 1P: Barco papel
     (lambda v, e: ("vaixell" in v or "barquet" in v or "barco" in v or "barquit" in v) and ("paper" in v or "papel" in v) and ("barc" in e or "barqu" in e) and ("papel" in e or "paper" in e)),
-    # Galletas / Galetes
+    # 1P: Galletas / Galetes
     (lambda v, e: ("galet" in v or "galletes" in v) and ("gallet" in e or "galletas" in e)),
-    # Limonada / Llimonada
+    # 1P: Limonada / Llimonada
     (lambda v, e: ("llimon" in v) and ("limon" in e)),
-    # Clase / Classe
+    # 1P: Clase / Classe
     (lambda v, e: ("class" in v) and ("clas" in e)),
-    # Lúa
+    # 1P: Lúa
     (lambda v, e: "lua" in v and "lua" in e),
-    # Pol
+    # 1P: Pol
     (lambda v, e: "pol" in v and "pol" in e),
-    # Eli
+    # 1P: Eli
     (lambda v, e: "eli" in v and "eli" in e),
-    # Ramón
+    # 1P: Ramón
     (lambda v, e: "ramon" in v and "ramon" in e),
-    # Nieve / Ninot
+    # 1P: Nieve / Ninot
     (lambda v, e: ("neu" in v or "ninot" in v) and ("niev" in e or "munec" in e)),
-    # Playa / Platja
+    # 1P: Playa / Platja
     (lambda v, e: ("platj" in v) and ("play" in e)),
-    # Avión
+    # 1P: Avión
     (lambda v, e: ("avio" in v) and ("avion" in e)),
-    # Cometa
+    # 1P: Cometa
     (lambda v, e: ("catxerul" in v or "estel" in v or "comet" in v) and ("comet" in e)),
-    # Colores
+    # 1P: Colores
     (lambda v, e: ("color" in v) and ("color" in e)),
-    # Tía
+    # 1P: Tía
     (lambda v, e: ("tia" in v) and ("tia" in e)),
-    # Ada
+    # 1P: Ada
     (lambda v, e: ("ada" in v) and ("ada" in e)),
-    # Meli
+    # 1P: Meli
     (lambda v, e: ("meli" in v) and ("meli" in e)),
-    # Juana / Granota
+    # 1P: Juana / Granota
     (lambda v, e: ("joana" in v or "juana" in v or "granot" in v) and ("juan" in e or "ran" in e)),
 ]
 
@@ -253,7 +311,7 @@ def find_matching_spanish_text(val_text: models.Text, es_texts: List[models.Text
 
 def sync_all_matching_illustrations(db: Session) -> int:
     """
-    Synchronizes illustrations between matching Spanish and Valencian readings (especially for 1P).
+    Synchronizes illustrations between matching Spanish and Valencian readings (across all course levels).
     Returns the number of texts updated.
     """
     updated_count = 0
