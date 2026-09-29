@@ -13,6 +13,7 @@ aiofiles
 fpdf2
 gunicorn
 psycopg2-binary
+psycopg[binary]
 
 openai
 python-dotenv
