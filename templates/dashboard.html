@@ -436,19 +436,27 @@
                     
                     <div style="flex-grow: 1;"></div> 
 
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: auto; align-items: center;">
-                        ${getCourseBadge(text.course_level)}
-                        <span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: #EA580C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${getLangLabel(text.language)}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.35rem; margin-top: auto;">
+                        <div style="display: flex; gap: 0.3rem; align-items: center;">
+                            ${getCourseBadge(text.course_level)}
+                            <span style="background: white; padding: 0.3rem 0.55rem; border-radius: 50px; font-size: 0.75rem; color: #EA580C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center; font-weight: 600;" title="${getLangFullLabel(text.language)}">${getLangLabel(text.language)}</span>
+                            
+                            ${text.audio_path ? `
+                            <div style="display: inline-flex; align-items: center; justify-content: center; background: white; padding: 0.3rem 0.45rem; border-radius: 50px; border: 1px solid white; height: 26px; width: 26px;" title="Tiene audio">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                </svg>
+                            </div>` : ''}
+                        </div>
                         
-                        ${text.audio_path ? `
-                        <div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.55rem; border-radius: 50px; border: 1px solid white; height: 26px;" title="Tiene audio">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
-                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        ${text.is_completed ? `
+                        <div style="display: inline-flex; align-items: center; gap: 0.3rem; background: white; padding: 0.3rem 0.65rem; border-radius: 50px; border: 1px solid white; height: 26px; margin-left: auto;">
+                            <svg width="14" height="14" viewBox="0 0 20 20" fill="#EAB308" style="flex-shrink: 0;">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                             </svg>
+                            <span style="font-size: 0.85rem; color: #CA8A04; font-weight: 700; line-height: 1;">${Math.round(text.score / 10)}/10</span>
                         </div>` : ''}
-                        
-                        ${text.is_completed ? `<div style="display: inline-flex; align-items: center; background: white; padding: 0.3rem 0.7rem; border-radius: 50px; border: 1px solid white; height: 26px; margin-left: auto;"><span style="font-size: 0.85rem; color: #15803D; font-weight: 600; line-height: 1;">${Math.round(text.score / 10)}/10</span></div>` : ''}
                     </div>
                 </div>
             `;
@@ -486,18 +494,29 @@
     }
 
     function getLangLabel(code) {
+        const map = { 'es': 'ES', 'en': 'EN', 'val': 'VAL', 'cat': 'CAT', 'fr': 'FR', 'gal': 'GAL', 'eus': 'EUS' };
+        return map[code] || (code ? code.toUpperCase() : 'ES');
+    }
+
+    function getLangFullLabel(code) {
         const map = { 'es': 'Español', 'en': 'Inglés', 'val': 'Valencià', 'cat': 'Català', 'fr': 'Francés', 'gal': 'Gallego', 'eus': 'Euskera' };
         return map[code] || code || 'Español';
     }
 
     function getCourseBadge(code) {
-        const map = {
+        const shortMap = {
+            '1P': '1º', '2P': '2º', '3P': '3º', '4P': '4º', '5P': '5º', '6P': '6º',
+            '1ESO': '1º ESO', '2ESO': '2º ESO', '3ESO': '3º ESO', '4ESO': '4º ESO',
+            'ALL': 'Gen.'
+        };
+        const fullMap = {
             '1P': '1º Primaria', '2P': '2º Primaria', '3P': '3º Primaria', '4P': '4º Primaria', '5P': '5º Primaria', '6P': '6º Primaria',
             '1ESO': '1º ESO', '2ESO': '2º ESO', '3ESO': '3º ESO', '4ESO': '4º ESO',
-            'ALL': 'Sin Curso'
+            'ALL': 'Sin Curso / General'
         };
-        const label = map[code] || code;
-        return `<span style="background: white; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; color: #EA580C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center;">${label}</span>`;
+        const label = shortMap[code] || code;
+        const fullLabel = fullMap[code] || label;
+        return `<span style="background: white; padding: 0.3rem 0.55rem; border-radius: 50px; font-size: 0.75rem; color: #EA580C; border: 1px solid white; height: 26px; display: inline-flex; align-items: center; font-weight: 600;" title="${fullLabel}">${label}</span>`;
     }
 
     // --- Navigation Logic removed (moved to Global app.js)
