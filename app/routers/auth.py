@@ -492,30 +492,58 @@ def get_codes(current_user: schemas.User = Depends(get_current_user), db: Sessio
         "expires_at": c.user.access_expires_at if c.user else None
     } for c in codes]
 
+@router.get("/debug-ai")
 @router.get("/debug-openai")
-def debug_openai_config():
+def debug_ai_config():
     import os
-    import openai
+    from app import ai_service
     
-    key = os.getenv("OPENAI_API_KEY")
+    active_provider, _, active_model = ai_service.get_ai_provider()
+    
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    
     report = {
-        "key_present": bool(key),
-        "key_length": len(key) if key else 0,
-        "key_preview": f"{key[:5]}..." if key else "None",
-        "api_call": "Not attempted"
+        "active_provider": active_provider,
+        "active_model": active_model,
+        "gemini": {
+            "key_present": bool(gemini_key),
+            "key_length": len(gemini_key) if gemini_key else 0,
+            "key_preview": f"{gemini_key[:5]}..." if gemini_key else "None",
+            "api_call": "Not attempted"
+        },
+        "openai": {
+            "key_present": bool(openai_key),
+            "key_length": len(openai_key) if openai_key else 0,
+            "key_preview": f"{openai_key[:5]}..." if openai_key else "None",
+            "api_call": "Not attempted"
+        }
     }
     
-    if key:
+    # Test active provider
+    if active_provider == "gemini":
         try:
-            client = openai.OpenAI(api_key=key)
+            from google import genai
+            client = genai.Client(api_key=gemini_key)
+            resp = client.models.generate_content(
+                model=active_model,
+                contents="Di OK si estás listo",
+            )
+            report["gemini"]["api_call"] = f"Success: {resp.text.strip()[:30]}"
+        except Exception as e:
+            report["gemini"]["api_call"] = f"Failed: {str(e)}"
+    elif active_provider == "openai":
+        try:
+            import openai
+            client = openai.OpenAI(api_key=openai_key)
             client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=active_model,
                 messages=[{"role": "user", "content": "Test"}],
                 max_tokens=5
             )
-            report["api_call"] = "Success"
+            report["openai"]["api_call"] = "Success"
         except Exception as e:
-            report["api_call"] = f"Failed: {str(e)}"
+            report["openai"]["api_call"] = f"Failed: {str(e)}"
             
     return report
 

@@ -16,6 +16,7 @@ psycopg2-binary
 psycopg[binary]
 
 openai
+google-genai
 python-dotenv
 authlib
 itsdangerous

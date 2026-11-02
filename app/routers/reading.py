@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import os
-from app import schemas, auth, models, database, config, image_sync
+from app import schemas, auth, models, database, config, image_sync, ai_service
 
 def robust_decode(raw_bytes: bytes) -> str:
     """
@@ -517,13 +517,6 @@ def upload_text(
     if existing_questions == 0:
         print("No manual questions found. Triggering AI Generation...")
         try:
-            import openai
-            import os
-            from dotenv import load_dotenv
-            load_dotenv()
-            api_key = os.getenv("OPENAI_API_KEY")
-            client = openai.OpenAI(api_key=api_key)
-            
             # Load context if exists (shared logic)
             context_instruction = ""
             try:
@@ -533,7 +526,7 @@ def upload_text(
                         if c: context_instruction = f"\n    CONTEXTO ADICIONAL: {c}\n"
             except: pass
 
-            questions_data = generate_lomloe_questions_logic(main_text, client, context_instruction, language=new_text.language, course_level=new_text.course_level)
+            questions_data = generate_lomloe_questions_logic(main_text, context_instruction=context_instruction, language=new_text.language, course_level=new_text.course_level)
             
             for q in questions_data:
                 db_q = models.Question(
@@ -585,13 +578,7 @@ def analyze_upload_text(
 
     import shutil
     import os
-    import openai
-    from dotenv import load_dotenv
     import uuid
-    
-    load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-    client = openai.OpenAI(api_key=api_key)
 
     # 1. Process Text File
     content = ""
@@ -666,33 +653,23 @@ def analyze_upload_text(
         ]
         """
         
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un experto creador de cuestionarios educativos. Devuelve SOLO JSON válido."},
-                {"role": "user", "content": prompt}
-            ]
+        parsed_res = ai_service.call_ai_json(
+            prompt=prompt,
+            system_instruction="Eres un experto creador de cuestionarios educativos. Devuelve SOLO JSON válido.",
+            temperature=0.7
         )
-        
-        response_content = completion.choices[0].message.content.strip()
-        # Clean markdown code blocks if present
-        if response_content.startswith("```json"):
-            response_content = response_content.split("```json")[1].split("```")[0].strip()
-        elif response_content.startswith("```"):
-            response_content = response_content.split("```")[1].split("```")[0].strip()
+        if isinstance(parsed_res, dict) and "questions" in parsed_res:
+            questions = parsed_res["questions"]
+        elif isinstance(parsed_res, list):
+            questions = parsed_res
+        else:
+            questions = []
 
-        import json
-        questions = json.loads(response_content)
-
-    except openai.RateLimitError as rle:
-        raise HTTPException(status_code=429, detail="Se ha agotado el saldo o crédito en OpenAI. Por favor, recarga saldo en tu cuenta de OpenAI (platform.openai.com/settings/organization/billing).")
-    except openai.AuthenticationError as ae:
-        raise HTTPException(status_code=401, detail="La clave de API de OpenAI no es válida o ha caducado.")
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"ERROR OPENAI/PARSING: {e}")
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(status_code=500, detail=f"Error analyzing text (OpenAI): {str(e)}")
+        print(f"ERROR AI/PARSING: {e}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing text: {str(e)}")
 
     return {
         "title": title,
@@ -991,19 +968,8 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    import openai
     import os
-    import json
-    from dotenv import load_dotenv
     import traceback
-    
-    load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        print("❌ CRITICAL: OPENAI_API_KEY is missing/None in generate_magic_story")
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY missing")
-
-    client = openai.OpenAI(api_key=api_key)
 
     # Context Loading
     context_instruction = ""
@@ -1066,24 +1032,11 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
     """
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un premiado autor de literatura infantil y juvenil, además de pedagogo experto. Tu misión es crear textos fascinantes, literariamente ricos y perfectamente ajustados a las capacidades cognitivas del nivel solicitado. No escribas como un robot, escribe con alma."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.85, # Slightly higher for creativity
-            response_format={"type": "json_object"}
+        data = ai_service.call_ai_json(
+            prompt=prompt,
+            system_instruction="Eres un premiado autor de literatura infantil y juvenil, además de pedagogo experto. Tu misión es crear textos fascinantes, literariamente ricos y perfectamente ajustados a las capacidades cognitivas del nivel solicitado. No escribas como un robot, escribe con alma.",
+            temperature=0.85
         )
-        
-        json_content = response.choices[0].message.content
-        json_content = json_content.replace("```json", "").replace("```", "").strip()
-        
-        try:
-            data = json.loads(json_content)
-        except json.JSONDecodeError as je:
-            print(f"❌ JSON Decode Error: {je} - Content: {json_content}")
-            raise HTTPException(status_code=500, detail="Error de IA: Respuesta no es un JSON válido")
 
         # Robust Type Handling
         if isinstance(data, list):
@@ -1092,27 +1045,23 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
             else:
                 raise HTTPException(status_code=500, detail="Error de IA: Formato inesperado")
 
-        data["title"] = str(data.get("title") or "Cuento Generado")
-        data["content"] = str(data.get("content") or "Error generando contenido")
+        title = str(data.get("title") or "Cuento Generado")
+        content = str(data.get("content") or "Error generando contenido")
         
-        return schemas.MagicStoryResponse(title=data["title"], content=data["content"])
+        return schemas.MagicStoryResponse(title=title, content=content)
 
-    except openai.RateLimitError as rle:
-        raise HTTPException(status_code=429, detail="Se ha agotado el saldo o crédito en OpenAI. Por favor, recarga saldo en tu cuenta de OpenAI (platform.openai.com/settings/organization/billing).")
-    except openai.AuthenticationError as ae:
-        raise HTTPException(status_code=401, detail="La clave de API de OpenAI no es válida o ha caducado.")
+    except HTTPException:
+        raise
     except Exception as e:
         print("❌ CRITICAL EXCEPTION IN GENERATE_MAGIC_STORY")
         traceback.print_exc()
-        if isinstance(e, HTTPException):
-            raise e
         raise HTTPException(status_code=500, detail=f"Error generando cuento: {str(e)}")
 
 
 
 # --- HELPERS ---
 
-def generate_lomloe_questions_logic(content: str, client, context_instruction: str = "", language: str = None, course_level: str = None):
+def generate_lomloe_questions_logic(content: str, client=None, context_instruction: str = "", language: str = None, course_level: str = None):
     import json
     import traceback
     
@@ -1267,20 +1216,11 @@ def generate_lomloe_questions_logic(content: str, client, context_instruction: s
     """
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un asistente experto que SOLO responde en JSON válido."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            response_format={"type": "json_object"}
+        data = ai_service.call_ai_json(
+            prompt=prompt,
+            system_instruction="Eres un asistente experto que SOLO responde en JSON válido.",
+            temperature=0.7
         )
-
-        json_content = response.choices[0].message.content
-        json_content = json_content.replace("```json", "").replace("```", "").strip()
-
-        data = json.loads(json_content)
 
         if isinstance(data, list):
              if len(data) > 0 and isinstance(data[0], dict):
@@ -1335,16 +1275,8 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    import openai
     import os
     import traceback
-    from dotenv import load_dotenv
-    
-    load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY missing")
-    client = openai.OpenAI(api_key=api_key)
 
     # Context Loading
     context_instruction = ""
@@ -1358,22 +1290,12 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
         print(f"Warning: Could not read magic_context.txt: {e}")
 
     try:
-        questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction, language=request.language, course_level=request.course_level)
+        questions_data = generate_lomloe_questions_logic(request.content, context_instruction=context_instruction, language=request.language, course_level=request.course_level)
         return schemas.MagicQuestionsResponse(questions=questions_data)
-    except openai.RateLimitError as rle:
-        raise HTTPException(
-            status_code=429,
-            detail="Se ha agotado el saldo o crédito en OpenAI. Por favor, recarga saldo en tu cuenta de OpenAI (platform.openai.com/settings/organization/billing)."
-        )
-    except openai.AuthenticationError as ae:
-        raise HTTPException(
-            status_code=401,
-            detail="La clave de API de OpenAI no es válida o ha caducado."
-        )
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
-        if isinstance(e, HTTPException):
-            raise e
         raise HTTPException(status_code=500, detail=f"Error generando preguntas: {str(e)}")
 
 
