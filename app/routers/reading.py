@@ -684,8 +684,14 @@ def analyze_upload_text(
         import json
         questions = json.loads(response_content)
 
+    except openai.RateLimitError as rle:
+        raise HTTPException(status_code=429, detail="Se ha agotado el saldo o crédito en OpenAI. Por favor, recarga saldo en tu cuenta de OpenAI (platform.openai.com/settings/organization/billing).")
+    except openai.AuthenticationError as ae:
+        raise HTTPException(status_code=401, detail="La clave de API de OpenAI no es válida o ha caducado.")
     except Exception as e:
         print(f"ERROR OPENAI/PARSING: {e}")
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Error analyzing text (OpenAI): {str(e)}")
 
     return {
@@ -1091,9 +1097,15 @@ def generate_magic_story(request: schemas.MagicRequest, current_user: schemas.Us
         
         return schemas.MagicStoryResponse(title=data["title"], content=data["content"])
 
+    except openai.RateLimitError as rle:
+        raise HTTPException(status_code=429, detail="Se ha agotado el saldo o crédito en OpenAI. Por favor, recarga saldo en tu cuenta de OpenAI (platform.openai.com/settings/organization/billing).")
+    except openai.AuthenticationError as ae:
+        raise HTTPException(status_code=401, detail="La clave de API de OpenAI no es válida o ha caducado.")
     except Exception as e:
         print("❌ CRITICAL EXCEPTION IN GENERATE_MAGIC_STORY")
         traceback.print_exc()
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Error generando cuento: {str(e)}")
 
 
@@ -1325,10 +1337,13 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
 
     import openai
     import os
+    import traceback
     from dotenv import load_dotenv
     
     load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY missing")
     client = openai.OpenAI(api_key=api_key)
 
     # Context Loading
@@ -1342,8 +1357,24 @@ def generate_questions_from_text(request: schemas.MagicQuestionsRequest, current
     except Exception as e:
         print(f"Warning: Could not read magic_context.txt: {e}")
 
-    questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction, language=request.language, course_level=request.course_level)
-    return schemas.MagicQuestionsResponse(questions=questions_data)
+    try:
+        questions_data = generate_lomloe_questions_logic(request.content, client, context_instruction, language=request.language, course_level=request.course_level)
+        return schemas.MagicQuestionsResponse(questions=questions_data)
+    except openai.RateLimitError as rle:
+        raise HTTPException(
+            status_code=429,
+            detail="Se ha agotado el saldo o crédito en OpenAI. Por favor, recarga saldo en tu cuenta de OpenAI (platform.openai.com/settings/organization/billing)."
+        )
+    except openai.AuthenticationError as ae:
+        raise HTTPException(
+            status_code=401,
+            detail="La clave de API de OpenAI no es válida o ha caducado."
+        )
+    except Exception as e:
+        traceback.print_exc()
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error generando preguntas: {str(e)}")
 
 
 @router.post("/admin/magic/save", response_model=schemas.TextResponse)
