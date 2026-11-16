@@ -60,6 +60,7 @@ class TextResponse(TextBase):
     is_locked: Optional[bool] = False
     order: Optional[int] = 0
     timestamps: Optional[List[Optional[dict]]] = None
+    has_questions: Optional[bool] = True
     
     class Config:
         from_attributes = True

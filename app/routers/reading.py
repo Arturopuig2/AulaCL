@@ -158,6 +158,7 @@ def get_text(text_id: int, current_user: schemas.User = Depends(auth.get_current
     # We need to manually construct the dict or object because we are enhancing the DB model
     response = schemas.TextResponse.model_validate(text)
     response.content = content
+    response.has_questions = db.query(models.Question.id).filter(models.Question.text_id == text_id).first() is not None
     return response
 
 @router.get("/texts/{text_id}/questions", response_model=List[schemas.QuestionResponse])

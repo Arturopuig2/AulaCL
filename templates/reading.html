@@ -198,7 +198,7 @@
 
 </div>
 
-<div style="margin-top: 2rem; text-align: right; padding-bottom: 2rem; padding-right: 1.5rem;">
+<div id="finish-btn-container" style="display: none; margin-top: 2rem; text-align: right; padding-bottom: 2rem; padding-right: 1.5rem;">
     <button id="finish-btn" class="btn-bubble btn-bubble-green" style="font-size: 1rem; padding: 0.8rem 2rem;">
         Preguntas >
     </button>
@@ -478,6 +478,11 @@
             window.currentTextData = textData; // Store globally for TTS
 
             document.getElementById('text-title').innerText = textData.title;
+
+            const finishBtnContainer = document.getElementById('finish-btn-container');
+            if (finishBtnContainer) {
+                finishBtnContainer.style.display = textData.has_questions ? 'block' : 'none';
+            }
 
             // Handle Illustration and Audio Container
             const container = document.getElementById('illustration-container');
