@@ -284,8 +284,8 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
         # If it doesn't have leading 'audio/' or '/static/audio/', normalize it safely if needed.
         # But usually coming from upload-audio it returns 'audio/filename.mp3'
         text.audio_path = request.audio_path
-    if request.image_path:
-        text.image_path = request.image_path
+    image_removed = (text.image_path is not None and not request.image_path)
+    text.image_path = request.image_path or None
         
     # 2. Update File Content
     try:
@@ -318,7 +318,8 @@ def update_text_full(text_id: int, request: schemas.MagicSaveRequest, current_us
         
     db.commit()
     db.refresh(text)
-    image_sync.sync_all_matching_illustrations(db)
+    if not image_removed:
+        image_sync.sync_all_matching_illustrations(db)
     return text
 
 @router.post("/admin/upload-audio")

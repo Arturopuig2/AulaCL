@@ -82,12 +82,16 @@
 
                 <img id="draft-image-preview" class="image-preview" src="" alt="Vista previa">
 
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                     <input type="file" id="image-upload-input" accept="image/*" style="display: none;"
                         onchange="handleImageUpload(this)">
-                    <button onclick="document.getElementById('image-upload-input').click()" class="btn btn-outline"
+                    <button type="button" onclick="document.getElementById('image-upload-input').click()" class="btn btn-outline"
                         style="font-size: 0.9rem;">
                         📤 Subir/Cambiar Imagen
+                    </button>
+                    <button type="button" id="btn-remove-image" onclick="removeImage()" class="btn btn-outline"
+                        style="font-size: 0.9rem; color: #ef4444; border-color: #fecaca; background: #fef2f2; display: none;">
+                        🗑️ Quitar Imagen
                     </button>
                     <span id="upload-status" style="font-size: 0.85rem; color: #64748b;">Ningún archivo
                         seleccionado</span>
@@ -238,12 +242,15 @@
 
         // Image Preview
         const imgPreview = document.getElementById('draft-image-preview');
+        const removeImgBtn = document.getElementById('btn-remove-image');
         if (currentDraft.image_path) {
             imgPreview.src = currentDraft.image_path;
             imgPreview.style.display = 'block';
+            if (removeImgBtn) removeImgBtn.style.display = 'inline-block';
             document.getElementById('upload-status').innerText = "Imagen actual cargada ✅";
         } else {
             imgPreview.style.display = 'none';
+            if (removeImgBtn) removeImgBtn.style.display = 'none';
         }
 
         // Audio Preview
@@ -542,6 +549,8 @@
                 const preview = document.getElementById('draft-image-preview');
                 preview.src = imagePath;
                 preview.style.display = 'block';
+                const removeBtn = document.getElementById('btn-remove-image');
+                if (removeBtn) removeBtn.style.display = 'inline-block';
                 document.getElementById('upload-status').innerText = "Imagen subida ✅";
 
             } catch (error) {
@@ -550,6 +559,20 @@
                 document.getElementById('upload-status').innerText = "Error ❌";
             }
         }
+    }
+
+    function removeImage() {
+        currentDraft.image_path = null;
+        const input = document.getElementById('image-upload-input');
+        if (input) input.value = '';
+        const preview = document.getElementById('draft-image-preview');
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+        const removeBtn = document.getElementById('btn-remove-image');
+        if (removeBtn) removeBtn.style.display = 'none';
+        document.getElementById('upload-status').innerText = "Ilustración quitada (guarda los cambios para aplicar)";
     }
     async function handleAudioUpload(input) {
         if (input.files && input.files[0]) {
