@@ -196,10 +196,15 @@
 
     async function loadReadingData() {
         try {
-            // Parallel fetch text and questions
+            // Parallel fetch text and questions (allow 404 when reading has no questions)
             const [textResp, questionsResp] = await Promise.all([
                 axios.get(`/reading/texts/${textId}`),
-                axios.get(`/reading/texts/${textId}/questions`)
+                axios.get(`/reading/texts/${textId}/questions`).catch(err => {
+                    if (err.response && err.response.status === 404) {
+                        return { data: [] };
+                    }
+                    throw err;
+                })
             ]);
 
             const text = textResp.data;
