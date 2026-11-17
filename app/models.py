@@ -116,8 +116,23 @@ class License(Base):
     used_by_subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True)
     used_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
+    is_reusable = Column(Boolean, default=False)
+    max_uses = Column(Integer, nullable=True)
+    use_count = Column(Integer, default=0)
+    label = Column(String, nullable=True)
+    
     subuser = relationship("SubUser", back_populates="licenses")
     user = relationship("User")
+
+class LicenseRedemption(Base):
+    __tablename__ = "license_redemptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    license_id = Column(Integer, ForeignKey("licenses.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True, index=True)
+    redeemed_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)
 
 class LoginAttempt(Base):
     __tablename__ = "login_attempts"

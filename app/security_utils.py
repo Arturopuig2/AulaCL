@@ -9,10 +9,11 @@ from . import config
 SECRET_KEY = config.SECRET_KEY
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Exclusion list for legibility (I, L, O)
+# Exclusion list for legibility (I, L, O, 0, 1)
 # Note: secrets.choice is CSPRNG
 ALPHABET_UPPER_NO_CONFUSING = "ABCDEFGHJKMNPQRSTUVWXYZ" # Removed I, L, O
 DIGITS = string.digits
+DIGITS_NO_CONFUSING = "23456789" # Removed 0, 1
 
 def generate_login_code() -> str:
     """
@@ -26,12 +27,18 @@ def generate_login_code() -> str:
 
 def generate_license_key() -> str:
     """
-    Generates a 9-char code: Combination of digits and uppercase letters.
-    No I, L, O.
+    Generates a 9-char code: Combination of digits (2-9) and uppercase letters.
+    Excludes confusing characters: 0, 1, I, L, O (and no lowercase).
+    Guarantees at least one digit and one letter.
     Example: 8AH2K9M2J
     """
-    chars = DIGITS + ALPHABET_UPPER_NO_CONFUSING
-    return ''.join(secrets.choice(chars) for _ in range(9))
+    chars = DIGITS_NO_CONFUSING + ALPHABET_UPPER_NO_CONFUSING
+    result = [
+        secrets.choice(DIGITS_NO_CONFUSING),
+        secrets.choice(ALPHABET_UPPER_NO_CONFUSING),
+    ] + [secrets.choice(chars) for _ in range(7)]
+    secrets.SystemRandom().shuffle(result)
+    return ''.join(result)
 
 def hash_code(code: str) -> str:
     """

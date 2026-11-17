@@ -34,6 +34,10 @@ def update_schema():
     # LICENSES TABLE
     verify_column(connection, "licenses", "used_by_subuser_id", "INTEGER")
     verify_column(connection, "licenses", "used_by_user_id", "INTEGER")
+    verify_column(connection, "licenses", "is_reusable", "BOOLEAN DEFAULT FALSE")
+    verify_column(connection, "licenses", "max_uses", "INTEGER")
+    verify_column(connection, "licenses", "use_count", "INTEGER DEFAULT 0")
+    verify_column(connection, "licenses", "label", "VARCHAR")
     
     # Use TIMESTAMP for Postgres, DATETIME for SQLite
     is_sqlite = "sqlite" in str(engine.url)

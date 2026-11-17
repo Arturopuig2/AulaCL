@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app import models, schemas, auth, security_utils
 from app.database import get_db
+from app.routers.auth import redeem_license_entry
 
 router = APIRouter(
     prefix="/subusers",
@@ -15,30 +16,15 @@ def process_license_activation(db: Session, subuser: models.SubUser, license_key
     Returns (raw_code, new_expiry)
     """
     # Verify License
+    normalized_key = license_key.strip().upper()
     license_entry = db.query(models.License).filter(
-        models.License.key == license_key
+        models.License.key == normalized_key
     ).first()
     
     if not license_entry:
         raise HTTPException(status_code=404, detail="Licencia incorrecta. Contacta con info@editorialaula.es")
         
-    if license_entry.status != "ACTIVE":
-        raise HTTPException(status_code=400, detail="Esta licencia ya ha sido utilizada o es incorrecta. Contacta con info@editorialaula.es")
-        
-    # Activate License
-    license_entry.status = "USED"
-    license_entry.used_by_subuser_id = subuser.id
-    now = datetime.utcnow()
-    license_entry.activated_at = now
-    license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
-    
-    # Extend Access
-    now = datetime.utcnow()
-    current_expiry = subuser.access_expires_at if subuser.access_expires_at else now
-    if current_expiry < now:
-        current_expiry = now
-        
-    subuser.access_expires_at = current_expiry + timedelta(days=license_entry.duration_days)
+    redeem_license_entry(db, license_entry, subuser, subuser_id=subuser.id)
     
     # Generate Login Code
     raw_code = security_utils.generate_login_code()

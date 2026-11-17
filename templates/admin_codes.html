@@ -12,11 +12,27 @@
     <div
         style="margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
 
-        <div style="display: flex; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
-            <div style="flex: 1;">
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin-bottom: 1.5rem;">
+            <div style="min-width: 120px; flex: 1;">
                 <label for="code-count" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Cantidad a
                     generar</label>
                 <input type="number" id="code-count" value="1" min="1" max="50"
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+            </div>
+            <div style="min-width: 200px; flex: 1.5;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer; padding: 0.55rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: #f8fafc;">
+                    <input type="checkbox" id="code-reusable" onchange="toggleReusableFields()">
+                    <span>Código reutilizable (Cuaderno)</span>
+                </label>
+            </div>
+            <div id="reusable-label-wrap" style="display: none; min-width: 180px; flex: 1.5;">
+                <label for="code-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Etiqueta (opcional)</label>
+                <input type="text" id="code-label" placeholder="Ej: Cuaderno 2026"
+                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
+            </div>
+            <div id="reusable-max-wrap" style="display: none; min-width: 150px; flex: 1;">
+                <label for="code-max-uses" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Límite de usos</label>
+                <input type="number" id="code-max-uses" min="1" placeholder="Ilimitado"
                     style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; width: 100%;">
             </div>
             <button onclick="generateCodes()" class="btn btn-primary" style="padding: 0.6rem 1.5rem;">Generar
@@ -24,22 +40,19 @@
         </div>
 
         <h3 style="margin-bottom: 1rem; font-size: 1rem;">Licencias Existentes</h3>
-        <div style="max-height: 400px; overflow-y: auto;">
+        <div style="max-height: 450px; overflow-y: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                <thead style="position: sticky; top: 0; background: white;">
+                <thead style="position: sticky; top: 0; background: white; z-index: 1;">
                     <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
                         <th style="padding: 0.5rem;">Clave de Licencia</th>
                         <th style="padding: 0.5rem;">Estado</th>
-                <thead style="position: sticky; top: 0; background: white;">
-                    <tr style="border-bottom: 1px solid #e2e8f0; text-align: left;">
-                        <th style="padding: 0.5rem;">Clave de Licencia</th>
-                        <th style="padding: 0.5rem;">Estado</th>
-                        <th style="padding: 0.5rem;">Usado Por (Alumno)</th>
-                        <th style="padding: 0.5rem;">Email Tutor</th>
+                        <th style="padding: 0.5rem;">Usado Por / Usos</th>
+                        <th style="padding: 0.5rem;">Tutor / Etiqueta</th>
                         <th style="padding: 0.5rem;">Activada</th>
                         <th style="padding: 0.5rem;">Caduca</th>
                         <th style="padding: 0.5rem;">Quedan</th>
                         <th style="padding: 0.5rem;">Duración</th>
+                        <th style="padding: 0.5rem;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="codes-table-body">
@@ -113,13 +126,30 @@
                     }
                 }
 
+                let statusBadge = '';
+                if (c.status === 'USED') {
+                    statusBadge = '<span style="color: #ef4444; font-size: 0.75rem; background: #fee2e2; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Usada</span>';
+                } else if (c.status === 'REVOKED') {
+                    statusBadge = '<span style="color: #64748b; font-size: 0.75rem; background: #e2e8f0; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Desactivada</span>';
+                } else {
+                    statusBadge = '<span style="color: #16a34a; font-size: 0.75rem; background: #dcfce7; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Activa/Libre</span>';
+                }
+
+                const typeBadge = c.is_reusable
+                    ? '<div style="font-size: 0.7rem; color: #7c3aed; font-weight: 700; margin-top: 3px;">♻️ Reutilizable</div>'
+                    : `<div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">${c.type || 'Fija'}</div>`;
+
+                let actionHtml = '<span style="color: #cbd5e1;">-</span>';
+                if (c.id && c.status !== 'USED') {
+                    const isRevoked = c.status === 'REVOKED';
+                    actionHtml = `<button onclick="toggleLicenseStatus(${c.id})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; border: 1px solid ${isRevoked ? '#16a34a' : '#ef4444'}; color: ${isRevoked ? '#16a34a' : '#ef4444'}; background: transparent;">${isRevoked ? 'Reactivar' : 'Revocar'}</button>`;
+                }
+
                 tr.innerHTML = `
                     <td style="padding: 0.8rem 0.5rem; font-family: monospace; font-weight: 600; color: #1e40af;">${c.key}</td>
                     <td style="padding: 0.8rem 0.5rem;">
-                        ${c.status === 'USED'
-                        ? '<span style="color: #ef4444; font-size: 0.75rem; background: #fee2e2; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Usada</span>'
-                        : '<span style="color: #16a34a; font-size: 0.75rem; background: #dcfce7; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Activa/Libre</span>'}
-                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">${c.type || 'Fija'}</div>
+                        ${statusBadge}
+                        ${typeBadge}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #334155; font-weight: 500;">
                         ${c.used_by || '<span style="color: #cbd5e1;">-</span>'}
@@ -131,7 +161,7 @@
                         ${formatDate(c.activated_at)}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #1e293b; font-size: 0.8rem; font-weight: 600;">
-                        ${formatDate(c.expires_at)}
+                        ${c.is_reusable ? '<span style="color: #7c3aed; font-weight: 500;">Sin caducidad</span>' : formatDate(c.expires_at)}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; font-size: 0.8rem;">
                         ${daysLeftHtml}
@@ -139,17 +169,39 @@
                     <td style="padding: 0.8rem 0.5rem; color: #64748b; font-size: 0.8rem;">
                         ${c.duration_days} días
                     </td>
+                    <td style="padding: 0.8rem 0.5rem;">
+                        ${actionHtml}
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         } catch (error) {
             console.error("Error loading licenses", error);
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">Error al cargar las licencias: ${error.response?.data?.detail || error.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #ef4444;">Error al cargar las licencias: ${error.response?.data?.detail || error.message}</td></tr>`;
+        }
+    }
+
+    function toggleReusableFields() {
+        const isReusable = document.getElementById('code-reusable').checked;
+        document.getElementById('reusable-label-wrap').style.display = isReusable ? 'block' : 'none';
+        document.getElementById('reusable-max-wrap').style.display = isReusable ? 'block' : 'none';
+    }
+
+    async function toggleLicenseStatus(licenseId) {
+        try {
+            await axios.patch(`/auth/admin/licenses/${licenseId}/toggle`);
+            await loadCodes();
+        } catch (error) {
+            console.error(error);
+            alert('Error cambiando el estado de la licencia: ' + (error.response?.data?.detail || error.message));
         }
     }
 
     async function generateCodes() {
         const count = document.getElementById('code-count').value;
+        const isReusable = document.getElementById('code-reusable').checked;
+        const label = document.getElementById('code-label').value.trim();
+        const maxUses = document.getElementById('code-max-uses').value.trim();
         const btn = document.querySelector('button[onclick="generateCodes()"]');
         const originalText = btn.innerText;
         
@@ -157,26 +209,30 @@
             btn.innerText = "Generando...";
             btn.disabled = true;
             
-            const response = await axios.post(`/auth/admin/licenses?count=${count}`);
+            const params = new URLSearchParams({ count, is_reusable: isReusable });
+            if (isReusable && label) params.append('label', label);
+            if (isReusable && maxUses) params.append('max_uses', maxUses);
+
+            const response = await axios.post(`/auth/admin/licenses?${params.toString()}`);
             await loadCodes();
 
             // Auto-Download Text File
             const keys = response.data;
             const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-            let fileContent = keys.map(key => `Licencia- Aula CL: ${key}`).join("\n");
+            let fileContent = keys.map(key => `${isReusable ? 'Código Reutilizable' : 'Licencia'}- Aula CL: ${key}`).join("\n");
             fileContent += `\n\nGenerado el: ${today}`;
 
             const blob = new Blob([fileContent], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `licencias_estudiantes_${new Date().getTime()}.txt`;
+            a.download = `${isReusable ? 'codigo_reutilizable' : 'licencias_estudiantes'}_${new Date().getTime()}.txt`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            alert(`¡${count} licencias generadas con éxito y descargadas!`);
+            alert(`¡${count} ${isReusable ? 'código(s) reutilizable(s)' : 'licencia(s)'} generado(s) con éxito!\n\n${keys.join(', ')}`);
         } catch (error) {
             console.error(error);
             alert('Error generando licencias: ' + (error.response?.data?.detail || error.message));

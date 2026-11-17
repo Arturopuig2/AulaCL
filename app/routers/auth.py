@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 import os
 from app import schemas, models, security_utils
 from app.limiter import limiter
@@ -250,13 +250,11 @@ def register(request: Request, user: schemas.UserCreate, db: Session = Depends(g
         # 1. Try modern License table
         license_entry = db.query(models.License).filter(models.License.key == lic_key).first()
         if license_entry and license_entry.status == "ACTIVE":
-            license_entry.status = "USED"
-            now = datetime.utcnow()
-            license_entry.activated_at = now
-            license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
-            license_entry.used_by_user_id = db_user.id
-            db_user.access_expires_at = license_entry.expires_at
-            db.commit()
+            try:
+                redeem_license_entry(db, license_entry, db_user, user_id=db_user.id)
+                db.commit()
+            except HTTPException:
+                pass
         else:
             # 2. Try legacy InvitationCode table
             invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == lic_key).first()
@@ -397,22 +395,87 @@ def change_password(request: schemas.ChangePasswordRequest, current_user: schema
     
     return {"message": "Contraseña actualizada correctamente"}
 
+def redeem_license_entry(
+    db: Session,
+    license_entry: models.License,
+    target_obj,
+    user_id: Optional[int] = None,
+    subuser_id: Optional[int] = None
+) -> datetime:
+    """
+    Validates and redeems a single-use or reusable license for a User or SubUser.
+    Returns the new access_expires_at datetime.
+    """
+    if license_entry.status == "REVOKED":
+        raise HTTPException(status_code=403, detail="Esta licencia ha sido desactivada. Contacta con info@editorialaula.es")
+    if license_entry.status != "ACTIVE":
+        raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o es incorrecta. Contacta con info@editorialaula.es")
+
+    now = datetime.utcnow()
+    duration = license_entry.duration_days or 365
+    current_expiry = target_obj.access_expires_at
+    if current_expiry and current_expiry > now:
+        new_expiry = current_expiry + timedelta(days=duration)
+    else:
+        new_expiry = now + timedelta(days=duration)
+
+    if getattr(license_entry, "is_reusable", False):
+        current_uses = license_entry.use_count or 0
+        if license_entry.max_uses is not None and current_uses >= license_entry.max_uses:
+            raise HTTPException(status_code=403, detail="Este código ha alcanzado el límite máximo de usos.")
+
+        existing_query = db.query(models.LicenseRedemption).filter(
+            models.LicenseRedemption.license_id == license_entry.id
+        )
+        if user_id is not None:
+            existing = existing_query.filter(models.LicenseRedemption.user_id == user_id).first()
+        elif subuser_id is not None:
+            existing = existing_query.filter(models.LicenseRedemption.subuser_id == subuser_id).first()
+        else:
+            existing = None
+
+        if existing:
+            raise HTTPException(status_code=400, detail="Ya has utilizado este código anteriormente en esta cuenta.")
+
+        target_obj.access_expires_at = new_expiry
+        license_entry.use_count = current_uses + 1
+        if license_entry.activated_at is None:
+            license_entry.activated_at = now
+
+        redemption = models.LicenseRedemption(
+            license_id=license_entry.id,
+            user_id=user_id,
+            subuser_id=subuser_id,
+            redeemed_at=now,
+            expires_at=new_expiry
+        )
+        db.add(redemption)
+    else:
+        target_obj.access_expires_at = new_expiry
+        license_entry.status = "USED"
+        license_entry.activated_at = now
+        license_entry.expires_at = now + timedelta(days=duration)
+        license_entry.use_count = 1
+        if user_id is not None:
+            license_entry.used_by_user_id = user_id
+        if subuser_id is not None:
+            license_entry.used_by_subuser_id = subuser_id
+
+    return new_expiry
+
 @router.post("/unlock")
 def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Validate Code (Force Uppercase)
     code_input = request.access_code.upper().strip()
+    now = datetime.utcnow()
+    had_active_access = bool(current_user.access_expires_at and current_user.access_expires_at > now)
+    message = "¡Suscripción extendida 1 año!" if had_active_access else "¡Contenido desbloqueado por 1 año!"
     
-    # 1. TRY LICENSE TABLE (Standard Format: LIC-XXXXXXXX)
+    # 1. TRY LICENSE TABLE
     license_entry = db.query(models.License).filter(models.License.key == code_input).first()
     
-    invitation = None
-    used_license = False
-    duration_days = 365
-    
     if license_entry:
-        if license_entry.status != "ACTIVE":
-             raise HTTPException(status_code=403, detail="Esta licencia ya ha sido utilizada o es incorrecta. Contacta con info@editorialaula.es")
-        used_license = True
+        redeem_license_entry(db, license_entry, current_user, user_id=current_user.id)
     else:
         # 2. TRY INVITATION CODE (Legacy)
         invitation = db.query(models.InvitationCode).filter(models.InvitationCode.code == code_input).first()
@@ -422,25 +485,11 @@ def unlock_content(request: schemas.UnlockRequest, current_user: schemas.User = 
         if invitation.is_used:
             raise HTTPException(status_code=403, detail="Este código de acceso ya ha sido utilizado")
 
-    # Grant Access (Cumulative)
-    now = datetime.utcnow()
-    
-    if current_user.access_expires_at and current_user.access_expires_at > now:
-        # Extend existing time
-        current_user.access_expires_at += timedelta(days=duration_days)
-        message = "¡Suscripción extendida 1 año!"
-    else:
-        # Start new subscription
-        current_user.access_expires_at = now + timedelta(days=duration_days)
-        message = "¡Contenido desbloqueado por 1 año!"
-    
-    # Mark code as used
-    if used_license:
-        license_entry.status = "USED"
-        license_entry.activated_at = now
-        license_entry.expires_at = now + timedelta(days=license_entry.duration_days)
-        license_entry.used_by_user_id = current_user.id
-    else:
+        if had_active_access:
+            current_user.access_expires_at += timedelta(days=365)
+        else:
+            current_user.access_expires_at = now + timedelta(days=365)
+
         invitation.is_used = True
         invitation.used_at = now
         invitation.used_by_user_id = current_user.id
@@ -549,30 +598,62 @@ def debug_ai_config():
 
 # --- ADMIN: LICENSE GENERATION (For Students) ---
 @router.post("/admin/licenses", response_model=List[str])
-def generate_licenses(count: int = 1, duration_days: int = 365, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def generate_licenses(
+    count: int = 1,
+    duration_days: int = 365,
+    is_reusable: bool = False,
+    max_uses: Optional[int] = None,
+    label: Optional[str] = None,
+    current_user: schemas.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     if current_user.username != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
     new_keys = []
     for _ in range(count):
-        # Use utility to generate a clean license key (No I, L, O)
+        # Use utility to generate a clean license key (No 0, 1, I, L, O)
         key = security_utils.generate_license_key()
         
         # Check uniqueness in License table
         while db.query(models.License).filter(models.License.key == key).first():
              key = security_utils.generate_license_key()
              
-        # Create License (Student License)
+        # Create License
         db_license = models.License(
             key=key,
             status="ACTIVE",
-            duration_days=duration_days
+            duration_days=duration_days,
+            is_reusable=is_reusable,
+            max_uses=max_uses if (is_reusable and max_uses and max_uses > 0) else None,
+            use_count=0,
+            label=label.strip() if label and label.strip() else None
         )
         db.add(db_license)
         new_keys.append(key)
     
     db.commit()
     return new_keys
+
+@router.patch("/admin/licenses/{license_id}/toggle")
+def toggle_license_status(
+    license_id: int,
+    current_user: schemas.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    lic = db.query(models.License).filter(models.License.id == license_id).first()
+    if not lic:
+        raise HTTPException(status_code=404, detail="Licencia no encontrada")
+
+    if lic.status == "USED":
+        raise HTTPException(status_code=400, detail="No se puede reactivar una licencia de un solo uso ya consumida")
+
+    lic.status = "REVOKED" if lic.status == "ACTIVE" else "ACTIVE"
+    db.commit()
+    return {"id": lic.id, "key": lic.key, "status": lic.status}
 
 @router.get("/admin/licenses")
 def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -582,14 +663,20 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
     result = []
 
     try:
-        # 1. Fetch Student Licenses
+        # 1. Fetch Student / Reusable Licenses
         student_licenses = db.query(models.License).all()
         for lic in student_licenses:
             used_by_name = None
             parent_email = None
+            is_reusable = bool(getattr(lic, "is_reusable", False))
             
-            # Use relationships if available for better reliability
-            if lic.used_by_subuser_id:
+            if is_reusable:
+                uses = lic.use_count or 0
+                cap = str(lic.max_uses) if lic.max_uses else "∞"
+                used_by_name = f"Usos: {uses} / {cap}"
+                if lic.label:
+                    parent_email = lic.label
+            elif lic.used_by_subuser_id:
                 sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
                 if sub:
                     used_by_name = f"Alumno/a: {sub.name or 'S/N'}"
@@ -602,15 +689,20 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                     parent_email = u.email
 
             result.append({
+                "id": lic.id,
                 "key": lic.key,
                 "status": lic.status,
                 "duration_days": lic.duration_days,
                 "created_at": lic.created_at,
                 "activated_at": lic.activated_at,
-                "expires_at": lic.expires_at or (lic.activated_at + timedelta(days=lic.duration_days) if lic.activated_at else None),
+                "expires_at": None if is_reusable else (lic.expires_at or (lic.activated_at + timedelta(days=lic.duration_days) if lic.activated_at else None)),
                 "used_by": used_by_name,
                 "parent_email": parent_email,
-                "type": "Estudiante"
+                "is_reusable": is_reusable,
+                "max_uses": lic.max_uses,
+                "use_count": lic.use_count or 0,
+                "label": lic.label,
+                "type": "Reutilizable" if is_reusable else "Estudiante"
             })
 
         # 2. Fetch Premium Invitation Codes (Legacy)
