@@ -38,6 +38,9 @@ def update_schema():
     verify_column(connection, "licenses", "max_uses", "INTEGER")
     verify_column(connection, "licenses", "use_count", "INTEGER DEFAULT 0")
     verify_column(connection, "licenses", "label", "VARCHAR")
+
+    # LICENSE REDEMPTIONS TABLE
+    verify_column(connection, "license_redemptions", "is_revoked", "BOOLEAN DEFAULT FALSE")
     
     # Use TIMESTAMP for Postgres, DATETIME for SQLite
     is_sqlite = "sqlite" in str(engine.url)

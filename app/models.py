@@ -133,6 +133,7 @@ class LicenseRedemption(Base):
     subuser_id = Column(Integer, ForeignKey("subusers.id"), nullable=True, index=True)
     redeemed_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=True)
+    is_revoked = Column(Boolean, default=False)
 
 class LoginAttempt(Base):
     __tablename__ = "login_attempts"

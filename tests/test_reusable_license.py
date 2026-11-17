@@ -6,7 +6,12 @@ from sqlalchemy.orm import sessionmaker
 
 from app.database import Base
 from app import models, security_utils
-from app.routers.auth import redeem_license_entry
+from app.routers.auth import (
+    redeem_license_entry,
+    delete_unused_license,
+    toggle_license_status,
+    toggle_redemption_status,
+)
 
 
 @pytest.fixture
@@ -104,3 +109,69 @@ def test_reusable_license_subuser_and_max_uses_and_revoke(db_session):
     with pytest.raises(HTTPException) as exc_rev:
         redeem_license_entry(db_session, lic, s3, subuser_id=s3.id)
     assert exc_rev.value.status_code == 403
+
+
+def test_delete_unused_and_revoke_used_single_license(db_session):
+    admin = models.User(username="admin", email="admin@test.com", hashed_password="x")
+    unused_lic = models.License(key="UNUSED234", status="ACTIVE", duration_days=365, is_reusable=False)
+    used_lic = models.License(key="USED23456", status="ACTIVE", duration_days=365, is_reusable=False)
+    student = models.User(username="s@test.com", email="s@test.com", hashed_password="x")
+    db_session.add_all([admin, unused_lic, used_lic, student])
+    db_session.commit()
+
+    # Delete unused succeeds
+    res_del = delete_unused_license(unused_lic.id, current_user=admin, db=db_session)
+    assert res_del["deleted"] is True
+    assert db_session.query(models.License).filter(models.License.key == "UNUSED234").first() is None
+
+    # Redeem used_lic
+    exp = redeem_license_entry(db_session, used_lic, student, user_id=student.id)
+    db_session.commit()
+    assert student.access_expires_at == exp
+
+    # Cannot delete a used license
+    with pytest.raises(HTTPException) as exc_del:
+        delete_unused_license(used_lic.id, current_user=admin, db=db_session)
+    assert exc_del.value.status_code == 400
+
+    # Revoke removes student's access, status becomes REVOKED
+    toggle_license_status(used_lic.id, current_user=admin, db=db_session)
+    db_session.refresh(student)
+    db_session.refresh(used_lic)
+    assert used_lic.status == "REVOKED"
+    assert student.access_expires_at is None
+
+    # Reactivate restores student's access, status becomes USED
+    toggle_license_status(used_lic.id, current_user=admin, db=db_session)
+    db_session.refresh(student)
+    db_session.refresh(used_lic)
+    assert used_lic.status == "USED"
+    assert student.access_expires_at == exp
+
+
+def test_revoke_and_reactivate_reusable_redemption(db_session):
+    admin = models.User(username="admin", email="admin@test.com", hashed_password="x")
+    lic = models.License(key="REUS23456", status="ACTIVE", duration_days=365, is_reusable=True)
+    u1 = models.User(username="u1@test.com", email="u1@test.com", hashed_password="x")
+    db_session.add_all([admin, lic, u1])
+    db_session.commit()
+
+    exp = redeem_license_entry(db_session, lic, u1, user_id=u1.id)
+    db_session.commit()
+    red = db_session.query(models.LicenseRedemption).filter(models.LicenseRedemption.license_id == lic.id).first()
+    assert red is not None
+    assert u1.access_expires_at == exp
+
+    # Revoke redemption -> withdraws u1's access
+    toggle_redemption_status(red.id, current_user=admin, db=db_session)
+    db_session.refresh(u1)
+    db_session.refresh(red)
+    assert red.is_revoked is True
+    assert u1.access_expires_at is None
+
+    # Reactivate redemption -> restores u1's access
+    toggle_redemption_status(red.id, current_user=admin, db=db_session)
+    db_session.refresh(u1)
+    db_session.refresh(red)
+    assert red.is_revoked is False
+    assert u1.access_expires_at == exp

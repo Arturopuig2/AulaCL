@@ -131,7 +131,7 @@
                 if (c.status === 'USED') {
                     statusBadge = '<span style="color: #ef4444; font-size: 0.75rem; background: #fee2e2; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Usada</span>';
                 } else if (c.status === 'REVOKED') {
-                    statusBadge = '<span style="color: #64748b; font-size: 0.75rem; background: #e2e8f0; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Desactivada</span>';
+                    statusBadge = '<span style="color: #64748b; font-size: 0.75rem; background: #e2e8f0; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Revocada</span>';
                 } else {
                     statusBadge = '<span style="color: #16a34a; font-size: 0.75rem; background: #dcfce7; padding: 3px 8px; border-radius: 50px; font-weight: 600;">Activa/Libre</span>';
                 }
@@ -141,9 +141,16 @@
                     : `<div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">${c.type || 'Fija'}</div>`;
 
                 let actionHtml = '<span style="color: #cbd5e1;">-</span>';
-                if (c.id && c.status !== 'USED') {
+                if (c.is_redemption_row && c.redemption_id) {
                     const isRevoked = c.status === 'REVOKED';
-                    actionHtml = `<button onclick="toggleLicenseStatus(${c.id})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; border: 1px solid ${isRevoked ? '#16a34a' : '#ef4444'}; color: ${isRevoked ? '#16a34a' : '#ef4444'}; background: transparent;">${isRevoked ? 'Reactivar' : 'Revocar'}</button>`;
+                    actionHtml = `<button onclick="toggleRedemptionStatus(${c.redemption_id})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; border: 1px solid ${isRevoked ? '#16a34a' : '#ef4444'}; color: ${isRevoked ? '#16a34a' : '#ef4444'}; background: transparent;">${isRevoked ? 'Reactivar' : 'Revocar'}</button>`;
+                } else if (c.id) {
+                    if (!c.is_used) {
+                        actionHtml = `<button onclick="deleteUnusedLicense(${c.id}, '${c.key}')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; border: 1px solid #ef4444; color: #ef4444; background: #fef2f2;">Borrar</button>`;
+                    } else {
+                        const isRevoked = c.status === 'REVOKED';
+                        actionHtml = `<button onclick="toggleLicenseStatus(${c.id})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; border: 1px solid ${isRevoked ? '#16a34a' : '#ef4444'}; color: ${isRevoked ? '#16a34a' : '#ef4444'}; background: transparent;">${isRevoked ? 'Reactivar' : 'Revocar'}</button>`;
+                    }
                 }
 
                 tr.innerHTML = `
@@ -195,6 +202,29 @@
         } catch (error) {
             console.error(error);
             alert('Error cambiando el estado de la licencia: ' + (error.response?.data?.detail || error.message));
+        }
+    }
+
+    async function toggleRedemptionStatus(redemptionId) {
+        try {
+            await axios.patch(`/auth/admin/redemptions/${redemptionId}/toggle`);
+            await loadCodes();
+        } catch (error) {
+            console.error(error);
+            alert('Error cambiando el estado del acceso: ' + (error.response?.data?.detail || error.message));
+        }
+    }
+
+    async function deleteUnusedLicense(licenseId, key) {
+        if (!confirm(`¿Seguro que quieres borrar el código ${key}? Esta acción no se puede deshacer y el código dejará de existir.`)) {
+            return;
+        }
+        try {
+            await axios.delete(`/auth/admin/licenses/${licenseId}`);
+            await loadCodes();
+        } catch (error) {
+            console.error(error);
+            alert('Error borrando la licencia: ' + (error.response?.data?.detail || error.message));
         }
     }
 

@@ -635,6 +635,44 @@ def generate_licenses(
     db.commit()
     return new_keys
 
+def _set_target_access(db: Session, user_id: Optional[int], subuser_id: Optional[int], expires_at: Optional[datetime]):
+    if subuser_id:
+        target = db.query(models.SubUser).filter(models.SubUser.id == subuser_id).first()
+    elif user_id:
+        target = db.query(models.User).filter(models.User.id == user_id).first()
+    else:
+        target = None
+    if target:
+        target.access_expires_at = expires_at
+
+
+@router.delete("/admin/licenses/{license_id}")
+def delete_unused_license(
+    license_id: int,
+    current_user: schemas.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    lic = db.query(models.License).filter(models.License.id == license_id).first()
+    if not lic:
+        raise HTTPException(status_code=404, detail="Licencia no encontrada")
+
+    is_used = (
+        lic.status == "USED"
+        or (lic.use_count or 0) > 0
+        or lic.used_by_user_id is not None
+        or lic.used_by_subuser_id is not None
+    )
+    if is_used:
+        raise HTTPException(status_code=400, detail="No se puede borrar una licencia que ya ha sido utilizada. Usa Revocar.")
+
+    db.delete(lic)
+    db.commit()
+    return {"deleted": True, "id": license_id}
+
+
 @router.patch("/admin/licenses/{license_id}/toggle")
 def toggle_license_status(
     license_id: int,
@@ -648,12 +686,46 @@ def toggle_license_status(
     if not lic:
         raise HTTPException(status_code=404, detail="Licencia no encontrada")
 
-    if lic.status == "USED":
-        raise HTTPException(status_code=400, detail="No se puede reactivar una licencia de un solo uso ya consumida")
+    if getattr(lic, "is_reusable", False):
+        if (lic.use_count or 0) == 0 and lic.status == "ACTIVE":
+            raise HTTPException(status_code=400, detail="Un código reutilizable sin usos debe borrarse en lugar de revocarse.")
+        lic.status = "REVOKED" if lic.status == "ACTIVE" else "ACTIVE"
+    else:
+        if lic.status == "ACTIVE":
+            raise HTTPException(status_code=400, detail="Una licencia no utilizada debe borrarse en lugar de revocarse.")
+        if lic.status == "USED":
+            lic.status = "REVOKED"
+            _set_target_access(db, lic.used_by_user_id, lic.used_by_subuser_id, None)
+        elif lic.status == "REVOKED":
+            lic.status = "USED"
+            _set_target_access(db, lic.used_by_user_id, lic.used_by_subuser_id, lic.expires_at)
 
-    lic.status = "REVOKED" if lic.status == "ACTIVE" else "ACTIVE"
     db.commit()
     return {"id": lic.id, "key": lic.key, "status": lic.status}
+
+
+@router.patch("/admin/redemptions/{redemption_id}/toggle")
+def toggle_redemption_status(
+    redemption_id: int,
+    current_user: schemas.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.username != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    red = db.query(models.LicenseRedemption).filter(models.LicenseRedemption.id == redemption_id).first()
+    if not red:
+        raise HTTPException(status_code=404, detail="Canje no encontrado")
+
+    if not getattr(red, "is_revoked", False):
+        red.is_revoked = True
+        _set_target_access(db, red.user_id, red.subuser_id, None)
+    else:
+        red.is_revoked = False
+        _set_target_access(db, red.user_id, red.subuser_id, red.expires_at)
+
+    db.commit()
+    return {"id": red.id, "is_revoked": red.is_revoked}
 
 @router.get("/admin/licenses")
 def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -690,6 +762,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                 cap = str(lic.max_uses) if lic.max_uses else "∞"
                 result.append({
                     "id": lic.id,
+                    "redemption_id": None,
                     "key": lic.key,
                     "status": lic.status,
                     "duration_days": lic.duration_days,
@@ -700,6 +773,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                     "parent_email": lic.label or None,
                     "is_reusable": True,
                     "is_redemption_row": False,
+                    "is_used": uses > 0,
                     "max_uses": lic.max_uses,
                     "use_count": uses,
                     "label": lic.label,
@@ -712,10 +786,12 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                 ).order_by(models.LicenseRedemption.redeemed_at.desc()).all()
                 for red in redemptions:
                     used_by_name, parent_email = resolve_holder(red.user_id, red.subuser_id)
+                    red_revoked = bool(getattr(red, "is_revoked", False))
                     result.append({
                         "id": None,
+                        "redemption_id": red.id,
                         "key": lic.key,
-                        "status": "USED",
+                        "status": "REVOKED" if red_revoked else "USED",
                         "duration_days": lic.duration_days,
                         "created_at": lic.created_at,
                         "activated_at": red.redeemed_at,
@@ -724,6 +800,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                         "parent_email": parent_email,
                         "is_reusable": True,
                         "is_redemption_row": True,
+                        "is_used": True,
                         "max_uses": lic.max_uses,
                         "use_count": uses,
                         "label": lic.label,
@@ -731,8 +808,15 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                     })
             else:
                 used_by_name, parent_email = resolve_holder(lic.used_by_user_id, lic.used_by_subuser_id)
+                single_used = bool(
+                    lic.status in ("USED", "REVOKED")
+                    or lic.used_by_user_id is not None
+                    or lic.used_by_subuser_id is not None
+                    or lic.activated_at is not None
+                )
                 result.append({
                     "id": lic.id,
+                    "redemption_id": None,
                     "key": lic.key,
                     "status": lic.status,
                     "duration_days": lic.duration_days,
@@ -743,6 +827,7 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
                     "parent_email": parent_email,
                     "is_reusable": False,
                     "is_redemption_row": False,
+                    "is_used": single_used,
                     "max_uses": None,
                     "use_count": lic.use_count or 0,
                     "label": lic.label,
