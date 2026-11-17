@@ -162,7 +162,7 @@
                         ${formatDate(c.activated_at)}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; color: #1e293b; font-size: 0.8rem; font-weight: 600;">
-                        ${c.is_reusable ? '<span style="color: #7c3aed; font-weight: 500;">Sin caducidad</span>' : formatDate(c.expires_at)}
+                        ${(c.is_reusable && !c.is_redemption_row) ? '<span style="color: #7c3aed; font-weight: 500;">Sin caducidad</span>' : formatDate(c.expires_at)}
                     </td>
                     <td style="padding: 0.8rem 0.5rem; font-size: 0.8rem;">
                         ${daysLeftHtml}

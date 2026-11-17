@@ -662,48 +662,92 @@ def get_licenses(current_user: schemas.User = Depends(get_current_user), db: Ses
     
     result = []
 
+    def resolve_holder(user_id, subuser_id):
+        used_by_name = None
+        parent_email = None
+        if subuser_id:
+            sub = db.query(models.SubUser).filter(models.SubUser.id == subuser_id).first()
+            if sub:
+                used_by_name = f"Alumno/a: {sub.name or 'S/N'}"
+                if sub.parent_user:
+                    parent_email = sub.parent_user.email
+        elif user_id:
+            u = db.query(models.User).filter(models.User.id == user_id).first()
+            if u:
+                used_by_name = f"Usuario: {u.name or u.username or 'S/N'}"
+                parent_email = u.email
+        return used_by_name, parent_email
+
     try:
         # 1. Fetch Student / Reusable Licenses
         student_licenses = db.query(models.License).all()
         for lic in student_licenses:
-            used_by_name = None
-            parent_email = None
             is_reusable = bool(getattr(lic, "is_reusable", False))
             
             if is_reusable:
+                # Main row for managing/revoking the reusable code
                 uses = lic.use_count or 0
                 cap = str(lic.max_uses) if lic.max_uses else "∞"
-                used_by_name = f"Usos: {uses} / {cap}"
-                if lic.label:
-                    parent_email = lic.label
-            elif lic.used_by_subuser_id:
-                sub = db.query(models.SubUser).filter(models.SubUser.id == lic.used_by_subuser_id).first()
-                if sub:
-                    used_by_name = f"Alumno/a: {sub.name or 'S/N'}"
-                    if sub.parent_user:
-                        parent_email = sub.parent_user.email
-            elif lic.used_by_user_id:
-                u = db.query(models.User).filter(models.User.id == lic.used_by_user_id).first()
-                if u:
-                    used_by_name = f"Usuario: {u.name or u.username or 'S/N'}"
-                    parent_email = u.email
+                result.append({
+                    "id": lic.id,
+                    "key": lic.key,
+                    "status": lic.status,
+                    "duration_days": lic.duration_days,
+                    "created_at": lic.created_at,
+                    "activated_at": None,
+                    "expires_at": None,
+                    "used_by": f"Usos: {uses} / {cap}",
+                    "parent_email": lic.label or None,
+                    "is_reusable": True,
+                    "is_redemption_row": False,
+                    "max_uses": lic.max_uses,
+                    "use_count": uses,
+                    "label": lic.label,
+                    "type": "Reutilizable"
+                })
 
-            result.append({
-                "id": lic.id,
-                "key": lic.key,
-                "status": lic.status,
-                "duration_days": lic.duration_days,
-                "created_at": lic.created_at,
-                "activated_at": lic.activated_at,
-                "expires_at": None if is_reusable else (lic.expires_at or (lic.activated_at + timedelta(days=lic.duration_days) if lic.activated_at else None)),
-                "used_by": used_by_name,
-                "parent_email": parent_email,
-                "is_reusable": is_reusable,
-                "max_uses": lic.max_uses,
-                "use_count": lic.use_count or 0,
-                "label": lic.label,
-                "type": "Reutilizable" if is_reusable else "Estudiante"
-            })
+                # Individual row per user/subuser redemption
+                redemptions = db.query(models.LicenseRedemption).filter(
+                    models.LicenseRedemption.license_id == lic.id
+                ).order_by(models.LicenseRedemption.redeemed_at.desc()).all()
+                for red in redemptions:
+                    used_by_name, parent_email = resolve_holder(red.user_id, red.subuser_id)
+                    result.append({
+                        "id": None,
+                        "key": lic.key,
+                        "status": "USED",
+                        "duration_days": lic.duration_days,
+                        "created_at": lic.created_at,
+                        "activated_at": red.redeemed_at,
+                        "expires_at": red.expires_at or (red.redeemed_at + timedelta(days=lic.duration_days) if red.redeemed_at else None),
+                        "used_by": used_by_name,
+                        "parent_email": parent_email,
+                        "is_reusable": True,
+                        "is_redemption_row": True,
+                        "max_uses": lic.max_uses,
+                        "use_count": uses,
+                        "label": lic.label,
+                        "type": "Reutilizable"
+                    })
+            else:
+                used_by_name, parent_email = resolve_holder(lic.used_by_user_id, lic.used_by_subuser_id)
+                result.append({
+                    "id": lic.id,
+                    "key": lic.key,
+                    "status": lic.status,
+                    "duration_days": lic.duration_days,
+                    "created_at": lic.created_at,
+                    "activated_at": lic.activated_at,
+                    "expires_at": lic.expires_at or (lic.activated_at + timedelta(days=lic.duration_days) if lic.activated_at else None),
+                    "used_by": used_by_name,
+                    "parent_email": parent_email,
+                    "is_reusable": False,
+                    "is_redemption_row": False,
+                    "max_uses": None,
+                    "use_count": lic.use_count or 0,
+                    "label": lic.label,
+                    "type": "Estudiante"
+                })
 
         # 2. Fetch Premium Invitation Codes (Legacy)
         invitations = db.query(models.InvitationCode).all()
